@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      1.0.1
+// @version      1.0.2
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -14,40 +14,7 @@
 // @grant        GM_addStyle
 // @run-at       document-idle
 // ==/UserScript==
-// ============================================================
-// CHANGELOG (GRTW-Fixed Version):
-// FIX #1  MTF-L: id:107 (war falsch: 106 = AB-L!)
-// FIX #2  Anh 12 Lbw (FGr Log-V): id:178 (war falsch: 116 = AB-Luefter FW!)
-// FIX #3  Anh FKH (SEG): id:[] (war falsch: 132 = LKW 7 Lbw THW!)
-// FIX #4  GTLF: Suchstring "wasserbedarf" entfernt (zahlte Ressourcen-Kachel als FW-Fahrzeug)
-// FIX #5  Luefter-Suchstrings disambiguiert: gw-luefter / anh-luefter / ab-luefter
-// FIX #6  MTW-V: "verpflegung" entfernt (Konflikt mit GW-Verpflegung)
-// FIX #7  Laufende Lehrgaenge: cat:"Ressourcen" -> cat:"Ausbildung"
-// FIX #8  MTW-V, GW-Verpflegung, GW-Kueche, AB-Kueche -> cat:"Versorgung" (Kategorie jetzt sichtbar!)
-// FIX #9  Pferdetransporter Suchstrings praezisiert (kein "klein"/"gross" allein)
-// FIX #10 store.save() vereinheitlicht (kein doppelter Key-Parameter mehr)
-// FIX #11 Sonstiges-Kacheln: id:[building_id] -> id:[] (building_ids ist das richtige Feld)
-// FIX #12 typeId===73 GRTW Disambiguierungsblock verbessert
-// FIX #13 typeId===93 KTW Typ B vs MTW-OV Disambiguierung verbessert
-// ============================================================
-// GRTW FIXES (neu):
-// GRTW-FIX #1  AAO_TILES_RAW Suchstrings fuer GRTW so gewaehlt, dass "grtw" kein gemeinsamer Substring mehr ist
-// GRTW-FIX #2  Disambiguierungsblock typeId===73 mit robustem normalize()-Matching und korrekter Reihenfolge
-// GRTW-FIX #3  Namensmatch-Fallback: verhindert gleichzeitigen Match aller 3 GRTW-Varianten
-// GRTW-FIX #4  VEHICLE_MATCH_CACHE.set() wird jetzt erst NACH allen Disambiguierungsbloecken ausgefuehrt
-// ============================================================
-// RESSOURCEN FIXES (neu):
-// RES-FIX #1  resourceCounterMode Default auf "all" - alle Ressourcen zeigen Zaehler
-// RES-FIX #2  updateTile: isEventCounter nur fuer reine Klick-Zaehlkacheln
-//             Helikopter + Betreuung/Versorgung + Krankentransporte zeigen numToday/numYday
-// RES-FIX #3  resCounter zeigt fuer alle Ressourcen den Wert (nicht nur Wasserbedarf)
-// RES-FIX #4  Dot-Farbe fuer Ressourcen: gruen wenn Wert > 0, grau wenn 0
-// RES-FIX #5  vehicleExists fuer Betreuung/Versorgung + Helikopter korrekt gesetzt
-// RES-FIX #6  Patienten/Gefangene: direkt aus cachedCapacities, unabhaengig von hasFreeCountData
-// RES-FIX #7  Badge-Anzeige fuer Betreuung/Versorgung und Helikopter
-// RES-FIX #8  Krankentransporte: Tages-Zaehler korrekt angezeigt
-// RES-FIX #9  Wasserbedarf: resCounter zeigt Liter, verhindert Doppeldarstellung
-// ============================================================
+
 
 (function() {
     'use strict';
