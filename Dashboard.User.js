@@ -189,7 +189,7 @@
         { n:"LKW 7 Lbw (FGr Log-V)", id:176, c:C_THW, cat:"THW", s:["lkw 7 lbw log","lkw 7 lbw (fgr log-v)"]},
         { n:"LKW 7 Lbw (FGr E)", id:122, c:C_THW, cat:"THW", s:["lkw 7 lbw e","lkw 7 lbw (fgr e)"]},
         { n:"MTW-TZ", id:40, c:C_THW, cat:"THW", s:["mtw-tz"]},
-        { n:"MTW-OV", id: 93, c:C_THW, cat:"THW", s:["mtw-ov","ov thw","mtw ov"]},
+        { n:"MTW-OV", id: 124, c:C_THW, cat:"THW", s:["mtw-ov","ov thw","mtw ov"]},
         { n:"MTW-O", id: 93, c:C_THW, cat:"THW", s:["mtw-o","o thw","mtw o"]},
         { n:"MTW-FGr K", id:148, c:C_THW, cat:"THW", s:["mtw-fgr k","mtw fgr k"]},
         { n:"MTW-Tr UL (Pilot Bobelle)", id:125, c:C_THW, cat:"THW", s:["mtw-tr ul"]},
