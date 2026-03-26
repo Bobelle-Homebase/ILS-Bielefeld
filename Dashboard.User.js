@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      1.0.2
+// @version      1.0.3
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -14,7 +14,6 @@
 // @grant        GM_addStyle
 // @run-at       document-idle
 // ==/UserScript==
-
 
 (function() {
     'use strict';
@@ -191,6 +190,7 @@
         { n:"LKW 7 Lbw (FGr E)", id:122, c:C_THW, cat:"THW", s:["lkw 7 lbw e","lkw 7 lbw (fgr e)"]},
         { n:"MTW-TZ", id:40, c:C_THW, cat:"THW", s:["mtw-tz"]},
         { n:"MTW-OV", id: 93, c:C_THW, cat:"THW", s:["mtw-ov","ov thw","mtw ov"]},
+        { n:"MTW-O", id: 93, c:C_THW, cat:"THW", s:["mtw-o","o thw","mtw o"]},
         { n:"MTW-FGr K", id:148, c:C_THW, cat:"THW", s:["mtw-fgr k","mtw fgr k"]},
         { n:"MTW-Tr UL (Pilot Bobelle)", id:125, c:C_THW, cat:"THW", s:["mtw-tr ul"]},
         { n:"MTW-FGr (Log-V)", id:177, c:C_THW, cat:"THW", s:["mtw-fgr log"]},
