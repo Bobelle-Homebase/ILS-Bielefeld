@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      1.0.3
+// @version      1.0.4
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -128,9 +128,6 @@
         { n:"ITW", id:97, c:C_RD, cat:"RD", s:["itw"]},
         { n:"KdoW-LNA", id:55, c:C_RD, cat:"RD", s:["lna"]},
         { n:"KdoW-OrgL", id:56, c:C_RD, cat:"RD", s:["orgl"]},
-        // GRTW-FIX #1: Suchstrings so gewaehlt, dass "grtw" kein gemeinsamer Substring ist.
-        // "GRTW" (Basis) bekommt nur exakte Strings die NICHT in den anderen vorkommen.
-        // Reihenfolge spielt keine Rolle mehr, da keine Ueberschneidungen.
         { n:"GRTW", id:73, c:C_RD, cat:"RD", s:["grtw basis","grtw standard","grossraumrettungswagen"]},
         //{ n:"GRTW (7 Pat)", id:73, c:C_RD, cat:"RD", s:["grtw 7","grtw7","grtw 7 pat","7 patienten","7pat"]},
         //{ n:"GRTW (3 Pat + NA)", id:73, c:C_RD, cat:"RD", s:["grtw 3","grtw3","grtw 3 pat","3 patienten","3pat"]},
@@ -194,6 +191,7 @@
         { n:"MTW-FGr K", id:148, c:C_THW, cat:"THW", s:["mtw-fgr k","mtw fgr k"]},
         { n:"MTW-Tr UL (Pilot Bobelle)", id:125, c:C_THW, cat:"THW", s:["mtw-tr ul"]},
         { n:"MTW-FGr (Log-V)", id:177, c:C_THW, cat:"THW", s:["mtw-fgr log"]},
+        { n:"Anh Hund", id:92, c:C_THW, cat:"THW", s:["anh Hund"]},
         { n:"Anh Anh 7", id:102, c:C_THW, cat:"THW", s:["anh 7 thw","anh fp thw"]},
         { n:"Anh Anh SwPu", id:101, c:C_THW, cat:"THW", s:["anh swpu thw","anh swpu"]},
         { n:"Anh FüLa", id:146, c:C_THW, cat:"THW", s:["anh füla"]},
@@ -324,7 +322,7 @@
         subDispSize:10, subDispWeight:"normal", subDispColor:"#555555",
         headerElementSize:12, pillBgColor:"#ffffff", pillTextColor:"#000000",
         creditsGap:6, creditsFontSize:13, creditsLabelColor:"#333333", creditsValueColor:"#00cc00",
-        funkalarmText:"📞 Alarmierung", funkalarmSize:10, funkalarmColor:"#555555", funkalarmBold:false,
+        funkalarmText:"Alarmierung", funkalarmSize:10, funkalarmColor:"#555555", funkalarmBold:false,
         funkalarmBlinkColor:"#ff0000", funkalarmBlinkDuration:240,
         toggleBtnSize:44, toggleBtnBg:"#b00000", toggleBtnBorderC:"#ffffff", toggleBtnBorderW:2,
         fmsFontSize:11, fmsHeight:1, fmsGap:4, debugMode:false, apiInterval:30,
@@ -673,10 +671,7 @@
 
     function getTargetBody(){return(extWin&&!extWin.closed)?extWin.document.body:document.body;}
     function getTargetDoc(){return(extWin&&!extWin.closed)?extWin.document:document;}
-
     function getAvailabilitySummary(){
-        // Ressourcen-Kacheln, Zähl-Kacheln und Ausbildungs-Kacheln aus Verfügbarkeit ausschließen.
-        // Diese haben keine echten Fahrzeuge und sollen nie als "Fehlt" / "Nicht verfügbar" angezeigt werden.
         const EXCLUDE_FROM_AVAIL = new Set([
             "Patienten","Krankenhausbetten","Gefangene","Gefängniszellen",
             "Wasserbedarf","Betreuung/Versorgung","Krankentransporte","Helikopter",
@@ -762,7 +757,6 @@
             const isInUse=(fms===3||fms===4||fms===7||fms===8);const isAvail=(fms===1||fms===2);
             let matchedKeys=new Set();
 
-            // ── GRTW-FIX #4: Cache nur lesen, nicht schreiben (Schreiben erfolgt erst NACH Disambiguierung) ──
             const cachedMatch=VEHICLE_MATCH_CACHE.get(v.id);
             if(cachedMatch&&cachedMatch.caption===v.caption){
                 cachedMatch.keys.forEach(k=>matchedKeys.add(k));
@@ -784,7 +778,6 @@
                             if(!hit&&t.search.length>0){for(let i=0;i<t.search.length;i++){if(vNameCustom.includes(t.search[i])||vNameType.includes(t.search[i])){hit=true;break;}}}
                             if(hit){matchedKeys.add(t.n);found.push(t.n);}
                         }
-                        // GRTW-FIX #3: Verhindert gleichzeitigen Match aller 3 GRTW-Varianten beim Namensmatch
                         if(matchedKeys.has("GRTW")&&(matchedKeys.has("GRTW (7 Pat)")||matchedKeys.has("GRTW (3 Pat + NA)"))){
                             matchedKeys.delete("GRTW");
                         }
@@ -834,21 +827,15 @@
                     if(vNameCustom.includes("tesi")||vNameCustom.includes("te-si")||vNameType.includes("tesi"))matchedKeys.add("MTW-TeSi");
                     else matchedKeys.add("MTW-V");
                 }
-                // typeId===93: immer MTW-OV (KTW Typ B hat echte ID 58!)
                 if(typeId===93){
                     matchedKeys.delete("MTW-OV");matchedKeys.delete("KTW Typ B");matchedKeys.delete("OV Mannschaftstransportwagen");
                     matchedKeys.add("MTW-OV");
                     matchedKeys.add("OV Mannschaftstransportwagen");
                 }
-                // typeId===58: immer KTW Typ B (echte ID!)
                 if(typeId===58){
                     matchedKeys.delete("KTW Typ B");
                     matchedKeys.add("KTW Typ B");
                 }
-
-                // ── GRTW-FIX #2: typeId 73 — robuster Disambiguierungsblock ──────────────
-                // Alle drei Varianten loeschen, dann per normalisiertem Fahrzeugnamen zuweisen.
-                // Reihenfolge: spezifischste Patterns (7 Pat / 3 Pat) ZUERST, Fallback = GRTW Basis
                 if(typeId===73){
                     matchedKeys.delete("GRTW");
                     matchedKeys.delete("GRTW (7 Pat)");
@@ -874,7 +861,6 @@
                         matchedKeys.add("GRTW");
                     }
                 }
-                // ── Ende GRTW-Fix ─────────────────────────────────────────────────────────
 
                 if(typeId===100){
                     matchedKeys.delete("FüKW (THW)");matchedKeys.delete("MLW 4");matchedKeys.delete("FüKomKW");
@@ -890,70 +876,57 @@
                     else
                         matchedKeys.add("LKW 7 Lbw");
                 }
-                // typeId 157: RTH mit Winde (nicht RTH Basis)
                 if(typeId===157){
                     matchedKeys.delete("RTH [Christoph 13 (Bielefeld)]");
                     matchedKeys.delete("RTH mit Winde");
                     matchedKeys.add("RTH mit Winde");
                 }
-                // typeId 156: Polizeihubschrauber mit Winde
                 if(typeId===156){
                     matchedKeys.delete("Polizeihubschrauber");
                     matchedKeys.delete("Polizeihubschrauber mit Winde");
                     matchedKeys.add("Polizeihubschrauber mit Winde");
                 }
-                // typeId 3: ELW 1 FW (nicht SEG)
                 if(typeId===3){
                     matchedKeys.delete("ELW 1");matchedKeys.delete("ELW 1 (SEG)");
                     matchedKeys.add("ELW 1");
                 }
-                // typeId 59: ELW 1 SEG (nicht FW)
                 if(typeId===59){
                     matchedKeys.delete("ELW 1");matchedKeys.delete("ELW 1 (SEG)");
                     matchedKeys.add("ELW 1 (SEG)");
                 }
-                // typeId 33: GW-Höhenrettung FW (nicht Bergrettung)
                 if(typeId===33){
                     matchedKeys.delete("GW-Höhenrettung");matchedKeys.delete("GW-Höhenrettung (Bergrettung)");
                     matchedKeys.add("GW-Höhenrettung");
                 }
-                // typeId 158: GW-Höhenrettung Bergrettung (nicht FW)
                 if(typeId===158){
                     matchedKeys.delete("GW-Höhenrettung");matchedKeys.delete("GW-Höhenrettung (Bergrettung)");
                     matchedKeys.add("GW-Höhenrettung (Bergrettung)");
                 }
-                // typeId 51: FüKW Polizei (nicht THW)
                 if(typeId===51){
                     matchedKeys.delete("FüKW (Polizei)");matchedKeys.delete("FüKW (THW)");
                     matchedKeys.add("FüKW (Polizei)");
                 }
-                // typeId 144: FüKW THW (nicht Polizei)
                 if(typeId===144){
                     matchedKeys.delete("FüKW (Polizei)");matchedKeys.delete("FüKW (THW)");
                     matchedKeys.add("FüKW (THW)");
                 }
-                // typeId 166: PTLF 4000 (nicht TLF - 'ptlf' enthält 'tlf' als Substring)
                 if(typeId===166){
                     matchedKeys.delete("TLF");matchedKeys.delete("PTLF 4000");
                     matchedKeys.add("PTLF 4000");
                 }
-                // typeId 17,18,87: TLF Basis (nicht PTLF)
                 if(typeId===17||typeId===18||typeId===87){
                     matchedKeys.delete("TLF");matchedKeys.delete("PTLF 4000");
                     matchedKeys.add("TLF");
                 }
-                // typeId 149: GW-Bergrettung NEF
                 if(typeId===149){
                     matchedKeys.delete("GW-Bergrettung");matchedKeys.delete("GW-Bergrettung (NEF)");
                     matchedKeys.add("GW-Bergrettung (NEF)");
                 }
-                // typeId 150: GW-Bergrettung Basis
                 if(typeId===150){
                     matchedKeys.delete("GW-Bergrettung");matchedKeys.delete("GW-Bergrettung (NEF)");
                     matchedKeys.add("GW-Bergrettung");
                 }
 
-                // GRTW-FIX #4: Cache erst NACH allen Disambiguierungsbloecken schreiben!
                 VEHICLE_MATCH_CACHE.set(v.id, {caption: v.caption, keys: Array.from(matchedKeys)});
             }
 
@@ -999,41 +972,33 @@
                 if(barEl&&data.total>0){const pFree=(data.free/data.total)*100;const pBusy=(data.busy/data.total)*100;const pS6=(data.s6/data.total)*100;const freeDiv=barEl.querySelector(".fzBarFree");const busyDiv=barEl.querySelector(".fzBarBusy");const s6Div=barEl.querySelector(".fzBarS6");if(freeDiv)freeDiv.style.width=pFree+"%";if(busyDiv)busyDiv.style.width=pBusy+"%";if(s6Div)s6Div.style.width=pS6+"%";}
             }
         });
-        // RES-FIX #5: vehicleExists + Fahrzeugzahlen fuer Betreuung/Versorgung und Helikopter
-        // Diese werden per Fahrzeug-API gezaehlt (haben IDs), muessen aber explizit markiert werden
+
         vehicleExists["Betreuung/Versorgung"]=true;
         vehicleExists["Helikopter"]=true;
-        // Sicherstellen dass hasFreeCountData fuer Ressourcen nicht noetig ist
-        // RES-FIX #6: Patienten/Gefangene direkt aus cachedCapacities, unabhaengig von hasFreeCountData
-        // Patienten: exists + available wenn Krankenhäuser vorhanden
         vehicleExists["Patienten"]=true;
         vehicleAvailability["Patienten"]=(cachedCapacities.beds||0)>0;
         vehicleTotalCount["Patienten"]=cachedCapacities.beds;
         vehicleInUseCount["Patienten"]=cachedCapacities.bedsUsed||0;
         vehicleFreeCount["Patienten"]=Math.max(0,(cachedCapacities.beds||0)-(cachedCapacities.bedsUsed||0));
-        // Krankenhausbetten: exists + available wenn Betten vorhanden
         vehicleExists["Krankenhausbetten"]=true;
         vehicleAvailability["Krankenhausbetten"]=(cachedCapacities.beds||0)>0;
         vehicleTotalCount["Krankenhausbetten"]=cachedCapacities.beds;
         vehicleInUseCount["Krankenhausbetten"]=cachedCapacities.bedsUsed||0;
         state.today["Krankenhausbetten"]=cachedCapacities.bedsUsed||0;
         vehicleFreeCount["Krankenhausbetten"]=Math.max(0,(cachedCapacities.beds||0)-(cachedCapacities.bedsUsed||0));
-        // Gefangene: exists + available wenn Zellen vorhanden
         vehicleExists["Gefangene"]=true;
         vehicleAvailability["Gefangene"]=(cachedCapacities.cells||0)>0;
         vehicleTotalCount["Gefangene"]=cachedCapacities.cells;
         vehicleInUseCount["Gefangene"]=state.today["Gefangene"]||0;
         vehicleFreeCount["Gefangene"]=Math.max(0,(cachedCapacities.cells||0)-(state.today["Gefangene"]||0));
-        // Gefängniszellen: exists + available wenn Zellen vorhanden
         vehicleExists["Gefängniszellen"]=true;
         vehicleAvailability["Gefängniszellen"]=(cachedCapacities.cells||0)>0;
         vehicleTotalCount["Gefängniszellen"]=cachedCapacities.cells;
         vehicleInUseCount["Gefängniszellen"]=state.today["Gefangene"]||0;
         state.today["Gefängniszellen"]=state.today["Gefangene"]||0;
         vehicleFreeCount["Gefängniszellen"]=Math.max(0,(cachedCapacities.cells||0)-(state.today["Gefangene"]||0));
-        // Zähl-Kacheln ohne echte Verfügbarkeit: immer exists+available
+
         ["Wasserbedarf","Krankentransporte","Laufende Lehrgänge","Aktive Lehrgänge","Meine DJI Mini 4k (Pilot Bobelle)"].forEach(k=>{vehicleExists[k]=true;vehicleAvailability[k]=true;if(!vehicleTotalCount[k])vehicleTotalCount[k]=0;});
-        // Helikopter + Betreuung: available wenn mind. 1 frei, sonst exists
         ["Helikopter","Betreuung/Versorgung"].forEach(k=>{vehicleExists[k]=true;if((vehicleFreeCount[k]||0)>0)vehicleAvailability[k]=true;if(!vehicleTotalCount[k])vehicleTotalCount[k]=0;});
         requestAnimationFrame(()=>{
             for(const k of KEYS)updateTile(k,state);
@@ -1184,20 +1149,16 @@
         el.dataset.val=v;
         const isResource=RESOURCE_TILE_NAMES.has(key);
 
-        // RES-FIX #2: Definiere welche Ressourcen-Kacheln einen eigenen Tages-Zaehler haben
-        // (werden per Klick oder API-Event gezaehlt und sollen numToday/numYday anzeigen)
         const COUNTED_RESOURCE_KEYS=new Set([
             "Patienten","Gefangene","Wasserbedarf","Betreuung/Versorgung",
             "Krankentransporte","Helikopter"
         ]);
-        // isEventCounter=true → tileCount (numToday/numYday) wird VERSTECKT
-        // Nur fuer reine Kapazitaets-Kacheln ohne eigenen Zaehler
+
         const isEventCounter = isResource && !COUNTED_RESOURCE_KEYS.has(key);
 
         const y=(state.yday[key]||0);
         const showNumbers=(uiSettings.tileStatsMode||"both")!=="barOnly";
 
-        // RES-FIX #3+#9: resCounter - fuer alle Ressourcen den Wert anzeigen
         if(cached.resCounter){
             const rMode=uiSettings.resourceCounterMode||"all";
             let txt="";
@@ -1220,7 +1181,6 @@
             if(cached.resCounter.textContent!==txt)cached.resCounter.textContent=txt;
         }
 
-        // Zaehlkacheln: numToday/numYday anzeigen (ausser Wasserbedarf hat resCounter)
         const showNumericCounter = showNumbers && !isEventCounter && key!=="Wasserbedarf" && key!=="Krankenhausbetten" && key!=="Gefängniszellen";
         if(cached.tileCount)cached.tileCount.style.display=showNumericCounter?"flex":"none";
         if(showNumericCounter){
@@ -1269,7 +1229,6 @@
             }
         }
 
-        // RES-FIX #7: Badges fuer alle Ressourcen-Kacheln korrekt befuellen
         if(cached.badgeSlot){
             if(isResource){
                 if(key==="Krankenhausbetten"){
@@ -1318,7 +1277,6 @@
         el.classList.remove("fzInUse","fzEmpty");
         if(!isResource){if(total>0&&free<=0)el.classList.add("fzEmpty");else if(inUse>0)el.classList.add("fzInUse");}
 
-        // RES-FIX #4: Dot-Farbe fuer Ressourcen-Kacheln sinnvoll setzen
         let dotColor="#888";
         if(isResource){
             if(key==="Patienten"||key==="Krankenhausbetten"){
@@ -1609,13 +1567,8 @@
         if(typeof sap!=='undefined'&&sap.audio_play){const originalAudioPlay=sap.audio_play;let apiDebounce=null;sap.audio_play=function(audio){originalAudioPlay.apply(this,arguments);if(audio&&(audio.includes('fms')||audio.includes('radio'))){if(apiDebounce)clearTimeout(apiDebounce);apiDebounce=setTimeout(()=>{updateAvailability();const statsEl=document.getElementById("fzMissionStats");if(statsEl)statsEl.innerHTML=getMissionStatsHTML();},200);}};}
     }
 
-    // ── Globaler Click-Handler für Zähl-Events ──────────────────────────────
-    // Leitstellenspiel nutzt Rails UJS: Links mit data-method="put"/"post" und class="btn"
-    // URLs: /patients/{id}/hospitals/{h}, /patients/{id}/ambulances/{a},
-    //       /prisoners/{id}/cells/{c}  (alle PLURAL)
-    // Fallback: formAction bei klassischen Forms (singular + plural abgedeckt)
     document.addEventListener("click",(e)=>{
-        // Erweiterter Selektor: a[href], alle Buttons, Rails-UJS-Links
+
         const activeEl=e.target.closest(
             "a[href],button,.vehicle_dispatch_button,.alarm_button,form button[type='submit'],"+
             "[data-mission-id],[data-method],[data-confirm]"
@@ -1628,20 +1581,19 @@
         // Zusammengesetzter URL-String: href ODER formAction
         const urlStr=href||formAction;
 
-        // ── Patienten → Krankenhaus (plural UND singular) ──────────
         if(/\/patients?\/\d+\/hospitals?\/\d+/.test(urlStr)){
             incrementTileCount("Patienten",activeEl);return;
         }
-        // ── Krankentransporte → Ambulanz/KTW ───────────────────────
+
         if(/\/patients?\/\d+\/ambulances?\/\d+/.test(urlStr)||
            /\/transports?\/\d+/.test(urlStr)){
             incrementTileCount("Krankentransporte",activeEl);return;
         }
-        // ── Gefangene → Zelle (plural UND singular) ────────────────
+
         if(/\/prisoners?\/\d+\/cells?\/\d+/.test(urlStr)){
             incrementTileCount("Gefangene",activeEl);return;
         }
-        // ── AAO-Buttons: Wasserbedarf + Betreuung ──────────────────
+
         if(activeEl.classList.contains("aao_btn")||activeEl.hasAttribute("aao_id")){
             const literVal=getWasserbedarfLiter(activeEl);
             if(literVal>0){
@@ -1664,7 +1616,7 @@
                 incrementTileCount("Betreuung/Versorgung",activeEl);return;
             }
         }
-        // ── Fahrzeug-Dispatch: Helikopter-Zählung ──────────────────
+
         if(activeEl.classList.contains("vehicle_dispatch_button")||
            activeEl.hasAttribute("data-mission-id")){
             if(text.includes("rth")||text.includes("ith")||
@@ -1688,11 +1640,7 @@
 
     setInterval(()=>{if(document.hidden&&!extWin)return;if(checkVehicleDayReset(state)&&isMainPage){KEYS.forEach(k=>updateTile(k,state));updateAvailability();}},5000);
 
-    // ── XHR + Fetch Interceptor für Patient/Gefangene-Zählung ────────────
-    // Rails UJS und Turbo führen Aktionen per AJAX aus – kein normaler Click.
-    // Wir fangen ausgehende Requests ab, bevor sie den Server erreichen.
     (function(){
-        // XMLHttpRequest interceptor
         const _xhrOpen=XMLHttpRequest.prototype.open;
         XMLHttpRequest.prototype.open=function(method,url){
             if(method&&(method.toUpperCase()==="PUT"||method.toUpperCase()==="POST")&&url){
@@ -1706,7 +1654,7 @@
             }
             return _xhrOpen.apply(this,arguments);
         };
-        // Fetch interceptor
+
         const _fetch=window.fetch;
         window.fetch=function(input,init){
             const method=((init&&init.method)||"GET").toUpperCase();
