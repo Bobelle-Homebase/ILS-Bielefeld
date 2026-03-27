@@ -278,7 +278,7 @@
         { n:"FG Führung und Kommunikation", id:[147], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"FG Logistik-Verpflegung", id:[176,177], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"FG Brückenbau", id:[181,182,183], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"OV Mannschaftstransportwagen", id:[93], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        { n:"OV Mannschaftstransportwagen", id:[124], c:"#5a5a5a", cat:"Ressourcen", s:[]},
 
         { n:"Laufende Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
         { n:"Aktive Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
