@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      1.0.7
+// @version      1.0.8
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -115,7 +115,6 @@
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
         { n:"AB-L", id:106, c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
         { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-log","mtf-l"]},
-
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
         { n:"MTW-V", id:140, c:C_FW, cat:"Versorgung", s:["mtw-v","mtw verpflegung"]},
@@ -130,7 +129,7 @@
         { n:"KdoW-LNA", id:55, c:C_RD, cat:"RD", s:["lna"]},
         { n:"KdoW-OrgL", id:56, c:C_RD, cat:"RD", s:["orgl"]},
         { n:"GRTW", id:73, c:C_RD, cat:"RD", s:["grtw basis","grtw standard","grossraumrettungswagen"]},
-
+        
         { n:"FuStW", id:32, c:C_POL, cat:"POL", s:["fustw","streifenwagen"]},
         { n:"FuStW (DGL)", id:103, c:C_POL, cat:"POL", s:["dgl"]},
         { n:"GruKw", id:50, c:C_POL, cat:"POL", s:["grukw"]},
@@ -165,13 +164,13 @@
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
 
-        { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
-        { n:"MzGW (FGr BrB)", id:181, c:C_THW, cat:"THW", s:["mzgw fgr brb"]},
-        { n:"MzGW SB", id:109, c:C_THW, cat:"THW", s:["mzgw sb"]},
-        { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
-        { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"Schmutzwasserpumpen", id:101, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
         { n:"Feuerlöschpumpen", id:[17,18,87,102], c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg","tlf"]},
+        { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
+        { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
+        { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
+        { n:"MzGW (FGr BrB)", id:181, c:C_THW, cat:"THW", s:["mzgw fgr brb"]},
+        { n:"MzGW SB", id:109, c:C_THW, cat:"THW", s:["mzgw sb"]},     
         { n:"FüKW (THW)", id:144, c:C_THW, cat:"THW", s:["fükw thw","fükw (thw)"]},
         { n:"FüKomKW", id:145, c:C_THW, cat:"THW", s:["fükomkw"]},
         { n:"FmKW", id:147, c:C_THW, cat:"THW", s:["fmkw"]},
@@ -201,8 +200,8 @@
         { n:"Anh 12 Lbw (FGr Log-V)", id:178, c:C_THW, cat:"THW", s:["anh 12 lbw"]},
         { n:"Anh Plattform (FGr BrB)", id:183, c:C_THW, cat:"THW", s:["anh plattform"]},
 
-        { n:"KTW Typ B", id:58, c:C_SEG, cat:"SEG", s:["ktw b","ktw typ b","nktw"]},
         { n:"ELW 1 (SEG)", id:59, c:C_SEG, cat:"SEG", s:["elw 1 (seg)","elw 1 seg"]},
+        { n:"KTW Typ B", id:58, c:C_SEG, cat:"SEG", s:["ktw b","ktw typ b","nktw"]},
         { n:"GW-San", id:60, c:C_SEG, cat:"SEG", s:["gw-san"]},
         { n:"Rettungshundefahrzeug", id:91, c:C_SEG, cat:"SEG", s:["rettungshunde"]},
         { n:"Bt-Kombi", id:131, c:C_SEG, cat:"SEG", s:["bt-kombi"]},
@@ -210,9 +209,9 @@
         { n:"Bt LKW", id:133, c:C_SEG, cat:"SEG", s:["bt lkw"]},
         { n:"GW-TeSi", id:171, c:C_SEG, cat:"SEG", s:["gw-tesi"]},
         { n:"LKW Technik", id:172, c:C_SEG, cat:"SEG", s:["lkw technik"]},
+        { n:"MTW-TeSi", id:173, c:C_SEG, cat:"SEG", s:["mtw-tesi"]},
         { n:"Anh TeSi", id:174, c:C_SEG, cat:"SEG", s:["anh tesi"]},
         { n:"Anh FKH", id:132, c:C_SEG, cat:"SEG", s:["anh fkh"]},
-        { n:"MTW-TeSi", id:173, c:C_SEG, cat:"SEG", s:["mtw-tesi"]},
 
         { n:"Anh NEA50 (SEG)", id:[175], c:"#5a5a5a", cat:"Netz", s:["anh nea50 seg"]},
         { n:"Anh NEA50 (THW)", id:[110], c:"#5a5a5a", cat:"Netz", s:["anh nea50 thw"]},
@@ -264,7 +263,7 @@
         { n:"Gefängniszellen", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Wasserbedarf", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Betreuung/Versorgung", id:[130,131,133], c:"#5a5a5a", cat:"Ressourcen", s:["bt-kombi","gw-bt","bt lkw"]},
-        { n:"Krankentransporte", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        { n:"Krankentransporte", id:[], c:"#5a5a5a", cat:"Ressourcen", s:["ktw"]},
         { n:"Helikopter", id:[31,157,61,156,161], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Meine DJI Mini 4k (Pilot Bobelle)", id:[127,125], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"FG Zugtrupp", id:[40], c:"#5a5a5a", cat:"Ressourcen", s:[]},
@@ -1078,7 +1077,6 @@
                     }
                 }
 
-                                // ── Disambiguierungsblöcke ────────────────────────
                 if(typeId===32){
                     matchedKeys.delete("FuStW"); matchedKeys.delete("FuStW (DGL)");
                     matchedKeys.delete("Zivilstreifenwagen"); matchedKeys.delete("LauKw"); matchedKeys.delete("LeBefKw");
