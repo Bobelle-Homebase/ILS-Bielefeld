@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      1.0.8
+// @version      1.0.9
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -129,7 +129,7 @@
         { n:"KdoW-LNA", id:55, c:C_RD, cat:"RD", s:["lna"]},
         { n:"KdoW-OrgL", id:56, c:C_RD, cat:"RD", s:["orgl"]},
         { n:"GRTW", id:73, c:C_RD, cat:"RD", s:["grtw basis","grtw standard","grossraumrettungswagen"]},
-        
+
         { n:"FuStW", id:32, c:C_POL, cat:"POL", s:["fustw","streifenwagen"]},
         { n:"FuStW (DGL)", id:103, c:C_POL, cat:"POL", s:["dgl"]},
         { n:"GruKw", id:50, c:C_POL, cat:"POL", s:["grukw"]},
@@ -165,12 +165,12 @@
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
 
         { n:"Schmutzwasserpumpen", id:101, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
-        { n:"Feuerlöschpumpen", id:[17,18,87,102], c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg","tlf"]},
+        { n:"Feuerlöschpumpen", id:[17,18,87], c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg","tlf"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
         { n:"MzGW (FGr BrB)", id:181, c:C_THW, cat:"THW", s:["mzgw fgr brb"]},
-        { n:"MzGW SB", id:109, c:C_THW, cat:"THW", s:["mzgw sb"]},     
+        { n:"MzGW SB", id:109, c:C_THW, cat:"THW", s:["mzgw sb"]},
         { n:"FüKW (THW)", id:144, c:C_THW, cat:"THW", s:["fükw thw","fükw (thw)"]},
         { n:"FüKomKW", id:145, c:C_THW, cat:"THW", s:["fükomkw"]},
         { n:"FmKW", id:147, c:C_THW, cat:"THW", s:["fmkw"]},
