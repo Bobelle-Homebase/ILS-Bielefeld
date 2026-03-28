@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      1.0.9
+// @version      1.0.10
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -1226,37 +1226,45 @@
                 BUILDING_ID_TILE_MAP[vBuildingId].forEach(k => matchedKeys.add(k));
             }
 
-            const oldFms = vehicleStateCache[v.id];
-            if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (fms === 3 || fms === 4)){
-                matchedKeys.forEach(k => {
-                    if(k === "Wasserbedarf"){
-                        const fakEl = { textContent: v.caption || "", title: "", getAttribute: () => "" };
-                        const liter = getWasserbedarfLiter(fakEl);
-                        if(liter > 0){
-                            state.today["Wasserbedarf"] = (state.today["Wasserbedarf"] || 0) + liter;
-                            state.total["Wasserbedarf"] = (state.total["Wasserbedarf"] || 0) + liter;
-                            state.det["Wasserbedarf"] = state.det["Wasserbedarf"] || {};
-                            const dKey = (normalize(v.caption || "wasserbedarf") || "wasserbedarf").slice(0,60);
-                            state.det["Wasserbedarf"][dKey] = (state.det["Wasserbedarf"][dKey] || 0) + liter;
-                            store.save();
-                        }
-                        triggerAlarm(k);
-                        return;
-                    }
-
-                    incrementTileCount(k, null);
-                    triggerAlarm(k);
-
-                    const meta = tileMetaByKey[k];
-                    if(meta && (meta.cat === "Luft" || meta.cat === "SeenotRett") && (k.includes("RTH") || k.includes("Hubschrauber") || k.includes("SAR Hubschrauber"))){
-                        const heliKey = v.id + "_" + k;
-                        if(!heliAlreadyCountedThisSession.has(heliKey)){
-                            heliAlreadyCountedThisSession.add(heliKey);
-                            incrementTileCount("Helikopter", null);
-                        }
-                    }
-                });
+   const oldFms = vehicleStateCache[v.id];
+if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (fms === 3 || fms === 4)){
+    matchedKeys.forEach(k => {
+        if(k === "Wasserbedarf"){
+            const fakEl = { textContent: v.caption || "", title: "", getAttribute: () => "" };
+            const liter = getWasserbedarfLiter(fakEl);
+            if(liter > 0){
+                state.today["Wasserbedarf"] = (state.today["Wasserbedarf"] || 0) + liter;
+                state.total["Wasserbedarf"] = (state.total["Wasserbedarf"] || 0) + liter;
+                state.det["Wasserbedarf"] = state.det["Wasserbedarf"] || {};
+                const dKey = (normalize(v.caption || "wasserbedarf") || "wasserbedarf").slice(0,60);
+                state.det["Wasserbedarf"][dKey] = (state.det["Wasserbedarf"][dKey] || 0) + liter;
+                store.save();
             }
+            triggerAlarm(k);
+            return;
+        }
+        incrementTileCount(k, null);
+        triggerAlarm(k);
+        const meta = tileMetaByKey[k];
+        if(meta && (meta.cat === "Luft" || meta.cat === "SeenotRett") && (k.includes("RTH") || k.includes("Hubschrauber") || k.includes("SAR Hubschrauber"))){
+            const heliKey = v.id + "_" + k;
+            if(!heliAlreadyCountedThisSession.has(heliKey)){
+                heliAlreadyCountedThisSession.add(heliKey);
+                incrementTileCount("Helikopter", null);
+            }
+        }
+    });
+
+    // NEU: Krankentransporte zählen
+    const KTW_TYPE_IDS = new Set([38, 58, 74, 97]);
+    if(KTW_TYPE_IDS.has(typeId)){
+        const ktpGuardKey = v.id + "_ktp_" + (vehicleStateCache[v.id] || 0);
+        if(!heliAlreadyCountedThisSession.has(ktpGuardKey)){
+            heliAlreadyCountedThisSession.add(ktpGuardKey);
+            incrementTileCount("Krankentransporte", null);
+        }
+    }
+}
 
             vehicleStateCache[v.id] = fms;
 
@@ -1313,8 +1321,8 @@
                 const bilStr = creditsData.bilanz.toLocaleString('de-DE');
                 const realBilColor = creditsData.bilanz >= 0 ? valColor : "#dc3545";
                 const creditsContent = (!creditsData.date && creditsData.ein === 0)
-                    ? "Lade..."
-                    : `Ein: <span style="color:${valColor};margin:0 3px;">${einStr}</span> | Aus: <span style="color:${valColor};margin:0 3px;">${ausStr}</span> | Σ: <span style="color:${realBilColor};margin-left:3px;">${bilStr}</span>`;
+                ? "Lade..."
+                : `Ein: <span style="color:${valColor};margin:0 3px;">${einStr}</span> | Aus: <span style="color:${valColor};margin:0 3px;">${ausStr}</span> | Σ: <span style="color:${realBilColor};margin-left:3px;">${bilStr}</span>`;
 
                 pillsContainer.innerHTML =
                     `<div class="fzResPill fzHeaderPill" title="Patienten" onclick="document.querySelector('.fzTile[data-key=\\'Patienten\\']')?.click()">${ICONS.patient} ${pat} / ${cachedCapacities.beds || 0}</div>` +
@@ -1970,7 +1978,7 @@
 
         const lastAlarm = lastAlarmTime[key] || null;
         const lastAlarmHtml = lastAlarm
-            ? `<div class="fzStatBox"><div class="fzStatVal" style="font-size:14px;">🚨 ${lastAlarm}</div><div class="fzStatLbl">Letzte Alarmierung</div></div>`
+        ? `<div class="fzStatBox"><div class="fzStatVal" style="font-size:14px;">🚨 ${lastAlarm}</div><div class="fzStatLbl">Letzte Alarmierung</div></div>`
             : `<div class="fzStatBox"><div class="fzStatVal" style="font-size:13px;color:#aaa;">–</div><div class="fzStatLbl">Letzte Alarmierung</div></div>`;
 
         const renderVehicleList = (filter) => {
