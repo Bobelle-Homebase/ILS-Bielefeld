@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.11
+// @version      v1.0.12
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -507,19 +507,13 @@
 
     let vehicleAvailability={},vehicleExists={},vehicleInUseCount={},vehicleTotalCount={},vehicleFreeCount={};
     let hasFreeCountData=false,vehicleLists={};
-
     let state={
         today:store.load(STORAGE.COUNTS_TODAY),
         total:store.load(STORAGE.COUNTS_TOTAL),
         yday:store.load(STORAGE.YDAY_COUNTS),
         history:json.load(STORAGE.HISTORY_7DAYS,{}),
-        det:json.load(STORAGE.DETAILS_TODAY,{})
-    };
-
-    if(state.today["Wasserbedarf"]&&state.today["Wasserbedarf"]<500){
-        state.today["Wasserbedarf"]=0;
-        store.save();
-    }
+        det:json.load(STORAGE.DETAILS_TODAY,{})};
+    if(state.today[" Wasserbedarf"]&&state.today[" Wasserbedarf"]<500){ state.today[" Wasserbedarf"]=0; store.save();}
 
     let fzWrapper,uiRoot,tileEls={},extWin=null,cssContent="";
     let animFrameId=null,hideStartTime=null,hideDuration=0,safeHideTimer=null,isHovering=false;
@@ -535,10 +529,8 @@
     function toArray(data){
         if(Array.isArray(data)) return data;
         if(data&&typeof data==="object"){
-            for(const key of Object.keys(data)){
-                if(Array.isArray(data[key])) return data[key];
-            }
-        }
+        for(const key of Object.keys(data)){
+        if(Array.isArray(data[key])) return data[key];}}
         return [];
     }
 
@@ -550,12 +542,8 @@
             const bRes=await fetch("/api/buildings",{credentials:"same-origin"});
             if(bRes.ok){
                 const buildings=await bRes.json();
-                buildings.forEach(b=>{buildingNameCache[b.id]=b.caption||("Wache #"+b.id);});
-                _buildingsFullyLoaded=true;
-            }
-        }catch(e){
-            console.warn("[Bobelle] Gebäude-Fetch fehlgeschlagen:",e);
-        }
+                buildings.forEach(b=>{buildingNameCache[b.id]=b.caption||("Wache #"+b.id);});_buildingsFullyLoaded=true;}
+        }catch(e){console.warn("[Bobelle] Gebäude-Fetch fehlgeschlagen:",e);}
     }
 
     async function fetchSchoolings(){
@@ -806,7 +794,7 @@
     }
 
     function updateCategoryHeaders(){
-        const pV=state.today["Patienten"]||0;
+        const pV=state.today[" Patienten"]||0;
         let kV=0;
         ["KTW","KTW Typ B","ITW","RTH [Christoph 13 (Bielefeld)]","RTH mit Winde","NAW"].forEach(k=>{kV+=(state.today[k]||0);});
 
@@ -821,7 +809,7 @@
             rdB.style.background=bFree<3?"rgba(220,53,69,0.5)":"rgba(40,167,69,0.3)";
         }
 
-        const gef=state.today["Gefangene"]||0;
+        const gef=state.today[" Gefangene"]||0;
         const polG=document.getElementById("fzBadge_POL_Gef");
         if(polG) polG.innerHTML=`${ICONS.prisoner} ${gef}`;
 
@@ -833,15 +821,15 @@
             polZ.style.background=cFree<2?"rgba(220,53,69,0.5)":"rgba(40,167,69,0.3)";
         }
 
-        const wasser=state.today["Wasserbedarf"]||0;
+        const wasser=state.today[" Wasserbedarf"]||0;
         const fwW=document.getElementById("fzBadge_FW_Was");
         if(fwW) fwW.innerHTML=`${ICONS.water} ${wasser.toLocaleString('de-DE')} L`;
 
-        const betr=state.today["Betreuung/Versorgung"]||0;
+        const betr=state.today[" Betreuung/Versorgung"]||0;
         const versB=document.getElementById("fzBadge_Vers_Bet");
         if(versB) versB.innerHTML=`${ICONS.supply} ${betr}`;
 
-        const heli=state.today["Helikopter"]||0;
+        const heli=state.today[" Helikopter"]||0;
         const luftH=document.getElementById("fzBadge_Luft_Heli");
         if(luftH) luftH.innerHTML=`${ICONS.heli} ${heli}`;
 
@@ -1226,45 +1214,45 @@
                 BUILDING_ID_TILE_MAP[vBuildingId].forEach(k => matchedKeys.add(k));
             }
 
-   const oldFms = vehicleStateCache[v.id];
-if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (fms === 3 || fms === 4)){
-    matchedKeys.forEach(k => {
-        if(k === "Wasserbedarf"){
-            const fakEl = { textContent: v.caption || "", title: "", getAttribute: () => "" };
-            const liter = getWasserbedarfLiter(fakEl);
-            if(liter > 0){
-                state.today["Wasserbedarf"] = (state.today["Wasserbedarf"] || 0) + liter;
-                state.total["Wasserbedarf"] = (state.total["Wasserbedarf"] || 0) + liter;
-                state.det["Wasserbedarf"] = state.det["Wasserbedarf"] || {};
-                const dKey = (normalize(v.caption || "wasserbedarf") || "wasserbedarf").slice(0,60);
-                state.det["Wasserbedarf"][dKey] = (state.det["Wasserbedarf"][dKey] || 0) + liter;
-                store.save();
-            }
-            triggerAlarm(k);
-            return;
-        }
-        incrementTileCount(k, null);
-        triggerAlarm(k);
-        const meta = tileMetaByKey[k];
-        if(meta && (meta.cat === "Luft" || meta.cat === "SeenotRett") && (k.includes("RTH") || k.includes("Hubschrauber") || k.includes("SAR Hubschrauber"))){
-            const heliKey = v.id + "_" + k;
-            if(!heliAlreadyCountedThisSession.has(heliKey)){
-                heliAlreadyCountedThisSession.add(heliKey);
-                incrementTileCount("Helikopter", null);
-            }
-        }
-    });
+            const oldFms = vehicleStateCache[v.id];
+            if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (fms === 3 || fms === 4)){
+                matchedKeys.forEach(k => {
+                    if(k === " Wasserbedarf"){
+                        const fakEl = { textContent: v.caption || "", title: "", getAttribute: () => "" };
+                        const liter = getWasserbedarfLiter(fakEl);
+                        if(liter > 0){
+                            state.today[" Wasserbedarf"] = (state.today[" Wasserbedarf"] || 0) + liter;
+                            state.total[" Wasserbedarf"] = (state.total[" Wasserbedarf"] || 0) + liter;
+                            state.det[" Wasserbedarf"] = state.det[" Wasserbedarf"] || {};
+                            const dKey = (normalize(v.caption || "wasserbedarf") || "wasserbedarf").slice(0,60);
+                            state.det[" Wasserbedarf"][dKey] = (state.det[" Wasserbedarf"][dKey] || 0) + liter;
+                            store.save();
+                        }
+                        triggerAlarm(k);
+                        return;
+                    }
+                    incrementTileCount(k, null);
+                    triggerAlarm(k);
+                    const meta = tileMetaByKey[k];
+                    if(meta && (meta.cat === "Luft" || meta.cat === "SeenotRett") && (k.includes("RTH") || k.includes("Hubschrauber") || k.includes("SAR Hubschrauber"))){
+                        const heliKey = v.id + "_" + k;
+                        if(!heliAlreadyCountedThisSession.has(heliKey)){
+                            heliAlreadyCountedThisSession.add(heliKey);
+                            incrementTileCount("Helikopter", null);
+                        }
+                    }
+                });
 
-    // NEU: Krankentransporte zählen
-    const KTW_TYPE_IDS = new Set([38, 58, 74, 97]);
-    if(KTW_TYPE_IDS.has(typeId)){
-        const ktpGuardKey = v.id + "_ktp_" + (vehicleStateCache[v.id] || 0);
-        if(!heliAlreadyCountedThisSession.has(ktpGuardKey)){
-            heliAlreadyCountedThisSession.add(ktpGuardKey);
-            incrementTileCount("Krankentransporte", null);
-        }
-    }
-}
+                // NEU: Krankentransporte zählen
+                const KTW_TYPE_IDS = new Set([38, 58, 74, 97]);
+                if(KTW_TYPE_IDS.has(typeId)){
+                    const ktpGuardKey = v.id + "_ktp_" + (vehicleStateCache[v.id] || 0);
+                    if(!heliAlreadyCountedThisSession.has(ktpGuardKey)){
+                        heliAlreadyCountedThisSession.add(ktpGuardKey);
+                        incrementTileCount("Krankentransporte", null);
+                    }
+                }
+            }
 
             vehicleStateCache[v.id] = fms;
 
@@ -1311,7 +1299,7 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
         requestAnimationFrame(() => {
             const pillsContainer = doc.getElementById("fzResourcePills");
             if(pillsContainer){
-                const pat = state.today["Patienten"] || 0;
+                const pat = state.today[" Patienten"] || 0;
                 let ktwCount = 0;
                 ["KTW","KTW Typ B","ITW","RTH [Christoph 13 (Bielefeld)]","RTH mit Winde","NAW"].forEach(k => { ktwCount += (state.today[k] || 0); });
 
@@ -1358,7 +1346,7 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
         });
 
         vehicleExists["Betreuung/Versorgung"] = true;
-        vehicleExists["Helikopter"] = true;
+        vehicleExists[" Helikopter"] = true;
 
         syncDerivedResourceCounts();
 
@@ -1388,30 +1376,27 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
     }
 
     function syncDerivedResourceCounts(){
-        state.today["Krankenhausbetten"] = cachedCapacities.bedsUsed || 0;
-        vehicleExists["Krankenhausbetten"] = true;
-        vehicleAvailability["Krankenhausbetten"] = (cachedCapacities.beds || 0) > 0;
-        vehicleTotalCount["Krankenhausbetten"] = cachedCapacities.beds || 0;
-        vehicleInUseCount["Krankenhausbetten"] = cachedCapacities.bedsUsed || 0;
-        vehicleFreeCount["Krankenhausbetten"] = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
+        state.today[" Krankenhausbetten"] = cachedCapacities.bedsUsed || 0;
+        vehicleExists[" Krankenhausbetten"] = true;
+        vehicleAvailability[" Krankenhausbetten"] = (cachedCapacities.beds || 0) > 0;
+        vehicleTotalCount[" Krankenhausbetten"] = cachedCapacities.beds || 0;
+        vehicleInUseCount[" Krankenhausbetten"] = cachedCapacities.bedsUsed || 0;
+        vehicleFreeCount[" Krankenhausbetten"] = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
+        vehicleExists[" Patienten"] = true;
+        vehicleAvailability[" Patienten"] = (cachedCapacities.beds || 0) > 0;
+        vehicleTotalCount[" Patienten"] = cachedCapacities.beds || 0;
+        vehicleInUseCount[" Patienten"] = cachedCapacities.bedsUsed || 0;
+        vehicleFreeCount[" Patienten"] = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
+        state.today[" Patienten"] = Math.max(Number(state.today[" Patienten"] || 0), Number(cachedCapacities.bedsUsed || 0));
 
-        vehicleExists["Patienten"] = true;
-        vehicleAvailability["Patienten"] = (cachedCapacities.beds || 0) > 0;
-        vehicleTotalCount["Patienten"] = cachedCapacities.beds || 0;
-        vehicleInUseCount["Patienten"] = cachedCapacities.bedsUsed || 0;
-        vehicleFreeCount["Patienten"] = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
-        state.today["Patienten"] = Math.max(Number(state.today["Patienten"] || 0), Number(cachedCapacities.bedsUsed || 0));
-
-        const prisonerValue = Math.max(Number(state.today["Gefangene"] || 0), Number(cachedCapacities.cellsUsed || 0));
-        state.today["Gefangene"] = prisonerValue;
-        state.today["Gefängniszellen"] = prisonerValue;
-
-        vehicleExists["Gefangene"] = true;
-        vehicleAvailability["Gefangene"] = (cachedCapacities.cells || 0) > 0;
-        vehicleTotalCount["Gefangene"] = cachedCapacities.cells || 0;
-        vehicleInUseCount["Gefangene"] = prisonerValue;
-        vehicleFreeCount["Gefangene"] = Math.max(0, (cachedCapacities.cells || 0) - prisonerValue);
-
+        const prisonerValue = Math.max(Number(state.today[" Gefangene"] || 0), Number(cachedCapacities.cellsUsed || 0));
+        state.today[" Gefangene"] = prisonerValue;
+        state.today[" Gefängniszellen"] = prisonerValue;
+        vehicleExists[" Gefangene"] = true;
+        vehicleAvailability[" Gefangene"] = (cachedCapacities.cells || 0) > 0;
+        vehicleTotalCount[" Gefangene"] = cachedCapacities.cells || 0;
+        vehicleInUseCount[" Gefangene"] = prisonerValue;
+        vehicleFreeCount[" Gefangene"] = Math.max(0, (cachedCapacities.cells || 0) - prisonerValue);
         vehicleExists["Gefängniszellen"] = true;
         vehicleAvailability["Gefängniszellen"] = (cachedCapacities.cells || 0) > 0;
         vehicleTotalCount["Gefängniszellen"] = cachedCapacities.cells || 0;
@@ -1661,8 +1646,8 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
                 } else if(key === "Krankenhausbetten"){
                     const frei = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
                     txt = `${frei} frei`;
-                } else if(key === "Gefängniszellen"){
-                    const freiZ = Math.max(0, (cachedCapacities.cells || 0) - (state.today["Gefangene"] || 0));
+                } else if(key === " Gefängniszellen"){
+                    const freiZ = Math.max(0, (cachedCapacities.cells || 0) - (state.today[" Gefangene"] || 0));
                     txt = `${freiZ} frei`;
                 } else if(rMode === "all" || rMode === "waterOnly"){
                     if(COUNTED_RESOURCE_KEYS.has(key)) txt = "";
@@ -1695,10 +1680,10 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
             let pct = 0;
             if(total > 0) pct = Math.min(100, Math.round((inUse / total) * 100));
             else if(isResource){
-                if((key === "Patienten" || key === "Krankenhausbetten") && cachedCapacities.beds > 0)
+                if((key === " Patienten" || key === " Krankenhausbetten") && cachedCapacities.beds > 0)
                     pct = Math.min(100, Math.round(((cachedCapacities.bedsUsed || 0) / cachedCapacities.beds) * 100));
-                else if((key === "Gefangene" || key === "Gefängniszellen") && cachedCapacities.cells > 0)
-                    pct = Math.min(100, Math.round(((state.today["Gefangene"] || 0) / cachedCapacities.cells) * 100));
+                else if((key === " Gefangene" || key === " Gefängniszellen") && cachedCapacities.cells > 0)
+                    pct = Math.min(100, Math.round(((state.today[" Gefangene"] || 0) / cachedCapacities.cells) * 100));
             }
             cached.bottomBar.style.width = pct + "%";
         }
@@ -1727,7 +1712,7 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
                     const col = frei < 3 ? "#dc3545" : frei < 10 ? "#f0ad4e" : "#109010";
                     cached.badgeSlot.innerHTML = `<span class="fzBadge" style="background:${col}">Belegt: ${cachedCapacities.bedsUsed || 0} | Frei: ${frei} | Ges: ${cachedCapacities.beds || 0}</span>`;
                 } else if(key === "Gefängniszellen"){
-                    const belegteZ = state.today["Gefangene"] || 0;
+                    const belegteZ = state.today[" Gefangene"] || 0;
                     const freiZ = Math.max(0, (cachedCapacities.cells || 0) - belegteZ);
                     const colZ = freiZ < 2 ? "#dc3545" : freiZ < 5 ? "#f0ad4e" : "#109010";
                     cached.badgeSlot.innerHTML = `<span class="fzBadge" style="background:${colZ}">Belegt: ${belegteZ} | Frei: ${freiZ} | Ges: ${cachedCapacities.cells || 0}</span>`;
@@ -1735,8 +1720,8 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
                     const freiB = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
                     const colP = freiB < 3 ? "#dc3545" : freiB < 10 ? "#f0ad4e" : "#109010";
                     cached.badgeSlot.innerHTML = `<span class="fzBadge" style="background:${colP}">Heute: ${v} | Betten frei: ${freiB}/${cachedCapacities.beds || 0}</span>`;
-                } else if(key === "Gefangene"){
-                    const freiZ2 = Math.max(0, (cachedCapacities.cells || 0) - (state.today["Gefangene"] || 0));
+                } else if(key === " Gefangene"){
+                    const freiZ2 = Math.max(0, (cachedCapacities.cells || 0) - (state.today[" Gefangene"] || 0));
                     const colG = freiZ2 < 2 ? "#dc3545" : freiZ2 < 5 ? "#f0ad4e" : "#109010";
                     cached.badgeSlot.innerHTML = `<span class="fzBadge" style="background:${colG}">Heute: ${v} | Zellen frei: ${freiZ2}/${cachedCapacities.cells || 0}</span>`;
                 } else if(key === "Wasserbedarf"){
@@ -1782,8 +1767,8 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
             if(key === "Patienten" || key === "Krankenhausbetten"){
                 const frei = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
                 dotColor = frei < 3 ? "#dc3545" : frei < 10 ? "#f0ad4e" : "#5cb85c";
-            } else if(key === "Gefangene" || key === "Gefängniszellen"){
-                const freiZ = Math.max(0, (cachedCapacities.cells || 0) - (state.today["Gefangene"] || 0));
+            } else if(key === " Gefangene" || key === "Gefängniszellen"){
+                const freiZ = Math.max(0, (cachedCapacities.cells || 0) - (state.today[" Gefangene"] || 0));
                 dotColor = freiZ < 2 ? "#dc3545" : freiZ < 5 ? "#f0ad4e" : "#5cb85c";
             } else if(key === "Wasserbedarf"){
                 dotColor = v > 0 ? "#f0ad4e" : "#5cb85c";
@@ -1902,7 +1887,7 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
                 const frei = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
                 ol.innerHTML = `<div class="fzModal" style="max-width:420px;"><h3>🏥 Krankenhausbetten</h3><div class="fzModalStats"><div class="fzStatBox"><div class="fzStatVal" style="color:#dc3545;">${cachedCapacities.bedsUsed || 0}</div><div class="fzStatLbl">Belegt</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#28a745;">${frei}</div><div class="fzStatLbl">Frei</div></div><div class="fzStatBox"><div class="fzStatVal">${cachedCapacities.beds || 0}</div><div class="fzStatLbl">Gesamt</div></div></div><button class="fzBtn" style="margin-top:15px;width:100%" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button></div>`;
             } else {
-                const belegteZ = state.today["Gefangene"] || 0;
+                const belegteZ = state.today[" Gefangene"] || 0;
                 const freiZ = Math.max(0, (cachedCapacities.cells || 0) - belegteZ);
                 ol.innerHTML = `<div class="fzModal" style="max-width:420px;"><h3>🔒 Gefängniszellen</h3><div class="fzModalStats"><div class="fzStatBox"><div class="fzStatVal" style="color:#dc3545;">${belegteZ}</div><div class="fzStatLbl">Belegt</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#28a745;">${freiZ}</div><div class="fzStatLbl">Frei</div></div><div class="fzStatBox"><div class="fzStatVal">${cachedCapacities.cells || 0}</div><div class="fzStatLbl">Gesamt</div></div></div><button class="fzBtn" style="margin-top:15px;width:100%" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button></div>`;
             }
@@ -2864,7 +2849,7 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
                         });
                     },300);
                 } else if(/\/patients?\/\d+\/ambulances?\/\d+/.test(u) || /\/transports?\/\d+/.test(u)){
-                    setTimeout(() => incrementTileCount("Krankentransporte",null),150);
+                    setTimeout(() => incrementTileCount("Krankentransporte",null),50);
                 } else if(/\/prisoners?\/\d+\/cells?\/\d+/.test(u) || /\/prisoners?\/.*\/cell/.test(u)){
                     setTimeout(() => {
                         incrementTileCount("Gefangene",null);
@@ -2899,7 +2884,7 @@ if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (
                         });
                     },300);
                 } else if(/\/patients?\/\d+\/ambulances?\/\d+/.test(u) || /\/transports?\/\d+/.test(u)){
-                    setTimeout(() => incrementTileCount("Krankentransporte",null),150);
+                    setTimeout(() => incrementTileCount("Krankentransporte",null),50);
                 } else if(/\/prisoners?\/\d+\/cells?\/\d+/.test(u) || /\/prisoners?\/.*\/cell/.test(u)){
                     setTimeout(() => {
                         incrementTileCount("Gefangene",null);
