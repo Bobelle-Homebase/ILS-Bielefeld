@@ -71,9 +71,9 @@
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
 
-        { n:"LF 20", id:0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
-        { n:"HLF 20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
-        { n:"DLK 23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
+        { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
+        { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
+        { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
         { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"TLF", id:[17,18,87], c:C_FW, cat:"FW", s:["tlf"]},
