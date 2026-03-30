@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.13
+// @version      v1.0.14
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -165,7 +165,7 @@
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
 
         { n:"Schmutzwasserpumpen", id:101, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
-        { n:"Feuerlöschpumpen", id:[17,18,87], c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg","tlf"]},
+        { n:"Feuerlöschpumpen", id:[17,18,87], c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
@@ -263,7 +263,7 @@
         { n:"Gefängniszellen", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Wasserbedarf", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Betreuung/Versorgung", id:[130,131,133], c:"#5a5a5a", cat:"Ressourcen", s:["bt-kombi","gw-bt","bt lkw"]},
-        { n:"Krankentransporte", id:[], c:"#5a5a5a", cat:"Ressourcen", s:["ktw"]},
+        { n:"Krankentransporte", id:[38,58], c:"#5a5a5a", cat:"Ressourcen", s:["ktw"]},
         { n:"Helikopter", id:[31,157,61,156,161], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Meine DJI Mini 4k (Pilot Bobelle)", id:[127,125], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"FG Zugtrupp", id:[40], c:"#5a5a5a", cat:"Ressourcen", s:[]},
@@ -363,7 +363,6 @@
             const ids = Array.isArray(tile.id) ? tile.id : [tile.id];
             ids.forEach(i => {
                 if (!i && i !== 0) return;
-                if (i === 0) return;
                 if (!TYPE_ID_MAPPING[i]) TYPE_ID_MAPPING[i] = [];
                 TYPE_ID_MAPPING[i].push(tile.n);
             });
@@ -419,6 +418,7 @@
     let saveTimeout=null;
     const alarmTimers={};
     const heliAlreadyCountedThisSession=new Set();
+    const ktpAlreadyCountedThisSession=new Set();
 
     let schoolingsData=[];
     let buildingNameCache={};
@@ -529,8 +529,8 @@
     function toArray(data){
         if(Array.isArray(data)) return data;
         if(data&&typeof data==="object"){
-        for(const key of Object.keys(data)){
-        if(Array.isArray(data[key])) return data[key];}}
+            for(const key of Object.keys(data)){
+                if(Array.isArray(data[key])) return data[key];}}
         return [];
     }
 
@@ -738,6 +738,7 @@
                 currentState.det={};
             }
             heliAlreadyCountedThisSession.clear();
+            ktpAlreadyCountedThisSession.clear();
             return true;
         }
         return false;
@@ -1043,7 +1044,7 @@
                         }
                     }
                 }
-
+                // Fallback: Textbasierte Fahrzeugtyp-Erkennung
                 if(!idMatched){
                     const cacheKey=vNameCustom+"|"+vNameType;
                     if(nameCache[cacheKey]){
@@ -1068,23 +1069,14 @@
                 if(typeId===32){
                     matchedKeys.delete("FuStW"); matchedKeys.delete("FuStW (DGL)");
                     matchedKeys.delete("Zivilstreifenwagen"); matchedKeys.delete("LauKw"); matchedKeys.delete("LeBefKw");
-                    if(vNameCustom.includes("dgl")) matchedKeys.add("FuStW (DGL)");
-                    else if(vNameCustom.includes("zivil")) matchedKeys.add("Zivilstreifenwagen");
-                    else if(vNameCustom.includes("laukw") || vNameCustom.includes("laut")) matchedKeys.add("LauKw");
-                    else if(vNameCustom.includes("lebef")) matchedKeys.add("LeBefKw");
-                    else matchedKeys.add("FuStW");
+                    matchedKeys.add("FuStW");
                 }
 
                 if(typeId===50){
                     matchedKeys.delete("GruKw"); matchedKeys.delete("Zugfahrzeug Pferdetransport");
                     matchedKeys.delete("Pferdetransporter klein"); matchedKeys.delete("Pferdetransporter groß");
                     matchedKeys.delete("Anh Pferdetransport");
-                    if(vNameCustom.includes("pferd") || vNameCustom.includes("anh")){
-                        if(vNameCustom.includes("anh")) matchedKeys.add("Anh Pferdetransport");
-                        else if(vNameCustom.includes("klein") || vNameCustom.includes(" k ")) matchedKeys.add("Pferdetransporter klein");
-                        else if(vNameCustom.includes("groß") || vNameCustom.includes(" g ")) matchedKeys.add("Pferdetransporter groß");
-                        else matchedKeys.add("Zugfahrzeug Pferdetransport");
-                    } else matchedKeys.add("GruKw");
+                    matchedKeys.add("GruKw");
                 }
 
                 if(typeId===31){
@@ -1099,9 +1091,7 @@
 
                 if(typeId===91){
                     matchedKeys.delete("GW-San"); matchedKeys.delete("Rettungshundefahrzeug"); matchedKeys.delete("Hundestaffel (Bergrettung)");
-                    if(vNameCustom.includes("hund") && (vNameCustom.includes("berg") || vNameCustom.includes("br"))) matchedKeys.add("Hundestaffel (Bergrettung)");
-                    else if(vNameCustom.includes("hund") || vNameCustom.includes("rhs")) matchedKeys.add("Rettungshundefahrzeug");
-                    else matchedKeys.add("GW-San");
+                    matchedKeys.add("Rettungshundefahrzeug");
                 }
 
                 if(typeId===126){
@@ -1111,14 +1101,12 @@
 
                 if(typeId===140){
                     matchedKeys.delete("MTW-V"); matchedKeys.delete("MTW-TeSi");
-                    if(vNameCustom.includes("tesi") || vNameCustom.includes("te-si") || vNameType.includes("tesi")) matchedKeys.add("MTW-TeSi");
-                    else matchedKeys.add("MTW-V");
+                    matchedKeys.add("MTW-V");
                 }
 
                 if(typeId===93){
-                    matchedKeys.delete("MTW-OV"); matchedKeys.delete("KTW Typ B"); matchedKeys.delete("OV Mannschaftstransportwagen");
-                    matchedKeys.add("MTW-OV");
-                    matchedKeys.add("OV Mannschaftstransportwagen");
+                    matchedKeys.delete("MTW-O"); matchedKeys.delete("MTW-OV"); matchedKeys.delete("KTW Typ B"); matchedKeys.delete("OV Mannschaftstransportwagen");
+                    matchedKeys.add("MTW-O");
                 }
 
                 if(typeId===58){
@@ -1133,10 +1121,7 @@
 
                 if(typeId===100){
                     matchedKeys.delete("FüKW (THW)"); matchedKeys.delete("MLW 4"); matchedKeys.delete("FüKomKW");
-                    if(vNameCustom.includes("fükomkw") || vNameType.includes("fükomkw")) matchedKeys.add("FüKomKW");
-                    else if(vNameCustom.includes("fükw") || vNameType.includes("fükw")) matchedKeys.add("FüKW (THW)");
-                    else if(vNameCustom.includes("mlw4") || vNameCustom.includes("mlw 4") || vNameType.includes("mlw 4")) matchedKeys.add("MLW 4");
-                    else matchedKeys.add("FüKW (THW)");
+                    matchedKeys.add("MLW 4");
                 }
 
                 if(typeId===132){
@@ -1247,8 +1232,8 @@
                 const KTW_TYPE_IDS = new Set([38, 58, 74, 97]);
                 if(KTW_TYPE_IDS.has(typeId)){
                     const ktpGuardKey = v.id + "_ktp_" + (vehicleStateCache[v.id] || 0);
-                    if(!heliAlreadyCountedThisSession.has(ktpGuardKey)){
-                        heliAlreadyCountedThisSession.add(ktpGuardKey);
+                    if(!ktpAlreadyCountedThisSession.has(ktpGuardKey)){
+                        ktpAlreadyCountedThisSession.add(ktpGuardKey);
                         incrementTileCount("Krankentransporte", null);
                     }
                 }
@@ -1677,14 +1662,14 @@
                 }
             }
         }
-
+        // Statusbalken (In-Use Prozentanteil) aktualisieren
         if(cached.bottomBar){
             let pct = 0;
             if(total > 0) pct = Math.min(100, Math.round((inUse / total) * 100));
             else if(isResource){
                 if((key === "Patienten" || key === "Krankenhausbetten") && cachedCapacities.beds > 0)
                     pct = Math.min(100, Math.round(((cachedCapacities.bedsUsed || 0) / cachedCapacities.beds) * 100));
-                else if((key === " Gefangene" || key === "Gefängniszellen") && cachedCapacities.cells > 0)
+                else if((key === "Gefangene" || key === "Gefängniszellen") && cachedCapacities.cells > 0)
                     pct = Math.min(100, Math.round(((state.today["Gefangene"] || 0) / cachedCapacities.cells) * 100));
             }
             cached.bottomBar.style.width = pct + "%";
@@ -2687,10 +2672,10 @@
 
         if(typeof sap !== 'undefined' && sap.audio_play){
             const statusDot = getTargetDoc().getElementById("fzAPIStatus");
-if(statusDot) {
-  statusDot.style.background = sysReady ? "#5cb85c" : "#dc3545";
-  statusDot.title = sysReady ? "API OK" : "API offline";
-}
+            if(statusDot) {
+                statusDot.style.background = sysReady ? "#5cb85c" : "#dc3545";
+                statusDot.title = sysReady ? "API OK" : "API offline";
+            }
 
             const originalAudioPlay = sap.audio_play;
             let apiDebounce = null;
@@ -2921,4 +2906,6 @@ if(statusDot) {
         },500);
     }
 })();
+
+
 
