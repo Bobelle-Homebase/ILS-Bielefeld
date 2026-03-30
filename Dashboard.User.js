@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.14
+// @version      v1.0.15
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -24,15 +24,18 @@
     console.log("Bobelle Dashboard v2.3-FullFix: Start...");
 
     const VEHICLE_MATCH_CACHE = {
-        _map: new Map(), _max: 2000,
+        _map: new Map(), _max: 5000,
         get(key) { return this._map.get(key); },
         set(key, val) {
-            if (this._map.size >= this._max) this._map.delete(this._map.keys().next().value);
+            if (this._map.size >= this._max) {
+                const iter = this._map.keys();
+                for(let i = 0; i < 100; i++) this._map.delete(iter.next().value);
+            }
             this._map.set(key, val);
         }
     };
     const CFG = { zIndex: 99999 };
-    const DEBOUNCE_TIME = 150;
+    const DEBOUNCE_TIME = 100;
 
     const ICONS = {
         patient: "👨‍⚕️", prisoner: "👮", alarm: "🚨", ktp: "🚑", supply: "🥘",
@@ -298,7 +301,7 @@
 
     const DEFAULTS = {
         columns:4, autoHideSeconds:30, clickIncrement:1, compactMode:false,
-        winMaxHeight:750, winTop:60, winBg:"#f8f9fa", winBorderC:"#e9ecef", winBorderW:1, winRadius:0,
+        winMaxHeight:700, winTop:60, winBg:"#f8f9fa", winBorderC:"#e9ecef", winBorderW:1, winRadius:0,
         headBg:"#e9ecef", headColor:"#343a40", headSize:15, headAlign:"left",
         logoSize:35, logoUrl:"https://feuerwehr-bielefeld.de/wp-content/uploads/2019/05/cropped-Feuerwehr-Bielefeld-Logo-1.png",
         catHeaderMode:"category", catHeaderBgColor:"#000000", catHeaderTextColor:"#ffffff",
@@ -328,7 +331,7 @@
         tileStatsMode:"both", tileBarReference:"yday", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized by Bobelle", footerColor:"#1e90ff", footerSize:9, footerAlign:"center",
+        footerText:"Design & Optimized by Bobelle v1.0.14", footerColor:"#1e90ff", footerSize:9, footerAlign:"center",
         schoolingApiInterval:120,
         tileImgSize:38, tileImgAlign:"right"
     };
@@ -515,7 +518,7 @@
         det:json.load(STORAGE.DETAILS_TODAY,{})};
     if(state.today["Wasserbedarf"]&&state.today["Wasserbedarf"]<500){ state.today["Wasserbedarf"]=0; store.save();}
 
-    let fzWrapper,uiRoot,tileEls={},extWin=null,cssContent="";
+    let fzWrapper,uiRoot,tileEls={},extWin=null,cssContent="",lastCSSHash="";
     let animFrameId=null,hideStartTime=null,hideDuration=0,safeHideTimer=null,isHovering=false;
     let redrawGrid=()=>{};
     let cachedCapacities={beds:0,cells:0,bedsUsed:0,cellsUsed:0};
@@ -523,7 +526,11 @@
 
     function _setEl(id,html){
         const el=document.getElementById(id);
-        if(el&&el.innerHTML!==html) el.innerHTML=html;
+        if(el && el.innerHTML!==html){
+            el.innerHTML=html;
+            return true;
+        }
+        return false;
     }
 
     function toArray(data){
@@ -535,15 +542,17 @@
     }
 
     async function ensureBuildingNames(buildingIds){
-        if(_buildingsFullyLoaded) return;
-        const missingIds=buildingIds.filter(id=>!buildingNameCache[id]);
-        if(missingIds.length===0) return;
+        if(_buildingsFullyLoaded || buildingIds.length === 0) return;
+        const missingIds = buildingIds.filter(id => !buildingNameCache[id]);
+        if(missingIds.length === 0) return;
         try{
-            const bRes=await fetch("/api/buildings",{credentials:"same-origin"});
+            const bRes = await fetch("/api/buildings", {credentials: "same-origin"});
             if(bRes.ok){
-                const buildings=await bRes.json();
-                buildings.forEach(b=>{buildingNameCache[b.id]=b.caption||("Wache #"+b.id);});_buildingsFullyLoaded=true;}
-        }catch(e){console.warn("[Bobelle] Gebäude-Fetch fehlgeschlagen:",e);}
+                const buildings = await bRes.json();
+                buildings.forEach(b => { buildingNameCache[b.id] = b.caption || ("Wache #" + b.id); });
+                _buildingsFullyLoaded = true;
+            }
+        }catch(e){ console.warn("[Bobelle] Gebäude-Fetch fehlgeschlagen:", e); }
     }
 
     async function fetchSchoolings(){
@@ -794,84 +803,95 @@
         if(statsEl) statsEl.innerHTML=getMissionStatsHTML();
     }
 
+    let _cachedHeaderElements = {};
+
     function updateCategoryHeaders(){
-        const pV=state.today[" Patienten"]||0;
-        let kV=0;
-        ["KTW","KTW Typ B","ITW","RTH [Christoph 13 (Bielefeld)]","RTH mit Winde","NAW"].forEach(k=>{kV+=(state.today[k]||0);});
+        const pV = state.today[" Patienten"] || 0;
+        let kV = 0;
+        ["KTW","KTW Typ B","ITW","RTH [Christoph 13 (Bielefeld)]","RTH mit Winde","NAW"].forEach(k => { kV += (state.today[k] || 0); });
 
-        _setEl("fzBadge_RD_Pat",`${ICONS.patient} ${pV}`);
-        _setEl("fzBadge_RD_KTW",`${ICONS.ktp} ${kV}`);
+        _setEl("fzBadge_RD_Pat", `${ICONS.patient} ${pV}`);
+        _setEl("fzBadge_RD_KTW", `${ICONS.ktp} ${kV}`);
 
-        const beds=cachedCapacities.beds||0, bedsUsed=cachedCapacities.bedsUsed||0;
-        const rdB=document.getElementById("fzBadge_RD_Betten");
+        const beds = cachedCapacities.beds || 0, bedsUsed = cachedCapacities.bedsUsed || 0;
+        const rdB = _cachedHeaderElements.bed || document.getElementById("fzBadge_RD_Betten");
         if(rdB){
-            const bFree=Math.max(0,beds-bedsUsed);
-            rdB.innerHTML=`🏥 ${bFree}/${beds}`;
-            rdB.style.background=bFree<3?"rgba(220,53,69,0.5)":"rgba(40,167,69,0.3)";
+            _cachedHeaderElements.bed = rdB;
+            const bFree = Math.max(0, beds - bedsUsed);
+            const newHTML = `🏥 ${bFree}/${beds}`;
+            if(rdB.innerHTML !== newHTML) {
+                rdB.innerHTML = newHTML;
+                rdB.style.background = bFree < 3 ? "rgba(220,53,69,0.5)" : "rgba(40,167,69,0.3)";
+            }
         }
 
-        const gef=state.today["Gefangene"]||0;
-        const polG=document.getElementById("fzBadge_POL_Gef");
-        if(polG) polG.innerHTML=`${ICONS.prisoner} ${gef}`;
+        const gef = state.today["Gefangene"] || 0;
+        _setEl("fzBadge_POL_Gef", `${ICONS.prisoner} ${gef}`);
 
-        const cells=cachedCapacities.cells||0;
-        const polZ=document.getElementById("fzBadge_POL_Zellen");
+        const cells = cachedCapacities.cells || 0;
+        const polZ = _cachedHeaderElements.cells || document.getElementById("fzBadge_POL_Zellen");
         if(polZ){
-            const cFree=Math.max(0,cells-gef);
-            polZ.innerHTML=`🔒 ${cFree}/${cells}`;
-            polZ.style.background=cFree<2?"rgba(220,53,69,0.5)":"rgba(40,167,69,0.3)";
+            _cachedHeaderElements.cells = polZ;
+            const cFree = Math.max(0, cells - gef);
+            const newHTML = `🔒 ${cFree}/${cells}`;
+            if(polZ.innerHTML !== newHTML) {
+                polZ.innerHTML = newHTML;
+                polZ.style.background = cFree < 2 ? "rgba(220,53,69,0.5)" : "rgba(40,167,69,0.3)";
+            }
         }
 
-        const wasser=state.today["Wasserbedarf"]||0;
-        const fwW=document.getElementById("fzBadge_FW_Was");
-        if(fwW) fwW.innerHTML=`${ICONS.water} ${wasser.toLocaleString('de-DE')} L`;
+        const wasser = state.today["Wasserbedarf"] || 0;
+        _setEl("fzBadge_FW_Was", `${ICONS.water} ${wasser.toLocaleString('de-DE')} L`);
 
-        const betr=state.today["Betreuung/Versorgung"]||0;
-        const versB=document.getElementById("fzBadge_Vers_Bet");
-        if(versB) versB.innerHTML=`${ICONS.supply} ${betr}`;
+        const betr = state.today["Betreuung/Versorgung"] || 0;
+        _setEl("fzBadge_Vers_Bet", `${ICONS.supply} ${betr}`);
 
-        const heli=state.today["Helikopter"]||0;
-        const luftH=document.getElementById("fzBadge_Luft_Heli");
-        if(luftH) luftH.innerHTML=`${ICONS.heli} ${heli}`;
+        const heli = state.today["Helikopter"] || 0;
+        _setEl("fzBadge_Luft_Heli", `${ICONS.heli} ${heli}`);
 
-        const schCount=schoolingsData.filter(s=>!s.finishAt||s.finishAt>Date.now()).length;
-        const ausB=document.getElementById("fzBadge_Aus_Count");
-        if(ausB) ausB.innerHTML=`${ICONS.school} ${schCount}`;
+        const schCount = schoolingsData.filter(s => !s.finishAt || s.finishAt > Date.now()).length;
+        _setEl("fzBadge_Aus_Count", `${ICONS.school} ${schCount}`);
 
-        CATEGORY_ORDER.forEach(cat=>{
-            const el=document.getElementById("fzBadge_Util_"+cat);
+        CATEGORY_ORDER.forEach(cat => {
+            const el = _cachedHeaderElements[cat + "_util"] || document.getElementById("fzBadge_Util_" + cat);
             if(!el) return;
-            const catKeys=CAT_VEHICLE_MAP[cat]||[];
-            let total=0,busy=0;
-            catKeys.forEach(t=>{
-                total+=(vehicleTotalCount[t.n]||0);
-                busy+=(vehicleInUseCount[t.n]||0);
+            _cachedHeaderElements[cat + "_util"] = el;
+            
+            const catKeys = CAT_VEHICLE_MAP[cat] || [];
+            let total = 0, busy = 0;
+            catKeys.forEach(t => {
+                total += (vehicleTotalCount[t.n] || 0);
+                busy += (vehicleInUseCount[t.n] || 0);
             });
-            if(total===0){ el.style.display="none"; return; }
-            const pct=Math.round((busy/total)*100);
-            el.style.display="inline-flex";
-            el.innerHTML=`${pct}%`;
-            el.style.background=pct>=80?"rgba(220,53,69,0.6)":pct>=50?"rgba(255,193,7,0.5)":"rgba(40,167,69,0.35)";
+            
+            if(total === 0){ el.style.display = "none"; return; }
+            const pct = Math.round((busy / total) * 100);
+            el.style.display = "inline-flex";
+            el.innerHTML = `${pct}%`;
+            el.style.background = pct >= 80 ? "rgba(220,53,69,0.6)" : pct >= 50 ? "rgba(255,193,7,0.5)" : "rgba(40,167,69,0.35)";
         });
 
-        CATEGORY_ORDER.forEach(cat=>{
-            const el=document.getElementById("fzBadge_LastAlarm_"+cat);
+        CATEGORY_ORDER.forEach(cat => {
+            const el = _cachedHeaderElements[cat + "_alarm"] || document.getElementById("fzBadge_LastAlarm_" + cat);
             if(!el) return;
-            const catKeys=(CAT_TILE_MAP[cat]||[]).map(t=>t.n);
-            let latestTime=null,latestKey=null;
-            catKeys.forEach(k=>{
+            _cachedHeaderElements[cat + "_alarm"] = el;
+            
+            const catKeys = (CAT_TILE_MAP[cat] || []).map(t => t.n);
+            let latestTime = null, latestKey = null;
+            catKeys.forEach(k => {
                 if(lastAlarmTime[k]){
-                    if(!latestTime||lastAlarmTime[k]>latestTime){
-                        latestTime=lastAlarmTime[k];
-                        latestKey=k;
+                    if(!latestTime || lastAlarmTime[k] > latestTime){
+                        latestTime = lastAlarmTime[k];
+                        latestKey = k;
                     }
                 }
             });
+            
             if(latestTime){
-                el.style.display="inline-flex";
-                el.innerHTML=`🚨 ${latestTime}`;
-                el.title=latestKey||"";
-            } else el.style.display="none";
+                el.style.display = "inline-flex";
+                el.innerHTML = `🚨 ${latestTime}`;
+                el.title = latestKey || "";
+            } else el.style.display = "none";
         });
     }
 
@@ -1453,12 +1473,16 @@
 
     function startApiLoop(){
         if(apiTimer) clearInterval(apiTimer);
-        apiTimer = setInterval(updateAvailability, Math.max(30, uiSettings.apiInterval || 120) * 1000);
+        const interval = Math.max(30, uiSettings.apiInterval || 120) * 1000;
+        apiTimer = setInterval(updateAvailability, interval);
+        updateAvailability();
     }
 
     function startSchoolingLoop(){
         if(schoolingTimer) clearInterval(schoolingTimer);
-        schoolingTimer = setInterval(fetchSchoolings, Math.max(60, uiSettings.schoolingApiInterval || 120) * 1000);
+        const interval = Math.max(60, uiSettings.schoolingApiInterval || 120) * 1000;
+        schoolingTimer = setInterval(fetchSchoolings, interval);
+        fetchSchoolings();
     }
 
     function prepareCSSString(){
@@ -1584,7 +1608,12 @@
     }
 
     function updateStyles(){
-        cssContent = prepareCSSString();
+        const newCSS = prepareCSSString();
+        const newHash = newCSS.length + newCSS.substring(0, 100);
+        if(newHash === lastCSSHash) return;
+        
+        lastCSSHash = newHash;
+        cssContent = newCSS;
         let s = document.getElementById("fzStyles");
         if(s) s.textContent = cssContent;
         if(extWin && !extWin.closed){
@@ -2702,59 +2731,42 @@
         updateSubHeaderInfo();
     }
 
-    document.addEventListener("click",(e) => {
-        const activeEl = e.target.closest(
-            "a[href],button,.vehicle_dispatch_button,.alarm_button,form button[type='submit']," +
-            "[data-mission-id],[data-method],[data-confirm]"
-        );
+    const CLICK_PATTERNS = [
+        {
+            test: (url, text) => /\/patients?\/\d+\/hospitals?\/\d+/.test(url) || /\/missions\/\d+\/patients?\/\d+\/hospital/.test(url) || text.includes("ins krankenhaus"),
+            action: "Patienten"
+        },
+        {
+            test: (url, text) => /\/patients?\/\d+\/ambulances?\/\d+/.test(url) || /\/transports?\/\d+/.test(url) || text.includes("krankentransport"),
+            action: "Krankentransporte"
+        },
+        {
+            test: (url, text) => /\/prisoners?\/\d+\/cells?\/\d+/.test(url) || /\/missions\/\d+\/prisoners?\/\d+\/cell/.test(url) || text.includes("in zelle"),
+            action: "Gefangene"
+        }
+    ];
+
+    document.addEventListener("click", (e) => {
+        const activeEl = e.target.closest("a[href],button,.vehicle_dispatch_button,.alarm_button,form button[type='submit'],[data-mission-id],[data-method],[data-confirm]");
         if(!activeEl) return;
 
         const text = (activeEl.textContent || activeEl.value || "").trim().toLowerCase();
         const href = (activeEl.getAttribute("href") || "").toLowerCase();
         const formAction = (activeEl.closest("form")?.getAttribute("action") || "").toLowerCase();
         const urlStr = href || formAction;
-        const combinedText = ((activeEl.textContent || "") + " " + (activeEl.value || "")).toLowerCase();
 
-        if(
-            /\/patients?\/\d+\/hospitals?\/\d+/.test(urlStr) ||
-            /\/missions\/\d+\/patients?\/\d+\/hospital/.test(urlStr) ||
-            combinedText.includes("ins krankenhaus") ||
-            combinedText.includes("krankenhaus zuweisen") ||
-            combinedText.includes("patient aufnehmen")
-        ){
-            incrementTileCount("Patienten", activeEl);
-            setTimeout(() => updateBuildingCapacities(true).then(() => {
-                syncDerivedResourceCounts();
-                KEYS.forEach(k => tileEls[k] && updateTile(k, state));
-                updateCategoryHeaders();
-            }), 1000);
-            return;
-        }
-
-        if(
-            /\/patients?\/\d+\/ambulances?\/\d+/.test(urlStr) ||
-            /\/transports?\/\d+/.test(urlStr) ||
-            combinedText.includes("krankentransport") ||
-            combinedText.includes("transport zuweisen")
-        ){
-            incrementTileCount("Krankentransporte", activeEl);
-            return;
-        }
-
-        if(
-            /\/prisoners?\/\d+\/cells?\/\d+/.test(urlStr) ||
-            /\/missions\/\d+\/prisoners?\/\d+\/cell/.test(urlStr) ||
-            combinedText.includes("in zelle") ||
-            combinedText.includes("gefangenen abgeben") ||
-            combinedText.includes("gefangene unterbringen")
-        ){
-            incrementTileCount("Gefangene", activeEl);
-            setTimeout(() => updateBuildingCapacities(true).then(() => {
-                syncDerivedResourceCounts();
-                KEYS.forEach(k => tileEls[k] && updateTile(k, state));
-                updateCategoryHeaders();
-            }), 1000);
-            return;
+        for (const pattern of CLICK_PATTERNS) {
+            if (pattern.test(urlStr, text)) {
+                incrementTileCount(pattern.action, activeEl);
+                if (pattern.action === "Patienten" || pattern.action === "Gefangene") {
+                    setTimeout(() => updateBuildingCapacities(true).then(() => {
+                        syncDerivedResourceCounts();
+                        KEYS.forEach(k => tileEls[k] && updateTile(k, state));
+                        updateCategoryHeaders();
+                    }), 1000);
+                }
+                return;
+            }
         }
 
         if(activeEl.classList.contains("aao_btn") || activeEl.hasAttribute("aao_id")){
@@ -2786,7 +2798,7 @@
         }
 
         if(activeEl.classList.contains("vehicle_dispatch_button") || activeEl.hasAttribute("data-mission-id")){
-            if(text.includes("rth") || text.includes("ith") || text.includes("hubschrauber") || text.includes("sar hubschrauber")){
+            if(text.includes("rth") || text.includes("ith") || text.includes("hubschrauber")){
                 const vId = activeEl.getAttribute("data-vehicle-id") || activeEl.getAttribute("data-id") || null;
                 const guardKey = vId ? (vId + "_heli_click") : null;
                 if(!guardKey || !heliAlreadyCountedThisSession.has(guardKey)){
@@ -2810,102 +2822,79 @@
     setInterval(() => {
         if(document.hidden && !extWin) return;
         if(checkVehicleDayReset(state) && isMainPage){
-            KEYS.forEach(k => updateTile(k,state));
+            KEYS.forEach(k => updateTile(k, state));
             updateAvailability();
         }
-    },5000);
+    }, 10000);
 
     setInterval(() => {
         if(!isMainPage) return;
         state.today = store.load(STORAGE.COUNTS_TODAY);
         state.total = store.load(STORAGE.COUNTS_TOTAL);
         state.yday = store.load(STORAGE.YDAY_COUNTS);
-        state.det = json.load(STORAGE.DETAILS_TODAY,{});
+        state.det = json.load(STORAGE.DETAILS_TODAY, {});
         refreshAllVisibleTiles();
-    },5000);
+    }, 10000);
 
     (function(){
-        const _xhrOpen = XMLHttpRequest.prototype.open;
-        XMLHttpRequest.prototype.open = function(method,url){
-            if(method && (method.toUpperCase() === "PUT" || method.toUpperCase() === "POST") && url){
-                const u = String(url).toLowerCase();
+        const API_HANDLERS = {
+            patient: { pattern: /\/patients?\/.*\/hospitals?/, action: "Patienten", callback: () => updateBuildingCapacities(true).then(() => { syncDerivedResourceCounts(); if(isMainPage) { KEYS.forEach(k => tileEls[k] && updateTile(k, state)); updateCategoryHeaders(); } }) },
+            transit: { pattern: /\/patients?\/.*\/ambulances?|\/transports?/, action: "Krankentransporte" },
+            prisoner: { pattern: /\/prisoners?\/.*\/cells?/, action: "Gefangene", callback: () => updateBuildingCapacities(true).then(() => { syncDerivedResourceCounts(); if(isMainPage) { KEYS.forEach(k => tileEls[k] && updateTile(k, state)); updateCategoryHeaders(); } }) }
+        };
 
-                if(/\/patients?\/\d+\/hospitals?\/\d+/.test(u) || /\/patients?\/.*\/hospital/.test(u)){
+        const handleRequest = (url) => {
+            const u = String(url).toLowerCase();
+            for (const [key, { pattern, action, callback }] of Object.entries(API_HANDLERS)) {
+                if (pattern.test(u)) {
                     setTimeout(() => {
-                        incrementTileCount("Patienten",null);
-                        updateBuildingCapacities(true).then(() => {
-                            syncDerivedResourceCounts();
-                            if(isMainPage){
-                                KEYS.forEach(k => tileEls[k] && updateTile(k,state));
-                                updateCategoryHeaders();
-                            }
-                        });
-                    },300);
-                } else if(/\/patients?\/\d+\/ambulances?\/\d+/.test(u) || /\/transports?\/\d+/.test(u)){
-                    setTimeout(() => incrementTileCount("Krankentransporte",null),150);
-                } else if(/\/prisoners?\/\d+\/cells?\/\d+/.test(u) || /\/prisoners?\/.*\/cell/.test(u)){
-                    setTimeout(() => {
-                        incrementTileCount("Gefangene",null);
-                        updateBuildingCapacities(true).then(() => {
-                            syncDerivedResourceCounts();
-                            if(isMainPage){
-                                KEYS.forEach(k => tileEls[k] && updateTile(k,state));
-                                updateCategoryHeaders();
-                            }
-                        });
-                    },300);
+                        incrementTileCount(action, null);
+                        if (callback) callback();
+                    }, 300);
+                    return;
                 }
             }
-            return _xhrOpen.apply(this,arguments);
+        };
+
+        const _xhrOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function(method, url){
+            if((method || "").toUpperCase() === "PUT" || (method || "").toUpperCase() === "POST") {
+                handleRequest(url);
+            }
+            return _xhrOpen.apply(this, arguments);
         };
 
         const _fetch = window.fetch;
-        window.fetch = function(input,init){
+        window.fetch = function(input, init){
             const method = ((init && init.method) || "GET").toUpperCase();
-            if(method === "PUT" || method === "POST"){
-                const u = String(typeof input === "string" ? input : (input.url || "")).toLowerCase();
-
-                if(/\/patients?\/\d+\/hospitals?\/\d+/.test(u) || /\/patients?\/.*\/hospital/.test(u)){
-                    setTimeout(() => {
-                        incrementTileCount("Patienten",null);
-                        updateBuildingCapacities(true).then(() => {
-                            syncDerivedResourceCounts();
-                            if(isMainPage){
-                                KEYS.forEach(k => tileEls[k] && updateTile(k,state));
-                                updateCategoryHeaders();
-                            }
-                        });
-                    },300);
-                } else if(/\/patients?\/\d+\/ambulances?\/\d+/.test(u) || /\/transports?\/\d+/.test(u)){
-                    setTimeout(() => incrementTileCount("Krankentransporte",null),150);
-                } else if(/\/prisoners?\/\d+\/cells?\/\d+/.test(u) || /\/prisoners?\/.*\/cell/.test(u)){
-                    setTimeout(() => {
-                        incrementTileCount("Gefangene",null);
-                        updateBuildingCapacities(true).then(() => {
-                            syncDerivedResourceCounts();
-                            if(isMainPage){
-                                KEYS.forEach(k => tileEls[k] && updateTile(k,state));
-                                updateCategoryHeaders();
-                            }
-                        });
-                    },300);
-                }
+            if(method === "PUT" || method === "POST") {
+                handleRequest(typeof input === "string" ? input : (input.url || ""));
             }
-            return _fetch.apply(this,arguments);
+            return _fetch.apply(this, arguments);
         };
     })();
 
     if(isMainPage){
-        setTimeout(() => {
-            initUI(state);
-            registerEventListener();
-            updateAvailability();
-            startApiLoop();
-            fetchSchoolings();
-            startSchoolingLoop();
-        },500);
+        if(window.requestIdleCallback){
+            window.requestIdleCallback(() => {
+                initUI(state);
+                registerEventListener();
+            }, { timeout: 3000 });
+        } else {
+            setTimeout(() => {
+                initUI(state);
+                registerEventListener();
+            }, 100);
+        }
+        
+        updateAvailability();
+        startApiLoop();
+        fetchSchoolings();
+        startSchoolingLoop();
     }
 })();
+
+
 
 
 
