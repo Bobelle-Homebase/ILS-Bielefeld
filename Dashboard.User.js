@@ -18,16 +18,10 @@
 (function() {
     'use strict';
  
-    // 1. CSS Styles (z.B. für FIX #12)
-    // GM_addStyle('.navbar-brand { position: fixed; ... }');
+ if (window._bobelleDashboardRunning) return;
+    window._bobelleDashboardRunning = true;
 
-    // 2. Deine Funktionen für die Ressourcen (RES-FIX #1 bis #9)
-    // Hier den Code einfügen, der Patienten/Gefangene aus cachedCapacities liest [4].
-
-    // 3. Deine Fahrzeug-Korrekturen (FIX #1 bis #13)
-    // Hier die ID-Korrekturen für MTF-L (107) oder Anh 12 Lbw (178) einbauen [4, 6].
-
-    console.log("Dashboard Logik geladen!");
+    console.log("Bobelle Dashboard v2.3-FullFix: Start...");
 
     const VEHICLE_MATCH_CACHE = {
         _map: new Map(), _max: 5000,
