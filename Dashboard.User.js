@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.19
+// @version      v1.0.20
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -806,7 +806,7 @@
     let _cachedHeaderElements = {};
 
     function updateCategoryHeaders(){
-        const pV = state.today[" Patienten"] || 0;
+        const pV = state.today["Patienten"] || 0;
         let kV = 0;
         ["KTW","KTW Typ B","ITW","RTH [Christoph 13 (Bielefeld)]","RTH mit Winde","NAW"].forEach(k => { kV += (state.today[k] || 0); });
 
