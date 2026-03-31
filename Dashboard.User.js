@@ -74,7 +74,7 @@
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
         // Fahrzeuge Feuerwehr
-        { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
+        { n:"LF20", id:1, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
         { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
