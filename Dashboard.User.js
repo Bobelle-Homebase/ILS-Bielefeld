@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.21
+// @version      v1.0.22
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -103,6 +103,7 @@
         { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
         { n:"GW-L2", id:[105,11], c:C_FW, cat:"FW", s:["gw-l2"]},
         { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhenrettung","gw-höhen fw"]},
+        { n:"GW-Logistik", id:[108], c:C_FW, cat:"FW", s:["ab-l","gw-logistik"]},
         { n:"AB-Einsatzleitung", id:78, c:C_FW, cat:"FW", s:["ab-einsatz","ab-el"]},
         { n:"AB-Atemschutz", id:48, c:C_FW, cat:"FW", s:["ab-atemschutz"]},
         { n:"AB-Öl", id:49, c:C_FW, cat:"FW", s:["ab-öl"]},
