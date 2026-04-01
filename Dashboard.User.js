@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.20
+// @version      v1.0.21
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -102,7 +102,7 @@
         { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahrgut"]},
         { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
         { n:"GW-L2", id:[105,11], c:C_FW, cat:"FW", s:["gw-l2"]},
-        { n:"GW-Höhenrettung", id:33, c:C_FW, cat:"FW", s:["gw-höhenrettung","gw-höhen fw"]},
+        { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhenrettung","gw-höhen fw"]},
         { n:"AB-Einsatzleitung", id:78, c:C_FW, cat:"FW", s:["ab-einsatz","ab-el"]},
         { n:"AB-Atemschutz", id:48, c:C_FW, cat:"FW", s:["ab-atemschutz"]},
         { n:"AB-Öl", id:49, c:C_FW, cat:"FW", s:["ab-öl"]},
@@ -224,7 +224,7 @@
         // Fahrzeuge Bergrettung
         { n:"ELW Bergrettung", id:151, c:"#B0AC97", cat:"BergRett", s:["elw berg"]},
         { n:"GW-Bergrettung", id:150, c:"#B0AC97", cat:"BergRett", s:["gw-bergrettung","gw-berg"]},
-        { n:"GW-Höhenrettung (Bergrettung)", id:158, c:"#B0AC97", cat:"BergRett", s:["gw-höhen"]},
+        { n:"GW-Höhenrettung (Bergrettung)", id:33, c:"#B0AC97", cat:"BergRett", s:["gw-höhen"]},
         { n:"GW-Bergrettung (NEF)", id:149, c:"#B0AC97", cat:"BergRett", s:["gw-bergnef","gw-berg nef","gw-bergrettung nef"]},
         { n:"ATV", id:152, c:"#B0AC97", cat:"BergRett", s:["atv"]},
         { n:"Schneefahrzeug", id:154, c:"#B0AC97", cat:"BergRett", s:["schnee"]},
