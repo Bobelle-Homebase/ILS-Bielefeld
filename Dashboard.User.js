@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.22
+// @version      v1.0.23
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -69,6 +69,7 @@
     ];
 
     const AAO_TILES_RAW = [
+        // Luftrettung
         { n:"RTH [Christoph 13 (Bielefeld)]", id:31, c:C_LUFT, cat:"Luft", s:["rth"]},
         { n:"RTH mit Winde", id:157, c:C_LUFT, cat:"Luft", s:["rth mit winde"]},
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
