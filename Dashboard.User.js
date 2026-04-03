@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.24
+// @version      v1.0.25
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -12,7 +12,6 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addStyle
-// @run-at       document-idle
 // ==/UserScript==
 
 (function() {
