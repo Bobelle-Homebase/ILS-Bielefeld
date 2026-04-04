@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.28
+// @version      v1.0.29
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -303,7 +303,7 @@
     };
 
     const DEFAULTS = {
-        columns:4, autoHideSeconds:30, clickIncrement:1, compactMode:false,
+        columns:4, autoHideSeconds:5, clickIncrement:1, compactMode:false,
         winMaxHeight:700, winTop:60, winBg:"#f8f9fa", winBorderC:"#e9ecef", winBorderW:1, winRadius:0,
         headBg:"#e9ecef", headColor:"#343a40", headSize:15, headAlign:"left",
         logoSize:35, logoUrl:"https://feuerwehr-bielefeld.de/wp-content/uploads/2019/05/cropped-Feuerwehr-Bielefeld-Logo-1.png",
@@ -328,13 +328,13 @@
         creditsGap:6, creditsFontSize:13, creditsLabelColor:"#333333", creditsValueColor:"#00cc00",
         funkalarmText:"Alarmierung", funkalarmSize:10, funkalarmColor:"#555555", funkalarmBold:false,
         funkalarmBlinkColor:"#ff0000", funkalarmBlinkDuration:240,
-        toggleBtnSize:44, toggleBtnBg:"#b00000", toggleBtnBorderC:"#ffffff", toggleBtnBorderW:2,
+        toggleBtnSize:44, toggleBtnBg:"#f01606", toggleBtnBorderC:"#f3f035", toggleBtnBorderW:2,
         fmsFontSize:11, fmsHeight:1, fmsGap:4, debugMode:false, apiInterval:30,
         tileIdPrefix:"ID: ", tileIdSize:10, tileIdColor:"#999999", tileIdAlign:"right",
         tileStatsMode:"both", tileBarReference:"yday", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.28 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.29 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:120,
         tileImgSize:38, tileImgAlign:"right"
     };
