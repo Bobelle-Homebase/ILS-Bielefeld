@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.26
+// @version      v1.0.27
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -13,6 +13,7 @@
 // @grant        GM_getValue
 // @grant        GM_addStyle
 // @run-at       document-start
+// @grant        none
 // ==/UserScript==
 
 (function() {
@@ -333,7 +334,7 @@
         tileStatsMode:"both", tileBarReference:"yday", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized by Bobelle v1.0.14", footerColor:"#1e90ff", footerSize:9, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.14 by Bobelle", footerColor:"#1e90ff", footerSize:11, footerAlign:"center",
         schoolingApiInterval:120,
         tileImgSize:38, tileImgAlign:"right"
     };
