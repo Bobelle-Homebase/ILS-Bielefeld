@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.29
+// @version      v1.0.30
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
@@ -19,13 +19,20 @@
 (function() {
     'use strict';
 
- if (window._bobelleDashboardRunning) return;
+    if (window._bobelleDashboardRunning) return;
     window._bobelleDashboardRunning = true;
 
-    console.log("Bobelle Dashboard v2.3-FullFix: Start...");
+    console.log("[Bobelle Dashboard] v1.0.30 - Starte optimierte Version...");
+
+    // =======================================================
+    // KONFIGURATION & KONSTANTEN
+    // =======================================================
+    const CFG = { zIndex: 99999 };
+    const DEBOUNCE_TIME = 100;
 
     const VEHICLE_MATCH_CACHE = {
-        _map: new Map(), _max: 5000,
+        _map: new Map(), 
+        _max: 5000,
         get(key) { return this._map.get(key); },
         set(key, val) {
             if (this._map.size >= this._max) {
@@ -35,8 +42,6 @@
             this._map.set(key, val);
         }
     };
-    const CFG = { zIndex: 99999 };
-    const DEBOUNCE_TIME = 100;
 
     const ICONS = {
         patient: "👨‍⚕️", prisoner: "👮", alarm: "🚨", ktp: "🚑", supply: "🥘",
@@ -59,8 +64,8 @@
         "THW": "Technisches Hilfswerk", "SEG": "Schnelleinsatzgruppe", "WerkFW": "Werkfeuerwehr",
         "FlugFW": "Flughafenfeuerwehr", "UAS": "UAS", "WasserRett": "Wasserrettung",
         "SeenotRett": "Seenotrettung", "BergRett": "Bergrettung", "BahnRett": "Bahnrettung",
-        "Netz": "Netzversorgung", "Sonstiges": "Feuer-und Rettungswachen &amp; Kreispolizeibehörden", "Versorgung": "Versorgung",
-        "Ressourcen": "Einsatz-Statistik", "Ausbildung": "Ausbildung &amp; Lehrgänge"
+        "Netz": "Netzversorgung", "Sonstiges": "Feuer-und Rettungswachen & Kreispolizeibehörden", "Versorgung": "Versorgung",
+        "Ressourcen": "Einsatz-Statistik", "Ausbildung": "Ausbildung & Lehrgänge"
     };
 
     const CATEGORY_ORDER = [
@@ -70,12 +75,10 @@
     ];
 
     const AAO_TILES_RAW = [
-        // Luftrettung
         { n:"RTH [Christoph 13 (Bielefeld)]", id:31, c:C_LUFT, cat:"Luft", s:["rth"]},
         { n:"RTH mit Winde", id:157, c:C_LUFT, cat:"Luft", s:["rth mit winde"]},
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
-        // Fahrzeuge Feuerwehr
         { n:"LF20", id:1, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
         { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
@@ -126,7 +129,6 @@
         { n:"MTW-V", id:140, c:C_FW, cat:"Versorgung", s:["mtw-v","mtw verpflegung"]},
         { n:"GW-Verpflegung", id:138, c:C_FW, cat:"Versorgung", s:["gw-verpflegung"]},
         { n:"GW-Küche", id:139, c:C_FW, cat:"Versorgung", s:["gw-küche"]},
-        // Fahrzeuge Rettungsdienst
         { n:"RTW", id:28, c:C_RD, cat:"RD", s:["rtw"]},
         { n:"NEF", id:29, c:C_RD, cat:"RD", s:["nef"]},
         { n:"KTW", id:38, c:C_RD, cat:"RD", s:["ktw"]},
@@ -135,7 +137,6 @@
         { n:"KdoW-LNA", id:55, c:C_RD, cat:"RD", s:["lna"]},
         { n:"KdoW-OrgL", id:56, c:C_RD, cat:"RD", s:["orgl"]},
         { n:"GRTW", id:73, c:C_RD, cat:"RD", s:["grtw basis","grtw standard","grossraumrettungswagen"]},
-        // Fahrzeuge Polizei
         { n:"FuStW", id:32, c:C_POL, cat:"POL", s:["fustw","streifenwagen"]},
         { n:"FuStW (DGL)", id:103, c:C_POL, cat:"POL", s:["dgl"]},
         { n:"GruKw", id:50, c:C_POL, cat:"POL", s:["grukw"]},
@@ -156,20 +157,16 @@
         { n:"Anh Pferdetransport", id:136, c:C_POL, cat:"POL", s:["anh pferde","anh pferdetransport"]},
         { n:"Zugfahrzeug Pferdetransport", id:137, c:C_POL, cat:"POL", s:["zugfahrzeug pferd"]},
         { n:"Außenlastbehälter", id:96, c:C_POL, cat:"POL", s:["außenlast"]},
-        // Fahrzeuge UAV
         { n:"MTF Drohne", id:126, c:"#9b9b9b", cat:"UAS", s:["mtf drohne","drohne"]},
         { n:"ELW Drohne", id:128, c:"#9b9b9b", cat:"UAS", s:["elw drohne"]},
         { n:"ELW 2 Drohne", id:129, c:"#9b9b9b", cat:"UAS", s:["elw 2 drohne"]},
         { n:"GW-UAS (Pilot Bobelle)", id:127, c:"#9b9b9b", cat:"UAS", s:["gw-uas"]},
-        // Fahrzeuge Flugfeldfeuerwehr
         { n:"FLF", id:75, c:"#721c24", cat:"FlugFW", s:["flf","flugfeldlöschfahrzeug"]},
         { n:"Rettungstreppe", id:76, c:"#721c24", cat:"FlugFW", s:["rt","rettungstreppe"]},
-        // Fahrzeuge Werkfeuerwehr
         { n:"GW-Werkfeuerwehr", id:83, c:"#5a1a1f", cat:"WerkFW", s:["gw-werk"]},
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        // Fahrzeuge THW
         { n:"Schmutzwasserpumpen", id:101, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
         { n:"Feuerlöschpumpen", id:[17,18,87], c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
@@ -205,7 +202,6 @@
         { n:"Anh DLE", id:44, c:C_THW, cat:"THW", s:["anh dle"]},
         { n:"Anh 12 Lbw (FGr Log-V)", id:178, c:C_THW, cat:"THW", s:["anh 12 lbw"]},
         { n:"Anh Plattform (FGr BrB)", id:183, c:C_THW, cat:"THW", s:["anh plattform"]},
-        // Fahrzeuge SEG
         { n:"ELW 1 (SEG)", id:59, c:C_SEG, cat:"SEG", s:["elw 1 (seg)","elw 1 seg"]},
         { n:"KTW Typ B", id:58, c:C_SEG, cat:"SEG", s:["ktw b","ktw typ b","nktw"]},
         { n:"GW-San", id:60, c:C_SEG, cat:"SEG", s:["gw-san"]},
@@ -218,13 +214,11 @@
         { n:"MTW-TeSi", id:173, c:C_SEG, cat:"SEG", s:["mtw-tesi"]},
         { n:"Anh TeSi", id:174, c:C_SEG, cat:"SEG", s:["anh tesi"]},
         { n:"Anh FKH", id:132, c:C_SEG, cat:"SEG", s:["anh fkh"]},
-        // Fahrzeuge Netzversorgung
         { n:"Anh NEA50 (SEG)", id:[175], c:"#5a5a5a", cat:"Netz", s:["anh nea50 seg"]},
         { n:"Anh NEA50 (THW)", id:[110], c:"#5a5a5a", cat:"Netz", s:["anh nea50 thw"]},
         { n:"Anh NEA200 (THW)", id:[112], c:"#5a5a5a", cat:"Netz", s:["anh nea200 thw"]},
         { n:"Anh NEA50 (FW)", id:[111], c:"#5a5a5a", cat:"Netz", s:["anh nea50 fw"]},
         { n:"Anh NEA200 (FW)", id:[113], c:"#5a5a5a", cat:"Netz", s:["anh nea200 fw"]},
-        // Fahrzeuge Bergrettung
         { n:"ELW Bergrettung", id:151, c:"#B0AC97", cat:"BergRett", s:["elw berg"]},
         { n:"GW-Bergrettung", id:150, c:"#B0AC97", cat:"BergRett", s:["gw-bergrettung","gw-berg"]},
         { n:"GW-Höhenrettung (Bergrettung)", id:33, c:"#B0AC97", cat:"BergRett", s:["gw-höhen"]},
@@ -233,19 +227,15 @@
         { n:"Schneefahrzeug", id:154, c:"#B0AC97", cat:"BergRett", s:["schnee"]},
         { n:"Hundestaffel (Bergrettung)", id:153, c:"#B0AC97", cat:"BergRett", s:["hunde berg","hundestaffel berg"]},
         { n:"Anh Höhenrettung (Bergrettung)", id:155, c:"#B0AC97", cat:"BergRett", s:["höhe"]},
-        // Fahrzeuge Wasserrettung
         { n:"GW-Wasserrettung", id:64, c:C_WR, cat:"WasserRett", s:["gw-wasser"]},
         { n:"GW-Taucher", id:63, c:C_WR, cat:"WasserRett", s:["gw-taucher"]},
         { n:"MZB", id:70, c:C_WR, cat:"WasserRett", s:["mzb","boot"]},
-        // Fahrzeuge Seenotrettung
         { n:"SAR Boot", id:160, c:C_SR, cat:"SeenotRett", s:["seenotrettungsboot","sar boot"]},
         { n:"SAR Kreuzer", id:159, c:C_SR, cat:"SeenotRett", s:["seenotrettungskreuzer","sar kreuzer"]},
         { n:"SAR Hubschrauber", id:161, c:C_SR, cat:"SeenotRett", s:["sar hubschrauber"]},
-        // Fahrzeuge Bahnrettung
         { n:"RW-Schiene", id:162, c:"#5a5a5a", cat:"BahnRett", s:["rw schiene","rw-schiene"]},
         { n:"HLF Schiene", id:163, c:"#5a5a5a", cat:"BahnRett", s:["hlf schiene"]},
         { n:"AB-Schiene", id:164, c:"#5a5a5a", cat:"BahnRett", s:["ab-schiene"]},
-        // Fahrzeuge Sonstiges
         { n:"Feuer-und Rettungswache Herford", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943238]},
         { n:"Feuer-und Rettungswache Gütersloh", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943286]},
         { n:"Feuer-und Rettungswache Halle(Westf.)", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943328]},
@@ -262,7 +252,6 @@
         { n:"Rettungswache Bremerhafen", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26794419]},
         { n:"DLRG Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016223]},
         { n:"DLRG Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016182]},
-
         { n:"Patienten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Krankenhausbetten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Gefangene", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
@@ -285,7 +274,6 @@
         { n:"FG Logistik-Verpflegung", id:[176,177], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"FG Brückenbau", id:[181,182,183], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"OV Mannschaftstransportwagen", id:[124], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-
         { n:"Laufende Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
         { n:"Aktive Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
     ];
@@ -334,7 +322,7 @@
         tileStatsMode:"both", tileBarReference:"yday", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.29 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.30 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:120,
         tileImgSize:38, tileImgAlign:"right"
     };
@@ -360,20 +348,50 @@
         TILE_IMAGES:"fz_v3_tile_images"
     };
 
+    // =======================================================
+    // VARIABLEN & STATUS
+    // =======================================================
     let tileImages = {};
-    const TILE_IMAGES_DEFAULT = {};
-
     const TYPE_ID_MAPPING = {};
     AAO_TILES_RAW.forEach(tile => {
         if (tile.id !== undefined && tile.id !== null) {
             const ids = Array.isArray(tile.id) ? tile.id : [tile.id];
             ids.forEach(i => {
-                if (!i && i !== 0) return;
+                if (i === null || i === undefined) return;
                 if (!TYPE_ID_MAPPING[i]) TYPE_ID_MAPPING[i] = [];
                 TYPE_ID_MAPPING[i].push(tile.n);
             });
         }
     });
+
+    const VEHICLE_TYPE_OVERRIDES = {
+        32:  { del: ["FuStW", "FuStW (DGL)", "Zivilstreifenwagen", "LauKw", "LeBefKw"], add: ["FuStW"] },
+        50:  { del: ["GruKw", "Zugfahrzeug Pferdetransport", "Pferdetransporter klein", "Pferdetransporter groß", "Anh Pferdetransport"], add: ["GruKw"] },
+        31:  { del: ["RTH [Christoph 13 (Bielefeld)]"], add: ["RTH [Christoph 13 (Bielefeld)]"] },
+        61:  { del: ["Polizeihubschrauber"], add: ["Polizeihubschrauber"] },
+        91:  { del: ["GW-San", "Rettungshundefahrzeug", "Hundestaffel (Bergrettung)"], add: ["Rettungshundefahrzeug"] },
+        126: { del: ["MTF Drohne"], add: ["MTF Drohne"] },
+        140: { del: ["MTW-V", "MTW-TeSi"], add: ["MTW-V"] },
+        93:  { del: ["MTW-O", "MTW-OV", "KTW Typ B", "OV Mannschaftstransportwagen"], add: ["MTW-O"] },
+        58:  { del: ["KTW Typ B"], add: ["KTW Typ B"] },
+        73:  { del: ["GRTW"], add: ["GRTW"] },
+        100: { del: ["FüKW (THW)", "MLW 4", "FüKomKW"], add: ["MLW 4"] },
+        132: { del: ["Anh FKH"], add: ["Anh FKH"] },
+        157: { del: ["RTH [Christoph 13 (Bielefeld)]", "RTH mit Winde"], add: ["RTH mit Winde"] },
+        156: { del: ["Polizeihubschrauber", "Polizeihubschrauber mit Winde"], add: ["Polizeihubschrauber mit Winde"] },
+        3:   { del: ["ELW 1", "ELW 1 (SEG)"], add: ["ELW 1"] },
+        59:  { del: ["ELW 1", "ELW 1 (SEG)"], add: ["ELW 1 (SEG)"] },
+        33:  { del: ["GW-Höhenrettung", "GW-Höhenrettung (Bergrettung)"], add: ["GW-Höhenrettung"] },
+        158: { del: ["GW-Höhenrettung", "GW-Höhenrettung (Bergrettung)"], add: ["GW-Höhenrettung (Bergrettung)"] },
+        51:  { del: ["FüKW (Polizei)", "FüKW (THW)"], add: ["FüKW (Polizei)"] },
+        144: { del: ["FüKW (Polizei)", "FüKW (THW)"], add: ["FüKW (THW)"] },
+        166: { del: ["TLF", "PTLF 4000"], add: ["PTLF 4000"] },
+        17:  { del: ["TLF", "PTLF 4000"], add: ["TLF"] },
+        18:  { del: ["TLF", "PTLF 4000"], add: ["TLF"] },
+        87:  { del: ["TLF", "PTLF 4000"], add: ["TLF"] },
+        149: { del: ["GW-Bergrettung", "GW-Bergrettung (NEF)"], add: ["GW-Bergrettung (NEF)"] },
+        150: { del: ["GW-Bergrettung", "GW-Bergrettung (NEF)"], add: ["GW-Bergrettung"] }
+    };
 
     const pathLoc = window.location.pathname;
     const isMainPage = ((pathLoc==="/"||pathLoc==="/index"||pathLoc.length<2)||pathLoc.includes("/leitstellenansicht"));
@@ -417,12 +435,9 @@
     let lastCreditsUpdate=0;
     let creditsData={ein:0,aus:0,bilanz:0,date:""};
 
-    const tileCache={};
-    const nameCache={};
-    const vehicleStateCache={};
-    let lastAlarmTime={};
-    let saveTimeout=null;
-    const alarmTimers={};
+    const tileCache={}, nameCache={}, vehicleStateCache={}, alarmTimers={};
+    let lastAlarmTime={}, saveTimeout=null;
+    
     const heliAlreadyCountedThisSession=new Set();
     const ktpAlreadyCountedThisSession=new Set();
 
@@ -432,105 +447,111 @@
     let _restzeitTimerId=null;
     let _buildingsFullyLoaded=false;
 
+    // =======================================================
+    // HILFSFUNKTIONEN
+    // =======================================================
     function formatRestzeit(finishAtMs) {
-        const diff=finishAtMs-Date.now();
-        if(diff<=0) return "✅ Fertig";
-        const h=Math.floor(diff/3600000);
-        const m=Math.floor((diff%3600000)/60000);
-        if(h>0) return `${h}h ${m}m`;
-        return `${m}m`;
+        const diff = finishAtMs - Date.now();
+        if(diff <= 0) return "✅ Fertig";
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        return h > 0 ? `${h}h ${m}m` : `${m}m`;
     }
 
     function parseTwoNumbers(text) {
-        const m=(text||"").match(/(\d+)\s*\/\s*(\d+)/);
-        if(!m) return {a:0,b:0};
-        return {a:parseInt(m[1],10),b:parseInt(m[2],10)};
+        const m = (text||"").match(/(\d+)\s*\/\s*(\d+)/);
+        return m ? { a: parseInt(m[1],10), b: parseInt(m[2],10) } : { a: 0, b: 0 };
     }
 
     function getCounts(sel){
-        const el=document.querySelector(sel);
-        return el?parseTwoNumbers(el.textContent):{a:0,b:0};
+        const el = document.querySelector(sel);
+        return el ? parseTwoNumbers(el.textContent) : { a: 0, b: 0 };
     }
 
     function getStartedCount(sel){
-        const el=document.querySelector(sel);
+        const el = document.querySelector(sel);
         if(!el) return 0;
-        const c=el.querySelector(".counter");
-        const txt=(c?c.textContent:el.textContent)||"0";
-        const m=txt.replace(/\s+/g,"").match(/\d+/);
-        return m?parseInt(m[0],10):0;
+        const c = el.querySelector(".counter");
+        const txt = (c ? c.textContent : el.textContent) || "0";
+        const m = txt.replace(/\s+/g,"").match(/\d+/);
+        return m ? parseInt(m[0],10) : 0;
     }
 
     function getMissionStatsHTML(){
-        const em=getCounts(MISSION_SELECTORS.emergency);
-        const ktp=getCounts(MISSION_SELECTORS.ktp);
-        const started=getStartedCount(MISSION_SELECTORS.started);
+        const em = getCounts(MISSION_SELECTORS.emergency);
+        const ktp = getCounts(MISSION_SELECTORS.ktp);
+        const started = getStartedCount(MISSION_SELECTORS.started);
         return `<span class="fzHeaderPill" style="color:${uiSettings.statsMissionsColor};font-size:${uiSettings.statsMissionsSize}px;font-weight:bold;">Einsätze: ${em.a}/${em.b}</span>
                <span class="fzHeaderPill" style="color:${uiSettings.statsKtpColor};font-size:${uiSettings.statsKtpSize}px;font-weight:bold;">KTW: ${ktp.a}/${ktp.b}</span>
                <span class="fzHeaderPill" style="color:${uiSettings.statsActiveColor};font-size:${uiSettings.statsActiveSize}px;font-weight:bold;">Aktiv: ${started}</span>`;
     }
 
-    const json={
-        load(key,fallback){
-            try{
-                const v=GM_getValue(key,"");
-                return v===""?fallback:(JSON.parse(v)||fallback);
-            }catch{
+    const json = {
+        load(key, fallback){
+            try {
+                const v = GM_getValue(key, "");
+                return v === "" ? fallback : (JSON.parse(v) || fallback);
+            } catch {
                 return fallback;
             }
         },
-        save(key,val){GM_setValue(key,JSON.stringify(val));}
+        save(key, val){ GM_setValue(key, JSON.stringify(val)); }
     };
 
-    const store={
-        load:(key)=>{
-            const o=json.load(key,{});
-            KEYS.forEach(k=>{if(o[k]==null)o[k]=0;});
+    const store = {
+        load: (key) => {
+            const o = json.load(key, {});
+            KEYS.forEach(k => { if(o[k] == null) o[k] = 0; });
             return o;
         },
-        save:()=>{
+        save: () => {
             if(saveTimeout) clearTimeout(saveTimeout);
-            saveTimeout=setTimeout(()=>{
-                json.save(STORAGE.COUNTS_TODAY,state.today);
-                json.save(STORAGE.COUNTS_TOTAL,state.total);
-                json.save(STORAGE.DETAILS_TODAY,state.det);
-                localStorage.setItem(STORAGE.SYNC_SIGNAL,Date.now().toString());
-            },800);
+            saveTimeout = setTimeout(() => {
+                json.save(STORAGE.COUNTS_TODAY, state.today);
+                json.save(STORAGE.COUNTS_TOTAL, state.total);
+                json.save(STORAGE.DETAILS_TODAY, state.det);
+                localStorage.setItem(STORAGE.SYNC_SIGNAL, Date.now().toString());
+            }, 800);
         }
     };
 
-    creditsData=json.load(STORAGE.CREDITS_DATA,{ein:0,aus:0,bilanz:0,date:""});
-    const customStock=json.load(STORAGE.CUSTOM_STOCK,{});
-    tileImages={...TILE_IMAGES_DEFAULT,...json.load(STORAGE.TILE_IMAGES,{})};
-    const saveTileImages=()=>json.save(STORAGE.TILE_IMAGES,tileImages);
+    // =======================================================
+    // INITIALISIERUNG
+    // =======================================================
+    creditsData = json.load(STORAGE.CREDITS_DATA, {ein:0, aus:0, bilanz:0, date:""});
+    const customStock = json.load(STORAGE.CUSTOM_STOCK, {});
+    tileImages = {...json.load(STORAGE.TILE_IMAGES, {})};
+    const saveTileImages = () => json.save(STORAGE.TILE_IMAGES, tileImages);
 
-    let uiSettings={...DEFAULTS,...json.load(STORAGE.UISETTINGS,{})};
-    for(const k in DEFAULTS){if(uiSettings[k]===undefined) uiSettings[k]=DEFAULTS[k];}
-    if(!Array.isArray(uiSettings.collapsedTilesCats)) uiSettings.collapsedTilesCats=[];
+    let uiSettings = {...DEFAULTS, ...json.load(STORAGE.UISETTINGS, {})};
+    for (const k in DEFAULTS) { if (uiSettings[k] === undefined) uiSettings[k] = DEFAULTS[k]; }
+    if (!Array.isArray(uiSettings.collapsedTilesCats)) uiSettings.collapsedTilesCats = [];
 
-    const saveUI=()=>json.save(STORAGE.UISETTINGS,uiSettings);
-    const getTodayString=()=>new Date().toLocaleDateString("de-DE");
+    const saveUI = () => json.save(STORAGE.UISETTINGS, uiSettings);
+    const getTodayString = () => new Date().toLocaleDateString("de-DE");
 
-    let vehicleAvailability={},vehicleExists={},vehicleInUseCount={},vehicleTotalCount={},vehicleFreeCount={};
-    let hasFreeCountData=false,vehicleLists={};
-    let state={
-        today:store.load(STORAGE.COUNTS_TODAY),
-        total:store.load(STORAGE.COUNTS_TOTAL),
-        yday:store.load(STORAGE.YDAY_COUNTS),
-        history:json.load(STORAGE.HISTORY_7DAYS,{}),
-        det:json.load(STORAGE.DETAILS_TODAY,{})};
-    if(state.today["Wasserbedarf"]&&state.today["Wasserbedarf"]<500){ state.today["Wasserbedarf"]=0; store.save();}
+    let vehicleAvailability={}, vehicleExists={}, vehicleInUseCount={}, vehicleTotalCount={}, vehicleFreeCount={};
+    let hasFreeCountData=false, vehicleLists={};
+    
+    let state = {
+        today: store.load(STORAGE.COUNTS_TODAY),
+        total: store.load(STORAGE.COUNTS_TOTAL),
+        yday: store.load(STORAGE.YDAY_COUNTS),
+        history: json.load(STORAGE.HISTORY_7DAYS, {}),
+        det: json.load(STORAGE.DETAILS_TODAY, {})
+    };
+    if (state.today["Wasserbedarf"] && state.today["Wasserbedarf"] < 500) { state.today["Wasserbedarf"]=0; store.save(); }
 
-    let fzWrapper,uiRoot,tileEls={},extWin=null,cssContent="",lastCSSHash="";
-    let animFrameId=null,hideStartTime=null,hideDuration=0,safeHideTimer=null,isHovering=false;
-    let redrawGrid=()=>{};
-    let cachedCapacities={beds:0,cells:0,bedsUsed:0,cellsUsed:0};
-    let lastBuildingUpdate=0;
+    let fzWrapper, uiRoot, tileEls={}, extWin=null, cssContent="", lastCSSHash="";
+    let animFrameId=null, hideStartTime=null, hideDuration=0, safeHideTimer=null, isHovering=false;
+    let redrawGrid = () => {};
+    let cachedCapacities = {beds:0, cells:0, bedsUsed:0, cellsUsed:0};
+    let lastBuildingUpdate = 0;
 
-    function _setEl(id,html){
-        const el=document.getElementById(id);
-        if(el && el.innerHTML!==html){
-            el.innerHTML=html;
+    function _setEl(id, html){
+        const el = document.getElementById(id);
+        if(el && el.innerHTML !== html){
+            el.innerHTML = html;
             return true;
         }
         return false;
@@ -538,216 +559,225 @@
 
     function toArray(data){
         if(Array.isArray(data)) return data;
-        if(data&&typeof data==="object"){
-            for(const key of Object.keys(data)){
-                if(Array.isArray(data[key])) return data[key];}}
+        if(data && typeof data === "object"){
+            for(const key of Object.keys(data)) {
+                if(Array.isArray(data[key])) return data[key];
+            }
+        }
         return [];
     }
 
+    // =======================================================
+    // GEBÄUDE & LEHRGÄNGE
+    // =======================================================
     async function ensureBuildingNames(buildingIds){
         if(_buildingsFullyLoaded || buildingIds.length === 0) return;
         const missingIds = buildingIds.filter(id => !buildingNameCache[id]);
         if(missingIds.length === 0) return;
-        try{
+        try {
             const bRes = await fetch("/api/buildings", {credentials: "same-origin"});
             if(bRes.ok){
                 const buildings = await bRes.json();
                 buildings.forEach(b => { buildingNameCache[b.id] = b.caption || ("Wache #" + b.id); });
                 _buildingsFullyLoaded = true;
             }
-        }catch(e){ console.warn("[Bobelle] Gebäude-Fetch fehlgeschlagen:", e); }
+        } catch(e) { console.warn("[Bobelle] Gebäude-Fetch fehlgeschlagen:", e); }
     }
 
     async function fetchSchoolings(){
-        try{
-            const ownRes=await fetch("/api/schoolings",{credentials:"same-origin"});
-            let own=[];
+        try {
+            const ownRes = await fetch("/api/schoolings", {credentials:"same-origin"});
+            let own = [];
             if(ownRes.ok){
-                try{own=toArray(await ownRes.json());}catch(e){own=[];}
+                try { own = toArray(await ownRes.json()); } catch(e) { own = []; }
             }
-            const buildingIds=[...new Set(own.map(s=>s.building_id).filter(Boolean))];
+            const buildingIds = [...new Set(own.map(s => s.building_id).filter(Boolean))];
             await ensureBuildingNames(buildingIds);
-            const now=Date.now();
+            const now = Date.now();
 
-            schoolingsData=own.map(s=>({
-                id:s.id,
-                caption:s.caption||s.name||"Lehrgang/Schulung",
-                description:s.description||s.schooling_description||s.type_name||"",
-                buildingId:s.building_id,
-                buildingName:buildingNameCache[s.building_id]||("Wache #"+(s.building_id||"?")),
-                finishAt:s.finish_at?new Date(s.finish_at).getTime():(s.end_time?new Date(s.end_time).getTime():null),
-                startAt:s.start_at?new Date(s.start_at).getTime():null,
-                source:"eigen",
-                participantCount:s.participant_count||s.attendee_count||0
-            })).filter(s=>!s.finishAt||s.finishAt>now-60000);
+            schoolingsData = own.map(s => ({
+                id: s.id,
+                caption: s.caption || s.name || "Lehrgang/Schulung",
+                description: s.description || s.schooling_description || s.type_name || "",
+                buildingId: s.building_id,
+                buildingName: buildingNameCache[s.building_id] || ("Wache #" + (s.building_id || "?")),
+                finishAt: s.finish_at ? new Date(s.finish_at).getTime() : (s.end_time ? new Date(s.end_time).getTime() : null),
+                startAt: s.start_at ? new Date(s.start_at).getTime() : null,
+                source: "eigen",
+                participantCount: s.participant_count || s.attendee_count || 0
+            })).filter(s => !s.finishAt || s.finishAt > now - 60000);
 
-            lastSchoolingsUpdate=now;
+            lastSchoolingsUpdate = now;
             updateSchoolingTiles();
-        }catch(e){
-            console.warn("[Bobelle] Schoolings fetch error:",e);
+        } catch(e) {
+            console.warn("[Bobelle] Schoolings fetch error:", e);
         }
     }
 
     function updateSchoolingTiles(){
         if(_restzeitTimerId) clearTimeout(_restzeitTimerId);
-        const now=Date.now();
-        const active=schoolingsData.filter(s=>!s.finishAt||s.finishAt>now);
-        const count=active.length;
+        const now = Date.now();
+        const active = schoolingsData.filter(s => !s.finishAt || s.finishAt > now);
+        const count = active.length;
 
-        ["Laufende Lehrgänge","Aktive Lehrgänge"].forEach(key=>{
-            const cached=tileCache[key];
+        ["Laufende Lehrgänge", "Aktive Lehrgänge"].forEach(key => {
+            const cached = tileCache[key];
             if(!cached) return;
-            const badge=cached.schoolingBadge;
-            const sub=cached.schoolingSub;
-            if(badge) badge.textContent=`${ICONS.school} ${count} aktiv`;
+            const badge = cached.schoolingBadge;
+            const sub = cached.schoolingSub;
+            if(badge) badge.textContent = `${ICONS.school} ${count} aktiv`;
             if(sub){
-                if(active.length===0){
-                    sub.textContent="Keine Lehrgänge aktiv";
-                }else{
-                    const earliest=active.reduce((a,b)=>(a.finishAt&&b.finishAt)?(a.finishAt<b.finishAt?a:b):(a.finishAt?a:b));
-                    const label=key==="Aktive Lehrgänge"?"Nächster":"Nächster Abschluss";
-                    sub.textContent=`${label}: ${formatRestzeit(earliest.finishAt)}`;
+                if(active.length === 0){
+                    sub.textContent = "Keine Lehrgänge aktiv";
+                } else {
+                    const earliest = active.reduce((a,b) => (a.finishAt && b.finishAt) ? (a.finishAt < b.finishAt ? a : b) : (a.finishAt ? a : b));
+                    const label = key === "Aktive Lehrgänge" ? "Nächster" : "Nächster Abschluss";
+                    sub.textContent = `${label}: ${formatRestzeit(earliest.finishAt)}`;
                 }
             }
         });
 
-        _restzeitTimerId=setTimeout(updateSchoolingTiles,30000);
+        _restzeitTimerId = setTimeout(updateSchoolingTiles, 30000);
     }
 
     function createSchoolingTile(key){
-        const meta=tileMetaByKey[key];
-        const color=meta?.c||C_AUS;
-        const div=document.createElement("div");
-        div.className="fzTile fzResource fzSchoolingTile";
-        div.dataset.key=key;
-        div.style.borderLeftColor=color;
-        div.style.cursor="pointer";
+        const meta = tileMetaByKey[key];
+        const color = meta?.c || C_AUS;
+        const div = document.createElement("div");
+        div.className = "fzTile fzResource fzSchoolingTile";
+        div.dataset.key = key;
+        div.style.borderLeftColor = color;
+        div.style.cursor = "pointer";
 
-        const badge=document.createElement("span");
-        badge.className="fzSchoolingBadge";
-        badge.style.cssText=`font-size:12px;font-weight:bold;color:${color};`;
-        badge.textContent=`${ICONS.school} Lade...`;
+        const badge = document.createElement("span");
+        badge.className = "fzSchoolingBadge";
+        badge.style.cssText = `font-size:12px;font-weight:bold;color:${color};`;
+        badge.textContent = `${ICONS.school} Lade...`;
 
-        const sub=document.createElement("div");
-        sub.className="fzSchoolingSub";
-        sub.style.cssText="font-size:10px;color:#666;margin-top:2px;";
-        sub.textContent="Bitte warten...";
+        const sub = document.createElement("div");
+        sub.className = "fzSchoolingSub";
+        sub.style.cssText = "font-size:10px;color:#666;margin-top:2px;";
+        sub.textContent = "Bitte warten...";
 
-        const nameSpan=document.createElement("span");
-        nameSpan.className="fzTileName";
-        nameSpan.style.cssText=`font-weight:bold;color:${color};`;
-        nameSpan.textContent=key;
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "fzTileName";
+        nameSpan.style.cssText = `font-weight:bold;color:${color};`;
+        nameSpan.textContent = key;
 
-        const topRow=document.createElement("div");
-        topRow.style.cssText="display:flex;align-items:center;gap:6px;margin-bottom:3px;";
+        const topRow = document.createElement("div");
+        topRow.style.cssText = "display:flex;align-items:center;gap:6px;margin-bottom:3px;";
 
-        const iconSpan=document.createElement("span");
-        iconSpan.style.fontSize="16px";
-        iconSpan.textContent=ICONS.school;
+        const iconSpan = document.createElement("span");
+        iconSpan.style.fontSize = "16px";
+        iconSpan.textContent = ICONS.school;
 
         topRow.appendChild(iconSpan);
         topRow.appendChild(nameSpan);
 
-        const wrapper=document.createElement("div");
-        wrapper.className="fzContentWrapper";
-        wrapper.style.cssText="justify-content:flex-start;padding:4px 0;";
+        const wrapper = document.createElement("div");
+        wrapper.className = "fzContentWrapper";
+        wrapper.style.cssText = "justify-content:flex-start;padding:4px 0;";
         wrapper.appendChild(topRow);
         wrapper.appendChild(badge);
         wrapper.appendChild(sub);
 
         div.appendChild(wrapper);
-        div.onclick=()=>showSchoolingDetails();
+        div.onclick = () => showSchoolingDetails();
 
-        tileEls[key]=div;
-        tileCache[key]={el:div,lastState:null,schoolingBadge:badge,schoolingSub:sub};
+        tileEls[key] = div;
+        tileCache[key] = { el: div, lastState: null, schoolingBadge: badge, schoolingSub: sub };
         return div;
     }
 
     function showSchoolingDetails(){
-        const now=Date.now();
-        const active=schoolingsData.filter(s=>!s.finishAt||s.finishAt>now);
-        const done=schoolingsData.filter(s=>s.finishAt&&s.finishAt<=now);
+        const now = Date.now();
+        const active = schoolingsData.filter(s => !s.finishAt || s.finishAt > now);
+        const done = schoolingsData.filter(s => s.finishAt && s.finishAt <= now);
 
-        const renderRow=(s)=>{
-            const rest=s.finishAt?formatRestzeit(s.finishAt):"–";
-            const isUrgent=s.finishAt&&(s.finishAt-now)<3600000;
-            const isDone=s.finishAt&&s.finishAt<=now;
-            const restColor=isDone?"#28a745":(isUrgent?"#dc3545":"#28a745");
-            let progressHtml="";
+        const renderRow = (s) => {
+            const rest = s.finishAt ? formatRestzeit(s.finishAt) : "–";
+            const isUrgent = s.finishAt && (s.finishAt - now) < 3600000;
+            const isDone = s.finishAt && s.finishAt <= now;
+            const restColor = isDone ? "#28a745" : (isUrgent ? "#dc3545" : "#28a745");
+            let progressHtml = "";
 
-            if(s.startAt&&s.finishAt&&!isDone){
-                const total=s.finishAt-s.startAt;
-                const elapsed=now-s.startAt;
-                const pct=Math.min(100,Math.max(0,Math.round((elapsed/total)*100)));
-                progressHtml=`<div style="margin-top:4px;height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${C_AUS};border-radius:2px;"></div></div><div style="font-size:9px;color:#999;margin-top:1px;">${pct}% abgeschlossen</div>`;
+            if(s.startAt && s.finishAt && !isDone){
+                const total = s.finishAt - s.startAt;
+                const elapsed = now - s.startAt;
+                const pct = Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+                progressHtml = `<div style="margin-top:4px;height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${C_AUS};border-radius:2px;"></div></div><div style="font-size:9px;color:#999;margin-top:1px;">${pct}% abgeschlossen</div>`;
             }
 
-            const typBadge=s.description?`<span style="font-size:9px;background:rgba(123,63,160,0.15);color:${C_AUS};padding:1px 5px;border-radius:3px;margin-left:5px;font-weight:bold;">${s.description}</span>`:"";
-            const pCount=s.participantCount>0?`<span style="font-size:10px;color:#888;margin-left:6px;">${ICONS.person} ${s.participantCount}</span>`:"";
+            const typBadge = s.description ? `<span style="font-size:9px;background:rgba(123,63,160,0.15);color:${C_AUS};padding:1px 5px;border-radius:3px;margin-left:5px;font-weight:bold;">${s.description}</span>` : "";
+            const pCount = s.participantCount > 0 ? `<span style="font-size:10px;color:#888;margin-left:6px;">${ICONS.person} ${s.participantCount}</span>` : "";
 
             return `<div style="padding:8px 10px;border-radius:5px;margin-bottom:6px;background:rgba(123,63,160,0.07);border-left:3px solid ${C_AUS};"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:bold;">${s.caption}${typBadge}</div><div style="font-size:10px;color:#555;margin-top:2px;">📍 ${s.buildingName}${pCount}</div>${progressHtml}</div><div style="font-size:13px;font-weight:bold;color:${restColor};flex-shrink:0;">${rest}</div></div></div>`;
         };
 
-        const ol=document.createElement("div");
-        ol.className="fzModalOverlay";
-        ol.onclick=(e)=>{if(e.target===ol)ol.remove();};
+        const ol = document.createElement("div");
+        ol.className = "fzModalOverlay";
+        ol.onclick = (e) => { if(e.target === ol) ol.remove(); };
 
-        const updStr=lastSchoolingsUpdate?new Date(lastSchoolingsUpdate).toLocaleTimeString("de-DE"):"–";
-        const captionGroups={};
-        active.forEach(s=>{if(!captionGroups[s.caption])captionGroups[s.caption]=0;captionGroups[s.caption]++;});
+        const updStr = lastSchoolingsUpdate ? new Date(lastSchoolingsUpdate).toLocaleTimeString("de-DE") : "–";
+        const captionGroups = {};
+        active.forEach(s => { if(!captionGroups[s.caption]) captionGroups[s.caption] = 0; captionGroups[s.caption]++; });
 
-        ol.innerHTML=`<div class="fzModal" style="max-width:620px;width:92%;"><h3>${ICONS.school} Eigene Lehrgänge</h3><div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;"><div class="fzStatBox"><div class="fzStatVal" style="color:${C_AUS};">${active.length}</div><div class="fzStatLbl">Aktiv</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#6c757d;">${Object.keys(captionGroups).length}</div><div class="fzStatLbl">Verschiedene Typen</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#28a745;">${done.length}</div><div class="fzStatLbl">Heute fertig</div></div><div class="fzStatBox"><div class="fzStatVal" style="font-size:13px;color:#555;">${updStr}</div><div class="fzStatLbl">Letztes Update</div></div></div>${active.length>0?`<div class="fzSectionTitle">Aktive Lehrgänge (${active.length})</div><div style="max-height:340px;overflow-y:auto;">${active.sort((a,b)=>(a.finishAt||Infinity)-(b.finishAt||Infinity)).map(renderRow).join("")}</div>`:`<div style="padding:20px;text-align:center;color:#999;">Keine aktiven Lehrgänge.</div>`}${done.length>0?`<div class="fzSectionTitle" style="margin-top:12px;">Heute abgeschlossen (${done.length})</div><div style="max-height:150px;overflow-y:auto;">${done.map(renderRow).join("")}</div>`:""}<div style="margin-top:10px;display:flex;gap:8px;"><button class="fzBtn" style="flex:1;" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button><button class="fzBtn" style="flex:1;" onclick="window.open('/schoolings','_blank')">📋 Alle Lehrgänge</button><button class="fzBtn" style="background:#edf3ff;flex:0.5;" id="fzSchoolingRefreshBtn">🔄</button></div></div>`;
+        ol.innerHTML = `<div class="fzModal" style="max-width:620px;width:92%;"><h3>${ICONS.school} Eigene Lehrgänge</h3><div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;"><div class="fzStatBox"><div class="fzStatVal" style="color:${C_AUS};">${active.length}</div><div class="fzStatLbl">Aktiv</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#6c757d;">${Object.keys(captionGroups).length}</div><div class="fzStatLbl">Verschiedene Typen</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#28a745;">${done.length}</div><div class="fzStatLbl">Heute fertig</div></div><div class="fzStatBox"><div class="fzStatVal" style="font-size:13px;color:#555;">${updStr}</div><div class="fzStatLbl">Letztes Update</div></div></div>${active.length > 0 ? `<div class="fzSectionTitle">Aktive Lehrgänge (${active.length})</div><div style="max-height:340px;overflow-y:auto;">${active.sort((a,b) => (a.finishAt || Infinity) - (b.finishAt || Infinity)).map(renderRow).join("")}</div>` : `<div style="padding:20px;text-align:center;color:#999;">Keine aktiven Lehrgänge.</div>`}${done.length > 0 ? `<div class="fzSectionTitle" style="margin-top:12px;">Heute abgeschlossen (${done.length})</div><div style="max-height:150px;overflow-y:auto;">${done.map(renderRow).join("")}</div>` : ""}<div style="margin-top:10px;display:flex;gap:8px;"><button class="fzBtn" style="flex:1;" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button><button class="fzBtn" style="flex:1;" onclick="window.open('/schoolings','_blank')">📋 Alle Lehrgänge</button><button class="fzBtn" style="background:#edf3ff;flex:0.5;" id="fzSchoolingRefreshBtn">🔄</button></div></div>`;
 
-        setTimeout(()=>{
-            const rb=ol.querySelector("#fzSchoolingRefreshBtn");
-            if(rb) rb.onclick=async()=>{
-                rb.textContent="⏳";
+        setTimeout(() => {
+            const rb = ol.querySelector("#fzSchoolingRefreshBtn");
+            if(rb) rb.onclick = async () => {
+                rb.textContent = "⏳";
                 await fetchSchoolings();
-                rb.textContent="✅";
-                setTimeout(()=>{rb.textContent="🔄";},2000);
+                rb.textContent = "✅";
+                setTimeout(() => { rb.textContent = "🔄"; }, 2000);
             };
-        },50);
+        }, 50);
 
         getTargetBody().appendChild(ol);
     }
 
+    // =======================================================
+    // UI UPDATES & STATUS
+    // =======================================================
     function updateSubHeaderInfo(){
-        const sysEl=document.getElementById("fzSysStatus");
-        const updEl=document.getElementById("fzLastUpdate");
-        const dispEl=document.getElementById("fzDispatcher");
-        if(!sysEl||!updEl||!dispEl) return;
+        const sysEl = document.getElementById("fzSysStatus");
+        const updEl = document.getElementById("fzLastUpdate");
+        const dispEl = document.getElementById("fzDispatcher");
+        if(!sysEl || !updEl || !dispEl) return;
 
-        sysEl.textContent=sysReady?"Leitstelle betriebsbereit":"Leitstelle offline / inaktiv";
-        sysEl.style.color=sysReady?uiSettings.subStatusColorOk:uiSettings.subStatusColorErr;
-        updEl.textContent="Letztes Update: "+lastUpdateStr;
+        sysEl.textContent = sysReady ? "Leitstelle betriebsbereit" : "Leitstelle offline / inaktiv";
+        sysEl.style.color = sysReady ? uiSettings.subStatusColorOk : uiSettings.subStatusColorErr;
+        updEl.textContent = "Letztes Update: " + lastUpdateStr;
 
         if(isUpdating) updEl.classList.add("fzUpdatingAnim");
         else updEl.classList.remove("fzUpdatingAnim");
 
-        const rankEl=document.getElementById("current_level");
-        dispEl.innerHTML=`Disposition: Bobelle <span style="margin-left:5px;">${rankEl?rankEl.textContent.trim():"Unbekannt"}</span>`;
+        const rankEl = document.getElementById("current_level");
+        dispEl.innerHTML = `Disposition: Bobelle <span style="margin-left:5px;">${rankEl ? rankEl.textContent.trim() : "Unbekannt"}</span>`;
     }
 
     function checkVehicleDayReset(currentState){
-        const today=getTodayString();
-        if(GM_getValue(STORAGE.DAYSTAMP,"")!==today){
-            const oldToday=store.load(STORAGE.COUNTS_TODAY);
-            let hist=json.load(STORAGE.HISTORY_7DAYS,{});
+        const today = getTodayString();
+        if(GM_getValue(STORAGE.DAYSTAMP, "") !== today){
+            const oldToday = store.load(STORAGE.COUNTS_TODAY);
+            let hist = json.load(STORAGE.HISTORY_7DAYS, {});
             for(const k in oldToday){
-                if(!hist[k]) hist[k]=[];
+                if(!hist[k]) hist[k] = [];
                 hist[k].unshift(oldToday[k]);
-                if(hist[k].length>7) hist[k]=hist[k].slice(0,7);
+                if(hist[k].length > 7) hist[k] = hist[k].slice(0,7);
             }
-            json.save(STORAGE.HISTORY_7DAYS,hist);
-            currentState.history=hist;
-            json.save(STORAGE.YDAY_COUNTS,oldToday);
-            json.save(STORAGE.COUNTS_TODAY,{});
-            json.save(STORAGE.DETAILS_TODAY,{});
-            GM_setValue(STORAGE.DAYSTAMP,today);
+            json.save(STORAGE.HISTORY_7DAYS, hist);
+            currentState.history = hist;
+            json.save(STORAGE.YDAY_COUNTS, oldToday);
+            json.save(STORAGE.COUNTS_TODAY, {});
+            json.save(STORAGE.DETAILS_TODAY, {});
+            GM_setValue(STORAGE.DAYSTAMP, today);
+            
             if(currentState){
-                currentState.today={};
-                currentState.yday=store.load(STORAGE.YDAY_COUNTS);
-                currentState.det={};
+                currentState.today = {};
+                currentState.yday = store.load(STORAGE.YDAY_COUNTS);
+                currentState.det = {};
             }
             heliAlreadyCountedThisSession.clear();
             ktpAlreadyCountedThisSession.clear();
@@ -758,52 +788,49 @@
 
     function getWasserbedarfLiter(activeEl){
         if(!activeEl) return 0;
-        const fullText=((activeEl.textContent||"")+" "+(activeEl.title||"")+" "+(activeEl.getAttribute("search_attribute")||"")+" "+(activeEl.getAttribute("data-aao-text")||"")).replace(/\./g,"").toLowerCase();
-        const matchLiter=fullText.match(/(\d{3,6})\s*(?:liter|ltr|li\b|l\b)/i);
+        const fullText = ((activeEl.textContent||"") + " " + (activeEl.title||"") + " " + (activeEl.getAttribute("search_attribute")||"") + " " + (activeEl.getAttribute("data-aao-text")||"")).replace(/\./g,"").toLowerCase();
+        const matchLiter = fullText.match(/(\d{3,6})\s*(?:liter|ltr|li\b|l\b)/i);
         if(matchLiter){
-            const val=parseInt(matchLiter[1],10);
-            if(val>=500) return val;
+            const val = parseInt(matchLiter[1],10);
+            if(val >= 500) return val;
         }
         if(fullText.includes("gtlf")||fullText.includes("großtank")) return 10000;
-        if(fullText.includes("ptlf")) return 4000;
-        if(fullText.includes("tankwagen")&&!fullText.includes("klein")) return 5000;
-        if(fullText.includes("kleintankwagen")) return 2000;
-        if(fullText.includes("tlf 4000")) return 4000;
-        if(fullText.includes("tlf 3000")) return 3000;
-        if(fullText.includes("tlf 2000")) return 2000;
-        if(fullText.includes("tlf")) return 3000;
+        if(fullText.includes("ptlf")||fullText.includes("tlf 4000")) return 4000;
+        if(fullText.includes("tankwagen") && !fullText.includes("klein")) return 5000;
+        if(fullText.includes("kleintankwagen")||fullText.includes("tlf 2000")) return 2000;
+        if(fullText.includes("tlf 3000")||fullText.includes("tlf")) return 3000;
         return 0;
     }
 
-    function incrementTileCount(vehicleKey,activeEl){
+    function incrementTileCount(vehicleKey, activeEl){
         if(!vehicleKey) return;
-        let inc=uiSettings.clickIncrement;
-        if(vehicleKey==="Wasserbedarf"){
-            inc=getWasserbedarfLiter(activeEl);
-            if(inc===0) return;
+        let inc = uiSettings.clickIncrement;
+        if(vehicleKey === "Wasserbedarf"){
+            inc = getWasserbedarfLiter(activeEl);
+            if(inc === 0) return;
         }
 
-        state.today[vehicleKey]=(state.today[vehicleKey]||0)+inc;
-        state.total[vehicleKey]=(state.total[vehicleKey]||0)+inc;
-        state.det[vehicleKey]=state.det[vehicleKey]||{};
-        const detailName=(normalize(activeEl?activeEl.textContent:vehicleKey)||vehicleKey).slice(0,60);
-        state.det[vehicleKey][detailName]=(state.det[vehicleKey][detailName]||0)+inc;
+        state.today[vehicleKey] = (state.today[vehicleKey] || 0) + inc;
+        state.total[vehicleKey] = (state.total[vehicleKey] || 0) + inc;
+        state.det[vehicleKey] = state.det[vehicleKey] || {};
+        const detailName = (normalize(activeEl ? activeEl.textContent : vehicleKey) || vehicleKey).slice(0,60);
+        state.det[vehicleKey][detailName] = (state.det[vehicleKey][detailName] || 0) + inc;
         store.save();
 
         if(isMainPage){
-            requestAnimationFrame(()=>{
-                if(tileEls[vehicleKey]) updateTile(vehicleKey,state);
+            requestAnimationFrame(() => {
+                if(tileEls[vehicleKey]) updateTile(vehicleKey, state);
                 updateCategoryHeaders();
-                updateHeaderStats(state);
+                updateHeaderStats();
                 if(fzWrapper) fzWrapper.classList.remove("fzHidden");
                 resetCountdown();
             });
         }
     }
 
-    function updateHeaderStats(state){
-        const statsEl=document.getElementById("fzMissionStats");
-        if(statsEl) statsEl.innerHTML=getMissionStatsHTML();
+    function updateHeaderStats(){
+        const statsEl = document.getElementById("fzMissionStats");
+        if(statsEl) statsEl.innerHTML = getMissionStatsHTML();
     }
 
     let _cachedHeaderElements = {};
@@ -898,8 +925,8 @@
         });
     }
 
-    function getTargetBody(){return(extWin&&!extWin.closed)?extWin.document.body:document.body;}
-    function getTargetDoc(){return(extWin&&!extWin.closed)?extWin.document:document;}
+    function getTargetBody(){ return (extWin && !extWin.closed) ? extWin.document.body : document.body; }
+    function getTargetDoc(){ return (extWin && !extWin.closed) ? extWin.document : document; }
 
     function getAvailabilitySummary(){
         const EXCLUDE_FROM_AVAIL = new Set([
@@ -920,106 +947,116 @@
             "DLRG Herford","DLRG Gütersloh"
         ]);
 
-        const relevantKeys = KEYS.filter(k=>!EXCLUDE_FROM_AVAIL.has(k));
-        const notAvailButExist=relevantKeys.filter(k=>vehicleExists[k]===true&&vehicleAvailability[k]!==true);
-        const notExist=relevantKeys.filter(k=>vehicleExists[k]!==true);
-        const green=relevantKeys.filter(k=>vehicleAvailability[k]===true).length;
-        return{total:relevantKeys.length,green,orange:notAvailButExist.length,red:notExist.length,notAvailButExist,notExist};
+        const relevantKeys = KEYS.filter(k => !EXCLUDE_FROM_AVAIL.has(k));
+        const notAvailButExist = relevantKeys.filter(k => vehicleExists[k] === true && vehicleAvailability[k] !== true);
+        const notExist = relevantKeys.filter(k => vehicleExists[k] !== true);
+        const green = relevantKeys.filter(k => vehicleAvailability[k] === true).length;
+        
+        return { total: relevantKeys.length, green, orange: notAvailButExist.length, red: notExist.length, notAvailButExist, notExist };
     }
 
     function triggerAlarm(key){
-        const cached=tileCache[key];
-        if(!cached||!cached.funkalarmLabel) return;
+        const cached = tileCache[key];
+        if(!cached || !cached.funkalarmLabel) return;
         if(alarmTimers[key]){
             clearTimeout(alarmTimers[key]);
             delete alarmTimers[key];
         }
         cached.funkalarmLabel.classList.add("fzAlarming");
-        lastAlarmTime[key]=new Date().toLocaleTimeString("de-DE");
-        const durationMs=Math.max(10,(uiSettings.funkalarmBlinkDuration||120))*1000;
-        alarmTimers[key]=setTimeout(()=>{
+        lastAlarmTime[key] = new Date().toLocaleTimeString("de-DE");
+        const durationMs = Math.max(10, (uiSettings.funkalarmBlinkDuration || 120)) * 1000;
+        alarmTimers[key] = setTimeout(() => {
             if(cached.funkalarmLabel) cached.funkalarmLabel.classList.remove("fzAlarming");
             delete alarmTimers[key];
-        },durationMs);
+        }, durationMs);
+    }
+
+    // =======================================================
+    // HAUPT-API-SCHLEIFE (FAHRZEUGE & CREDITS)
+    // =======================================================
+    async function fetchCreditsDaily() {
+        try {
+            const res = await fetch('/credits/daily');
+            const html = await res.text();
+            if (!html.includes('login-form')) {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const rows = doc.querySelectorAll('table tbody tr');
+                let ein = 0, aus = 0;
+                rows.forEach(row => {
+                    const cell = row.querySelector('td[data-sort-value],td[sortvalue]') || row.querySelectorAll('td')[2];
+                    if (!cell) return;
+                    const raw = (cell.getAttribute('data-sort-value') || cell.textContent || '').replace(/\./g, '').replace(/[^\d-]/g, '');
+                    const val = parseInt(raw, 10);
+                    if (!isNaN(val)) {
+                        if (val > 0) ein += val;
+                        else aus += val;
+                    }
+                });
+                creditsData = { ein, aus, bilanz: ein + aus, date: getTodayString() };
+                json.save(STORAGE.CREDITS_DATA, creditsData);
+                lastCreditsUpdate = Date.now();
+                updateCreditsUI();
+            }
+        } catch (e) {
+            console.warn("[Bobelle] Credits fetch failed:", e);
+        }
     }
 
     async function updateAvailability(){
         if(!isMainPage) return;
-        isUpdating=true;
+        isUpdating = true;
         updateSubHeaderInfo();
 
-        const now=Date.now();
-        const todayStr=getTodayString();
+        const now = Date.now();
+        const todayStr = getTodayString();
 
-        if(creditsData.date!==todayStr||(now-lastCreditsUpdate>300000)){
-            try{
-                fetch('/credits/daily').then(res=>res.text()).then(html=>{
-                    if(!html.includes('login-form')){
-                        const doc=new DOMParser().parseFromString(html,'text/html');
-                        const rows=doc.querySelectorAll('table tbody tr');
-                        let ein=0,aus=0;
-                        rows.forEach(row=>{
-                            const cell=row.querySelector('td[data-sort-value],td[sortvalue]')||row.querySelectorAll('td')[2];
-                            if(!cell) return;
-                            const raw=(cell.getAttribute('data-sort-value')||cell.textContent||'').replace(/\./g,'').replace(/[^\d-]/g,'');
-                            const val=parseInt(raw,10);
-                            if(!isNaN(val)){
-                                if(val>0) ein+=val;
-                                else aus+=val;
-                            }
-                        });
-                        creditsData={ein,aus,bilanz:ein+aus,date:todayStr};
-                        json.save(STORAGE.CREDITS_DATA,creditsData);
-                        lastCreditsUpdate=now;
-                        updateCreditsUI();
-                    }
-                }).catch(()=>{});
-            }catch(e){}
+        if(creditsData.date !== todayStr || (now - lastCreditsUpdate > 300000)){
+            await fetchCreditsDaily();
         }
 
         await updateBuildingCapacities();
 
         for(const k of KEYS){
-            vehicleAvailability[k]=false;
-            vehicleExists[k]=false;
-            vehicleInUseCount[k]=0;
-            vehicleTotalCount[k]=0;
-            vehicleFreeCount[k]=0;
+            vehicleAvailability[k] = false;
+            vehicleExists[k] = false;
+            vehicleInUseCount[k] = 0;
+            vehicleTotalCount[k] = 0;
+            vehicleFreeCount[k] = 0;
         }
 
-        hasFreeCountData=false;
-        vehicleLists={};
+        hasFreeCountData = false;
+        vehicleLists = {};
 
-        let catStats={};
-        for(const c of CATEGORY_ORDER) catStats[c]={free:0,busy:0,s6:0,total:0};
+        let catStats = {};
+        for(const c of CATEGORY_ORDER) catStats[c] = {free:0, busy:0, s6:0, total:0};
 
-        let vehicles=[];
-        try{
-            const response=await fetch("/api/vehicles",{credentials:"same-origin"});
+        let vehicles = [];
+        try {
+            const response = await fetch("/api/vehicles", {credentials:"same-origin"});
             if(!response.ok) throw new Error("API Offline");
-            vehicles=await response.json();
+            vehicles = await response.json();
             if(!Array.isArray(vehicles)) throw new Error("Invalid API Data");
-            sysReady=true;
-        }catch(e){
-            sysReady=false;
-            isUpdating=false;
+            sysReady = true;
+        } catch(e) {
+            sysReady = false;
+            isUpdating = false;
             updateSubHeaderInfo();
             return;
         }
 
-        const setExist=(k)=>{if(tileMetaByKey[k]) vehicleExists[k]=true;};
-        const setAvail=(k)=>{if(tileMetaByKey[k]) vehicleAvailability[k]=true;};
-        const addTotal=(k)=>{if(tileMetaByKey[k]) vehicleTotalCount[k]=(vehicleTotalCount[k]||0)+1;};
-        const addInUse=(k)=>{if(tileMetaByKey[k]) vehicleInUseCount[k]=(vehicleInUseCount[k]||0)+1;};
+        const setExist = (k) => { if(tileMetaByKey[k]) vehicleExists[k] = true; };
+        const setAvail = (k) => { if(tileMetaByKey[k]) vehicleAvailability[k] = true; };
+        const addTotal = (k) => { if(tileMetaByKey[k]) vehicleTotalCount[k] = (vehicleTotalCount[k] || 0) + 1; };
+        const addInUse = (k) => { if(tileMetaByKey[k]) vehicleInUseCount[k] = (vehicleInUseCount[k] || 0) + 1; };
 
-        const isInitialLoad=!vehicleStateCache._initialized;
+        const isInitialLoad = !vehicleStateCache._initialized;
 
         for(const v of vehicles){
-            const typeId=v.vehicle_type_id??v.vehicle_type??null;
-            let fms=v.fms_real??v.fms??null;
-            const fmsText=(v.fms_text||"").toLowerCase();
+            const typeId = v.vehicle_type_id ?? v.vehicle_type ?? null;
+            let fms = v.fms_real ?? v.fms ?? null;
+            const fmsText = (v.fms_text || "").toLowerCase();
 
-            if(!fms||fms===0){
+            if(!fms || fms === 0){
                 if(fmsText.includes("frei auf wache")||fmsText.includes("at the station")) fms=2;
                 else if(fmsText.includes("frei auf funk")) fms=1;
                 else if(fmsText.includes("anfahrt")) fms=3;
@@ -1031,187 +1068,67 @@
                 else fms=2;
             }
 
-            const isInUse=(fms===3||fms===4||fms===7||fms===8);
-            const isAvail=(fms===1||fms===2);
-            let matchedKeys=new Set();
+            const isInUse = (fms===3||fms===4||fms===7||fms===8);
+            const isAvail = (fms===1||fms===2);
+            let matchedKeys = new Set();
 
-            const cachedMatch=VEHICLE_MATCH_CACHE.get(v.id);
-            if(cachedMatch&&cachedMatch.caption===v.caption){
-                cachedMatch.keys.forEach(k=>matchedKeys.add(k));
+            const cachedMatch = VEHICLE_MATCH_CACHE.get(v.id);
+            if(cachedMatch && cachedMatch.caption === v.caption){
+                cachedMatch.keys.forEach(k => matchedKeys.add(k));
             } else {
-                const vNameCustom=normalize(v.caption||"");
-                const vNameType=normalize(v.vehicle_type_caption||v.vehicle_type_name||"");
-                const mappedKeys=TYPE_ID_MAPPING[typeId];
-                let idMatched=false;
+                const vNameCustom = normalize(v.caption || "");
+                const vNameType = normalize(v.vehicle_type_caption || v.vehicle_type_name || "");
+                const mappedKeys = TYPE_ID_MAPPING[typeId];
+                let idMatched = false;
 
-                if(mappedKeys&&mappedKeys.length>0){
-                    if(mappedKeys.length===1){
+                if(mappedKeys && mappedKeys.length > 0){
+                    if(mappedKeys.length === 1){
                         matchedKeys.add(mappedKeys[0]);
-                        idMatched=true;
+                        idMatched = true;
                     } else {
                         for(const k of mappedKeys){
-                            const tile=tileMetaByKey[k];
-                            if(tile&&tile.search&&tile.search.length>0){
-                                let nameMatch=false;
-                                if(tile.norm&&(vNameCustom.includes(tile.norm)||vNameType.includes(tile.norm))) nameMatch=true;
+                            const tile = tileMetaByKey[k];
+                            if(tile && tile.search && tile.search.length > 0){
+                                let nameMatch = false;
+                                if(tile.norm && (vNameCustom.includes(tile.norm) || vNameType.includes(tile.norm))) nameMatch = true;
                                 if(!nameMatch){
                                     for(const s of tile.search){
-                                        if(vNameCustom.includes(s)||vNameType.includes(s)){nameMatch=true;break;}
+                                        if(vNameCustom.includes(s) || vNameType.includes(s)){ nameMatch = true; break; }
                                     }
                                 }
-                                if(nameMatch){matchedKeys.add(k);idMatched=true;}
+                                if(nameMatch){ matchedKeys.add(k); idMatched = true; }
                             } else {
                                 matchedKeys.add(k);
-                                idMatched=true;
+                                idMatched = true;
                             }
                         }
                     }
                 }
-                // Fallback: Textbasierte Fahrzeugtyp-Erkennung
+                
                 if(!idMatched){
-                    const cacheKey=vNameCustom+"|"+vNameType;
+                    const cacheKey = vNameCustom + "|" + vNameType;
                     if(nameCache[cacheKey]){
                         for(const k of nameCache[cacheKey]) matchedKeys.add(k);
                     } else {
-                        const found=[];
+                        const found = [];
                         for(const t of TILE_LIST){
-                            let hit=false;
-                            if(t.norm&&(vNameCustom.includes(t.norm)||vNameType.includes(t.norm))) hit=true;
-                            if(!hit&&t.search.length>0){
-                                for(let i=0;i<t.search.length;i++){
-                                    if(vNameCustom.includes(t.search[i])||vNameType.includes(t.search[i])){hit=true;break;}
+                            let hit = false;
+                            if(t.norm && (vNameCustom.includes(t.norm) || vNameType.includes(t.norm))) hit = true;
+                            if(!hit && t.search.length > 0){
+                                for(let i=0; i < t.search.length; i++){
+                                    if(vNameCustom.includes(t.search[i]) || vNameType.includes(t.search[i])){ hit = true; break; }
                                 }
                             }
-                            if(hit){matchedKeys.add(t.n);found.push(t.n);}
+                            if(hit){ matchedKeys.add(t.n); found.push(t.n); }
                         }
-                        nameCache[cacheKey]=Array.from(matchedKeys).filter(k=>found.includes(k));
+                        nameCache[cacheKey] = Array.from(matchedKeys).filter(k => found.includes(k));
                         for(const k of found) matchedKeys.add(k);
                     }
                 }
 
-                if(typeId===32){
-                    matchedKeys.delete("FuStW"); matchedKeys.delete("FuStW (DGL)");
-                    matchedKeys.delete("Zivilstreifenwagen"); matchedKeys.delete("LauKw"); matchedKeys.delete("LeBefKw");
-                    matchedKeys.add("FuStW");
-                }
-
-                if(typeId===50){
-                    matchedKeys.delete("GruKw"); matchedKeys.delete("Zugfahrzeug Pferdetransport");
-                    matchedKeys.delete("Pferdetransporter klein"); matchedKeys.delete("Pferdetransporter groß");
-                    matchedKeys.delete("Anh Pferdetransport");
-                    matchedKeys.add("GruKw");
-                }
-
-                if(typeId===31){
-                    matchedKeys.delete("RTH [Christoph 13 (Bielefeld)]");
-                    matchedKeys.add("RTH [Christoph 13 (Bielefeld)]");
-                }
-
-                if(typeId===61){
-                    matchedKeys.delete("Polizeihubschrauber");
-                    matchedKeys.add("Polizeihubschrauber");
-                }
-
-                if(typeId===91){
-                    matchedKeys.delete("GW-San"); matchedKeys.delete("Rettungshundefahrzeug"); matchedKeys.delete("Hundestaffel (Bergrettung)");
-                    matchedKeys.add("Rettungshundefahrzeug");
-                }
-
-                if(typeId===126){
-                    matchedKeys.delete("MTF Drohne");
-                    matchedKeys.add("MTF Drohne");
-                }
-
-                if(typeId===140){
-                    matchedKeys.delete("MTW-V"); matchedKeys.delete("MTW-TeSi");
-                    matchedKeys.add("MTW-V");
-                }
-
-                if(typeId===93){
-                    matchedKeys.delete("MTW-O"); matchedKeys.delete("MTW-OV"); matchedKeys.delete("KTW Typ B"); matchedKeys.delete("OV Mannschaftstransportwagen");
-                    matchedKeys.add("MTW-O");
-                }
-
-                if(typeId===58){
-                    matchedKeys.delete("KTW Typ B");
-                    matchedKeys.add("KTW Typ B");
-                }
-
-                if(typeId===73){
-                    matchedKeys.delete("GRTW");
-                    matchedKeys.add("GRTW");
-                }
-
-                if(typeId===100){
-                    matchedKeys.delete("FüKW (THW)"); matchedKeys.delete("MLW 4"); matchedKeys.delete("FüKomKW");
-                    matchedKeys.add("MLW 4");
-                }
-
-                if(typeId===132){
-                    matchedKeys.delete("Anh FKH");
-                    matchedKeys.add("Anh FKH");
-                }
-
-                if(typeId===157){
-                    matchedKeys.delete("RTH [Christoph 13 (Bielefeld)]");
-                    matchedKeys.delete("RTH mit Winde");
-                    matchedKeys.add("RTH mit Winde");
-                }
-
-                if(typeId===156){
-                    matchedKeys.delete("Polizeihubschrauber");
-                    matchedKeys.delete("Polizeihubschrauber mit Winde");
-                    matchedKeys.add("Polizeihubschrauber mit Winde");
-                }
-
-                if(typeId===3){
-                    matchedKeys.delete("ELW 1"); matchedKeys.delete("ELW 1 (SEG)");
-                    matchedKeys.add("ELW 1");
-                }
-
-                if(typeId===59){
-                    matchedKeys.delete("ELW 1"); matchedKeys.delete("ELW 1 (SEG)");
-                    matchedKeys.add("ELW 1 (SEG)");
-                }
-
-                if(typeId===33){
-                    matchedKeys.delete("GW-Höhenrettung"); matchedKeys.delete("GW-Höhenrettung (Bergrettung)");
-                    matchedKeys.add("GW-Höhenrettung");
-                }
-
-                if(typeId===158){
-                    matchedKeys.delete("GW-Höhenrettung"); matchedKeys.delete("GW-Höhenrettung (Bergrettung)");
-                    matchedKeys.add("GW-Höhenrettung (Bergrettung)");
-                }
-
-                if(typeId===51){
-                    matchedKeys.delete("FüKW (Polizei)"); matchedKeys.delete("FüKW (THW)");
-                    matchedKeys.add("FüKW (Polizei)");
-                }
-
-                if(typeId===144){
-                    matchedKeys.delete("FüKW (Polizei)"); matchedKeys.delete("FüKW (THW)");
-                    matchedKeys.add("FüKW (THW)");
-                }
-
-                if(typeId===166){
-                    matchedKeys.delete("TLF"); matchedKeys.delete("PTLF 4000");
-                    matchedKeys.add("PTLF 4000");
-                }
-
-                if(typeId===17 || typeId===18 || typeId===87){
-                    matchedKeys.delete("TLF"); matchedKeys.delete("PTLF 4000");
-                    matchedKeys.add("TLF");
-                }
-
-                if(typeId===149){
-                    matchedKeys.delete("GW-Bergrettung"); matchedKeys.delete("GW-Bergrettung (NEF)");
-                    matchedKeys.add("GW-Bergrettung (NEF)");
-                }
-
-                if(typeId===150){
-                    matchedKeys.delete("GW-Bergrettung"); matchedKeys.delete("GW-Bergrettung (NEF)");
-                    matchedKeys.add("GW-Bergrettung");
+                if (VEHICLE_TYPE_OVERRIDES[typeId]) {
+                    VEHICLE_TYPE_OVERRIDES[typeId].del.forEach(k => matchedKeys.delete(k));
+                    VEHICLE_TYPE_OVERRIDES[typeId].add.forEach(k => matchedKeys.add(k));
                 }
 
                 VEHICLE_MATCH_CACHE.set(v.id, {caption: v.caption, keys: Array.from(matchedKeys)});
@@ -1241,21 +1158,21 @@
                     }
                     incrementTileCount(k, null);
                     triggerAlarm(k);
+                    
                     const meta = tileMetaByKey[k];
                     if(meta && (meta.cat === "Luft" || meta.cat === "SeenotRett") && (k.includes("RTH") || k.includes("Hubschrauber") || k.includes("SAR Hubschrauber"))){
                         const heliKey = v.id + "_" + k;
-                        if(!heliAlreadyCountedThisSession.has(heliKey)){
+                        if(!heliAlreadyCountedThisSession.has(heliKey) && heliAlreadyCountedThisSession.size < 5000){
                             heliAlreadyCountedThisSession.add(heliKey);
                             incrementTileCount("Helikopter", null);
                         }
                     }
                 });
 
-                // NEU: Krankentransporte zählen
                 const KTW_TYPE_IDS = new Set([38, 58, 74, 97]);
                 if(KTW_TYPE_IDS.has(typeId)){
                     const ktpGuardKey = v.id + "_ktp_" + (vehicleStateCache[v.id] || 0);
-                    if(!ktpAlreadyCountedThisSession.has(ktpGuardKey)){
+                    if(!ktpAlreadyCountedThisSession.has(ktpGuardKey) && ktpAlreadyCountedThisSession.size < 5000){
                         ktpAlreadyCountedThisSession.add(ktpGuardKey);
                         incrementTileCount("Krankentransporte", null);
                     }
@@ -1326,7 +1243,7 @@
                     `<div class="fzResPill fzHeaderPill" id="fzCreditsPill" title="Credits" onclick="window.open('/credits/daily','_blank')" style="margin-left:${uiSettings.creditsGap}px;background:transparent;border:1px solid rgba(0,0,0,0.1);font-size:${uiSettings.creditsFontSize}px;color:${uiSettings.creditsLabelColor};">${creditsContent}</div>`;
             }
 
-            if(!uiRoot.hasChildNodes()) redrawGrid();
+            if(uiRoot && !uiRoot.hasChildNodes()) redrawGrid();
 
             for(const cat in catStats){
                 const data = catStats[cat];
@@ -1376,7 +1293,7 @@
             for(const k of KEYS) updateTile(k, state);
             updateCategoryHeaders();
             renderAvailabilityIndicator();
-            updateHeaderStats(state);
+            updateHeaderStats();
             isUpdating = false;
             lastUpdateStr = new Date().toLocaleTimeString("de-DE");
             updateSubHeaderInfo();
@@ -1390,6 +1307,7 @@
         vehicleTotalCount["Krankenhausbetten"] = cachedCapacities.beds || 0;
         vehicleInUseCount["Krankenhausbetten"] = cachedCapacities.bedsUsed || 0;
         vehicleFreeCount["Krankenhausbetten"] = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
+        
         vehicleExists["Patienten"] = true;
         vehicleAvailability["Patienten"] = (cachedCapacities.beds || 0) > 0;
         vehicleTotalCount["Patienten"] = cachedCapacities.beds || 0;
@@ -1400,11 +1318,13 @@
         const prisonerValue = Math.max(Number(state.today["Gefangene"] || 0), Number(cachedCapacities.cellsUsed || 0));
         state.today["Gefangene"] = prisonerValue;
         state.today["Gefängniszellen"] = prisonerValue;
+        
         vehicleExists["Gefangene"] = true;
         vehicleAvailability["Gefangene"] = (cachedCapacities.cells || 0) > 0;
         vehicleTotalCount["Gefangene"] = cachedCapacities.cells || 0;
         vehicleInUseCount["Gefangene"] = prisonerValue;
         vehicleFreeCount["Gefangene"] = Math.max(0, (cachedCapacities.cells || 0) - prisonerValue);
+        
         vehicleExists["Gefängniszellen"] = true;
         vehicleAvailability["Gefängniszellen"] = (cachedCapacities.cells || 0) > 0;
         vehicleTotalCount["Gefängniszellen"] = cachedCapacities.cells || 0;
@@ -1440,11 +1360,7 @@
                     bedsUsed += bedUsedVal;
                 }
 
-                if(
-                    type === 6 || type === 12 ||
-                    String(b.caption || "").toLowerCase().includes("gefängnis") ||
-                    String(b.caption || "").toLowerCase().includes("polizei")
-                ){
+                if(type === 6 || type === 12 || String(b.caption || "").toLowerCase().includes("gefängnis") || String(b.caption || "").toLowerCase().includes("polizei")){
                     const cellTotal = Number(b.prisoner_capacity ?? b.jail_cells ?? b.cell_count ?? (type === 12 ? (1 + lvl) : (2 + lvl))) || 0;
                     const usedVal = Number(b.prisoner_count ?? b.prisoners_count ?? b.current_prisoners ?? 0) || 0;
                     cells += cellTotal;
@@ -1474,18 +1390,19 @@
         pill.style.color = uiSettings.creditsLabelColor;
     }
 
+    // =======================================================
+    // LOOPS & STYLES
+    // =======================================================
     function startApiLoop(){
         if(apiTimer) clearInterval(apiTimer);
         const interval = Math.max(30, uiSettings.apiInterval || 120) * 1000;
         apiTimer = setInterval(updateAvailability, interval);
-        updateAvailability();
     }
 
     function startSchoolingLoop(){
         if(schoolingTimer) clearInterval(schoolingTimer);
         const interval = Math.max(60, uiSettings.schoolingApiInterval || 120) * 1000;
         schoolingTimer = setInterval(fetchSchoolings, interval);
-        fetchSchoolings();
     }
 
     function prepareCSSString(){
@@ -1592,8 +1509,6 @@
             .fzTileCollapseToggle:hover{opacity:1;transform:scale(1.2);}.fzTileCollapseToggle.fzTCactive{opacity:1;}
             .fzVehicleImg{position:absolute;bottom:3px;right:${uiSettings.tileImgAlign==="left"?"auto":"4px"};left:${uiSettings.tileImgAlign==="left"?"4px":"auto"};width:${imgH}px;height:auto;max-height:${imgH}px;object-fit:contain;opacity:0;pointer-events:none;transition:opacity 0.3s ease;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.25));}
             .fzTile.fzInUse .fzVehicleImg{opacity:1;}.fzTile.fzTileCompact .fzVehicleImg{display:none;}.fzTile.fzNoImg .fzVehicleImg{display:none;}
-
-
         `;
     }
 
@@ -1625,7 +1540,10 @@
         }
     }
 
-    function updateTile(key,state){
+    // =======================================================
+    // KACHEL RENDER LOGIK
+    // =======================================================
+    function updateTile(key, state){
         if(SCHOOLING_TILE_NAMES.has(key)){ updateSchoolingTiles(); return; }
         const cached = tileCache[key];
         if(!cached || !cached.el) return;
@@ -1669,8 +1587,7 @@
                     const freiZ = Math.max(0, (cachedCapacities.cells || 0) - (state.today["Gefangene"] || 0));
                     txt = `${freiZ} frei`;
                 } else if(rMode === "all" || rMode === "waterOnly"){
-                    if(COUNTED_RESOURCE_KEYS.has(key)) txt = "";
-                    else txt = v > 0 ? String(v) : "";
+                    if(!COUNTED_RESOURCE_KEYS.has(key)) txt = v > 0 ? String(v) : "";
                 }
             }
 
@@ -1694,7 +1611,7 @@
                 }
             }
         }
-        // Statusbalken (In-Use Prozentanteil) aktualisieren
+        
         if(cached.bottomBar){
             let pct = 0;
             if(total > 0) pct = Math.min(100, Math.round((inUse / total) * 100));
@@ -1815,7 +1732,7 @@
         }
     }
 
-    function createTile(key,state){
+    function createTile(key, state){
         if(SCHOOLING_TILE_NAMES.has(key)) return createSchoolingTile(key);
 
         const meta = tileMetaByKey[key];
@@ -1845,7 +1762,7 @@
             <div class="fzRightWrapper"><div class="fzFunkalarmLabel">${uiSettings.funkalarmText || 'Funk-Alarm'}</div><div class="fzTileCount"><span class="fzNumToday">0</span><span class="fzNumYday">(0)</span><span class="fzTrend"></span></div><div class="fzResourceCounter"></div></div>
         `;
         div.appendChild(imgEl);
-        div.onclick = () => showDetails(key,state);
+        div.onclick = () => showDetails(key, state);
 
         tileEls[key] = div;
         tileCache[key] = {
@@ -1871,6 +1788,9 @@
         return div;
     }
 
+    // =======================================================
+    // MODALS & EVENT HANDLER
+    // =======================================================
     function toggleCategoryTileCompact(cat){
         if(!Array.isArray(uiSettings.collapsedTilesCats)) uiSettings.collapsedTilesCats = [];
         const isCompact = uiSettings.collapsedTilesCats.includes(cat);
@@ -1893,7 +1813,7 @@
         });
     }
 
-    function showDetails(key,state){
+    function showDetails(key, state){
         if(SCHOOLING_TILE_NAMES.has(key)){ showSchoolingDetails(); return; }
 
         const PURE_CAPACITY_KEYS = new Set(["Krankenhausbetten","Gefängniszellen"]);
@@ -1935,7 +1855,7 @@
         const peakLabel = peakIdx === 0 ? "Gestern" : `-${peakIdx+1}d`;
 
         let graphHtml = `<div class="fzSectionTitle">Letzte 7 Tage</div><div class="fzGraphContainer">`;
-        for(let i=6;i>=0;i--){
+        for(let i=6; i>=0; i--){
             const hVal = history[i] || 0;
             const hPct = Math.round((hVal / maxVal) * 100);
             const isPeak = (i === peakIdx && peak7 > 0);
@@ -1951,7 +1871,7 @@
         let fmsBarHtml = `<div class="fzSectionTitle">FMS-Übersicht (${list.length} Fahrzeuge)</div>`;
         if(list.length > 0){
             let segments = "";
-            for(let s=1;s<=8;s++){
+            for(let s=1; s<=8; s++){
                 if(fmsCounts[s] > 0){
                     const pct = Math.round((fmsCounts[s] / fmsTotal) * 100);
                     const textColor = FMS_TEXT_COLORS[s] || "#fff";
@@ -1959,7 +1879,7 @@
                 }
             }
             fmsBarHtml += `<div style="display:flex;height:18px;border-radius:4px;overflow:hidden;margin-bottom:6px;border:1px solid #ddd;">${segments}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">`;
-            for(let s=1;s<=8;s++){
+            for(let s=1; s<=8; s++){
                 if(fmsCounts[s] > 0){
                     const textColor = FMS_TEXT_COLORS[s] || "#fff";
                     fmsBarHtml += `<span style="font-size:11px;background:${FMS_COLORS[s]};color:${textColor};padding:2px 8px;border-radius:10px;font-weight:bold;">S${s}: ${fmsCounts[s]}</span>`;
@@ -1983,7 +1903,7 @@
         const lastAlarm = lastAlarmTime[key] || null;
         const lastAlarmHtml = lastAlarm
         ? `<div class="fzStatBox"><div class="fzStatVal" style="font-size:14px;">🚨 ${lastAlarm}</div><div class="fzStatLbl">Letzte Alarmierung</div></div>`
-            : `<div class="fzStatBox"><div class="fzStatVal" style="font-size:13px;color:#aaa;">–</div><div class="fzStatLbl">Letzte Alarmierung</div></div>`;
+        : `<div class="fzStatBox"><div class="fzStatVal" style="font-size:13px;color:#aaa;">–</div><div class="fzStatLbl">Letzte Alarmierung</div></div>`;
 
         const renderVehicleList = (filter) => {
             let filtered = [...list];
@@ -2053,7 +1973,7 @@
     function toggleFS(){ if(fzWrapper) fzWrapper.classList.toggle("fzFullscreen"); }
 
     function exportData(){
-        const backup = {settings:uiSettings,today:state.today,total:state.total,history:state.history,yday:state.yday,customStock};
+        const backup = {settings:uiSettings, today:state.today, total:state.total, history:state.history, yday:state.yday, customStock};
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup,null,2));
         const a = document.createElement('a');
         a.setAttribute("href", dataStr);
@@ -2575,13 +2495,13 @@
 
             renderAvailabilityIndicator();
             updateSubHeaderInfo();
-        },500);
+        }, 500);
 
         setInterval(() => {
             if(document.hidden || (fzWrapper && fzWrapper.classList.contains("fzHidden") && !extWin)) return;
             const statsEl = getTargetDoc().getElementById("fzMissionStats");
             if(statsEl) statsEl.innerHTML = getMissionStatsHTML();
-        },3000);
+        }, 3000);
 
         const scrollArea = document.createElement("div");
         scrollArea.className = "fzScrollArea";
@@ -2698,7 +2618,7 @@
                 setTimeout(() => {
                     const statsEl = document.getElementById("fzMissionStats");
                     if(statsEl) statsEl.innerHTML = getMissionStatsHTML();
-                },500);
+                }, 500);
             });
         }
 
@@ -2719,7 +2639,7 @@
                         updateAvailability();
                         const statsEl = document.getElementById("fzMissionStats");
                         if(statsEl) statsEl.innerHTML = getMissionStatsHTML();
-                    },200);
+                    }, 200);
                 }
             };
         }
@@ -2729,24 +2649,18 @@
         if(!isMainPage) return;
         KEYS.forEach(k => { if(tileEls[k]) updateTile(k, state); });
         updateCategoryHeaders();
-        updateHeaderStats(state);
+        updateHeaderStats();
         renderAvailabilityIndicator();
         updateSubHeaderInfo();
     }
 
+    // =======================================================
+    // CLICK LISTENER & INTERCEPTS
+    // =======================================================
     const CLICK_PATTERNS = [
-        {
-            test: (url, text) => /\/patients?\/\d+\/hospitals?\/\d+/.test(url) || /\/missions\/\d+\/patients?\/\d+\/hospital/.test(url) || text.includes("ins krankenhaus"),
-            action: "Patienten"
-        },
-        {
-            test: (url, text) => /\/patients?\/\d+\/ambulances?\/\d+/.test(url) || /\/transports?\/\d+/.test(url) || text.includes("krankentransport"),
-            action: "Krankentransporte"
-        },
-        {
-            test: (url, text) => /\/prisoners?\/\d+\/cells?\/\d+/.test(url) || /\/missions\/\d+\/prisoners?\/\d+\/cell/.test(url) || text.includes("in zelle"),
-            action: "Gefangene"
-        }
+        { test: (url, text) => /\/patients?\/\d+\/hospitals?\/\d+/.test(url) || /\/missions\/\d+\/patients?\/\d+\/hospital/.test(url) || text.includes("ins krankenhaus"), action: "Patienten" },
+        { test: (url, text) => /\/patients?\/\d+\/ambulances?\/\d+/.test(url) || /\/transports?\/\d+/.test(url) || text.includes("krankentransport"), action: "Krankentransporte" },
+        { test: (url, text) => /\/prisoners?\/\d+\/cells?\/\d+/.test(url) || /\/missions\/\d+\/prisoners?\/\d+\/cell/.test(url) || text.includes("in zelle"), action: "Gefangene" }
     ];
 
     document.addEventListener("click", (e) => {
@@ -2791,10 +2705,7 @@
                 return;
             }
 
-            if(
-                text.includes("bt-kombi") || text.includes("gw-bt") ||
-                text.includes("bt lkw") || text.includes("anh fkh") || text.includes("betreuung")
-            ){
+            if(text.includes("bt-kombi") || text.includes("gw-bt") || text.includes("bt lkw") || text.includes("anh fkh") || text.includes("betreuung")){
                 incrementTileCount("Betreuung/Versorgung", activeEl);
                 return;
             }
@@ -2806,18 +2717,18 @@
                 const guardKey = vId ? (vId + "_heli_click") : null;
                 if(!guardKey || !heliAlreadyCountedThisSession.has(guardKey)){
                     incrementTileCount("Helikopter", activeEl);
-                    if(guardKey) heliAlreadyCountedThisSession.add(guardKey);
+                    if(guardKey && heliAlreadyCountedThisSession.size < 5000) heliAlreadyCountedThisSession.add(guardKey);
                 }
             }
         }
     }, true);
 
-    window.addEventListener("storage",(e) => {
+    window.addEventListener("storage", (e) => {
         if(e.key === STORAGE.SYNC_SIGNAL){
             state.today = store.load(STORAGE.COUNTS_TODAY);
             state.total = store.load(STORAGE.COUNTS_TOTAL);
             state.yday = store.load(STORAGE.YDAY_COUNTS);
-            state.det = json.load(STORAGE.DETAILS_TODAY,{});
+            state.det = json.load(STORAGE.DETAILS_TODAY, {});
             refreshAllVisibleTiles();
         }
     });
@@ -2839,6 +2750,9 @@
         refreshAllVisibleTiles();
     }, 10000);
 
+    // =======================================================
+    // API INTERCEPTS (FETCH/XHR)
+    // =======================================================
     (function(){
         const API_HANDLERS = {
             patient: { pattern: /\/patients?\/.*\/hospitals?/, action: "Patienten", callback: () => updateBuildingCapacities(true).then(() => { syncDerivedResourceCounts(); if(isMainPage) { KEYS.forEach(k => tileEls[k] && updateTile(k, state)); updateCategoryHeaders(); } }) },
@@ -2877,6 +2791,9 @@
         };
     })();
 
+    // =======================================================
+    // START
+    // =======================================================
     if(isMainPage){
         if(window.requestIdleCallback){
             window.requestIdleCallback(() => {
