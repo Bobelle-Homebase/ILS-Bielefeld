@@ -5,8 +5,8 @@
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
-// @updateURL   https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
-// @downloadURL https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
+// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
+// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        GM_setValue
