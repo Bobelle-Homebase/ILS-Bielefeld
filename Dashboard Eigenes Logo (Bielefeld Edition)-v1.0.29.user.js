@@ -5,6 +5,8 @@
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und legt ein eigenes darüber
+// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
+// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        GM_setValue
