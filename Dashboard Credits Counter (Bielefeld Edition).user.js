@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Dashboard Credits Counter (Bielefeld Edition)
+// @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/bielefeld
 // @version      v1.0.33
 // @license      Design by Bobelle
