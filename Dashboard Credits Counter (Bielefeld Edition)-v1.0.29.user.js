@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter (Bielefeld Edition)
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.29
+// @version      v1.0.30
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
