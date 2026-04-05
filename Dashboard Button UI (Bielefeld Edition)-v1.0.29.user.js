@@ -5,8 +5,8 @@
 // @license     Design by Bobelle
 // @author      Design by Bobelle
 // @description Fügt einen Stil hinzu, welcher alle AAO-Links auf dieselbe Breite setzt
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
+// @updateURL   https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
+// @downloadURL https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @icon        https://www.leitstellenspiel.de/favicon.ico
 // @match       https://www.leitstellenspiel.de/
 // @match       https://www.leitstellenspiel.de/aaos
