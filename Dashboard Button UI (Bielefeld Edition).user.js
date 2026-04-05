@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Dashboard Button UI (Bielefeld Edition)
+// @name         Dashboard Button UI
 // @namespace    https://leitstellenspiel.de/bielefeld
 // @version      v1.0.33
 // @license      Design by Bobelle
