@@ -1,21 +1,17 @@
 // ==UserScript==
-// @name         Dashboard (Bielefeld Edition)
+// @name         Dashboard
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.34
+// @version      v1.0.35
 // @description  Full All in One
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addStyle
 // @run-at       document-start
-// @grant        none
 // ==/UserScript==
-
 (function() {
     'use strict';
 
@@ -31,7 +27,7 @@
     const DEBOUNCE_TIME = 100;
 
     const VEHICLE_MATCH_CACHE = {
-        _map: new Map(), 
+        _map: new Map(),
         _max: 5000,
         get(key) { return this._map.get(key); },
         set(key, val) {
@@ -322,7 +318,7 @@
         tileStatsMode:"both", tileBarReference:"yday", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.34 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.35 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:120,
         tileImgSize:38, tileImgAlign:"right"
     };
@@ -437,7 +433,7 @@
 
     const tileCache={}, nameCache={}, vehicleStateCache={}, alarmTimers={};
     let lastAlarmTime={}, saveTimeout=null;
-    
+
     const heliAlreadyCountedThisSession=new Set();
     const ktpAlreadyCountedThisSession=new Set();
 
@@ -532,7 +528,7 @@
 
     let vehicleAvailability={}, vehicleExists={}, vehicleInUseCount={}, vehicleTotalCount={}, vehicleFreeCount={};
     let hasFreeCountData=false, vehicleLists={};
-    
+
     let state = {
         today: store.load(STORAGE.COUNTS_TODAY),
         total: store.load(STORAGE.COUNTS_TOTAL),
@@ -773,7 +769,7 @@
             json.save(STORAGE.COUNTS_TODAY, {});
             json.save(STORAGE.DETAILS_TODAY, {});
             GM_setValue(STORAGE.DAYSTAMP, today);
-            
+
             if(currentState){
                 currentState.today = {};
                 currentState.yday = store.load(STORAGE.YDAY_COUNTS);
@@ -886,14 +882,14 @@
             const el = _cachedHeaderElements[cat + "_util"] || document.getElementById("fzBadge_Util_" + cat);
             if(!el) return;
             _cachedHeaderElements[cat + "_util"] = el;
-            
+
             const catKeys = CAT_VEHICLE_MAP[cat] || [];
             let total = 0, busy = 0;
             catKeys.forEach(t => {
                 total += (vehicleTotalCount[t.n] || 0);
                 busy += (vehicleInUseCount[t.n] || 0);
             });
-            
+
             if(total === 0){ el.style.display = "none"; return; }
             const pct = Math.round((busy / total) * 100);
             el.style.display = "inline-flex";
@@ -905,7 +901,7 @@
             const el = _cachedHeaderElements[cat + "_alarm"] || document.getElementById("fzBadge_LastAlarm_" + cat);
             if(!el) return;
             _cachedHeaderElements[cat + "_alarm"] = el;
-            
+
             const catKeys = (CAT_TILE_MAP[cat] || []).map(t => t.n);
             let latestTime = null, latestKey = null;
             catKeys.forEach(k => {
@@ -916,7 +912,7 @@
                     }
                 }
             });
-            
+
             if(latestTime){
                 el.style.display = "inline-flex";
                 el.innerHTML = `🚨 ${latestTime}`;
@@ -951,7 +947,7 @@
         const notAvailButExist = relevantKeys.filter(k => vehicleExists[k] === true && vehicleAvailability[k] !== true);
         const notExist = relevantKeys.filter(k => vehicleExists[k] !== true);
         const green = relevantKeys.filter(k => vehicleAvailability[k] === true).length;
-        
+
         return { total: relevantKeys.length, green, orange: notAvailButExist.length, red: notExist.length, notAvailButExist, notExist };
     }
 
@@ -1003,6 +999,7 @@
     }
 
     async function updateAvailability(){
+        if(isUpdating) return;
         if(!isMainPage) return;
         isUpdating = true;
         updateSubHeaderInfo();
@@ -1104,7 +1101,7 @@
                         }
                     }
                 }
-                
+
                 if(!idMatched){
                     const cacheKey = vNameCustom + "|" + vNameType;
                     if(nameCache[cacheKey]){
@@ -1158,7 +1155,7 @@
                     }
                     incrementTileCount(k, null);
                     triggerAlarm(k);
-                    
+
                     const meta = tileMetaByKey[k];
                     if(meta && (meta.cat === "Luft" || meta.cat === "SeenotRett") && (k.includes("RTH") || k.includes("Hubschrauber") || k.includes("SAR Hubschrauber"))){
                         const heliKey = v.id + "_" + k;
@@ -1307,7 +1304,7 @@
         vehicleTotalCount["Krankenhausbetten"] = cachedCapacities.beds || 0;
         vehicleInUseCount["Krankenhausbetten"] = cachedCapacities.bedsUsed || 0;
         vehicleFreeCount["Krankenhausbetten"] = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
-        
+
         vehicleExists["Patienten"] = true;
         vehicleAvailability["Patienten"] = (cachedCapacities.beds || 0) > 0;
         vehicleTotalCount["Patienten"] = cachedCapacities.beds || 0;
@@ -1318,13 +1315,13 @@
         const prisonerValue = Math.max(Number(state.today["Gefangene"] || 0), Number(cachedCapacities.cellsUsed || 0));
         state.today["Gefangene"] = prisonerValue;
         state.today["Gefängniszellen"] = prisonerValue;
-        
+
         vehicleExists["Gefangene"] = true;
         vehicleAvailability["Gefangene"] = (cachedCapacities.cells || 0) > 0;
         vehicleTotalCount["Gefangene"] = cachedCapacities.cells || 0;
         vehicleInUseCount["Gefangene"] = prisonerValue;
         vehicleFreeCount["Gefangene"] = Math.max(0, (cachedCapacities.cells || 0) - prisonerValue);
-        
+
         vehicleExists["Gefängniszellen"] = true;
         vehicleAvailability["Gefängniszellen"] = (cachedCapacities.cells || 0) > 0;
         vehicleTotalCount["Gefängniszellen"] = cachedCapacities.cells || 0;
@@ -1529,7 +1526,7 @@
         const newCSS = prepareCSSString();
         const newHash = newCSS.length + newCSS.substring(0, 100);
         if(newHash === lastCSSHash) return;
-        
+
         lastCSSHash = newHash;
         cssContent = newCSS;
         let s = document.getElementById("fzStyles");
@@ -1611,7 +1608,7 @@
                 }
             }
         }
-        
+
         if(cached.bottomBar){
             let pct = 0;
             if(total > 0) pct = Math.min(100, Math.round((inUse / total) * 100));
@@ -2404,8 +2401,10 @@
         (function(){
             const _push = history.pushState.bind(history);
             const _replace = history.replaceState.bind(history);
-            history.pushState = function(){ _push.apply(history,arguments); setTimeout(syncBtnVisibility,50); };
-            history.replaceState = function(){ _replace.apply(history,arguments); setTimeout(syncBtnVisibility,50); };
+            let _deb = null;
+            const debouncedSync = () => { clearTimeout(_deb); _deb = setTimeout(syncBtnVisibility, 250); };
+            history.pushState = function(){ _push.apply(history,arguments); debouncedSync(); };
+            history.replaceState = function(){ _replace.apply(history,arguments); debouncedSync(); };
         })();
 
         syncBtnVisibility();
@@ -2734,19 +2733,12 @@
     });
 
     setInterval(() => {
-        if(document.hidden && !extWin) return;
-        if(checkVehicleDayReset(state) && isMainPage){
+        if(!isMainPage || (document.hidden && !extWin)) return;
+        if(checkVehicleDayReset(state)){
             KEYS.forEach(k => updateTile(k, state));
             updateAvailability();
+            return;
         }
-    }, 10000);
-
-    setInterval(() => {
-        if(!isMainPage) return;
-        state.today = store.load(STORAGE.COUNTS_TODAY);
-        state.total = store.load(STORAGE.COUNTS_TOTAL);
-        state.yday = store.load(STORAGE.YDAY_COUNTS);
-        state.det = json.load(STORAGE.DETAILS_TODAY, {});
         refreshAllVisibleTiles();
     }, 10000);
 
@@ -2806,8 +2798,7 @@
                 registerEventListener();
             }, 100);
         }
-        
-        updateAvailability();
+
         startApiLoop();
         fetchSchoolings();
         startSchoolingLoop();
