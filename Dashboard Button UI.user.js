@@ -1,12 +1,10 @@
 // ==UserScript==
 // @name         Dashboard Button UI
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.34
+// @version      v1.0.35
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Fügt einen Stil hinzu, welcher alle AAO-Links auf dieselbe Breite setzt
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Button%20UI%20(Bielefeld%20Edition)-v1.0.29.user.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Button%20UI%20(Bielefeld%20Edition)-v1.0.29.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/
 // @match        https://www.leitstellenspiel.de/aaos
@@ -14,7 +12,6 @@
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addStyle
-// @run-at       document-idle
 // @grant        none
 // ==/UserScript==
 
@@ -79,3 +76,4 @@
     });
   }
 })();
+
