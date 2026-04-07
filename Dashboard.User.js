@@ -18,7 +18,7 @@
     if (window._bobelleDashboardRunning) return;
     window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.30 - Starte optimierte Version...");
+    console.log("[Bobelle Dashboard] v1.0.35 ");
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
@@ -313,13 +313,13 @@
         funkalarmText:"Alarmierung", funkalarmSize:10, funkalarmColor:"#555555", funkalarmBold:false,
         funkalarmBlinkColor:"#ff0000", funkalarmBlinkDuration:240,
         toggleBtnSize:44, toggleBtnBg:"#f01606", toggleBtnBorderC:"#f3f035", toggleBtnBorderW:2,
-        fmsFontSize:11, fmsHeight:1, fmsGap:4, debugMode:false, apiInterval:30,
+        fmsFontSize:11, fmsHeight:1, fmsGap:4, debugMode:false, apiInterval:60,
         tileIdPrefix:"ID: ", tileIdSize:10, tileIdColor:"#999999", tileIdAlign:"right",
         tileStatsMode:"both", tileBarReference:"yday", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.35 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
-        schoolingApiInterval:120,
+        footerText:"Design & Optimized v1.0.34 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        schoolingApiInterval:180,
         tileImgSize:38, tileImgAlign:"right"
     };
 
@@ -1007,11 +1007,10 @@
         const now = Date.now();
         const todayStr = getTodayString();
 
-        if(creditsData.date !== todayStr || (now - lastCreditsUpdate > 300000)){
+        if(creditsData.date !== todayStr || (now - lastCreditsUpdate > 30000)){
             await fetchCreditsDaily();
         }
 
-        await updateBuildingCapacities();
 
         for(const k of KEYS){
             vehicleAvailability[k] = false;
@@ -2679,7 +2678,7 @@
                         syncDerivedResourceCounts();
                         KEYS.forEach(k => tileEls[k] && updateTile(k, state));
                         updateCategoryHeaders();
-                    }), 1000);
+                    }), 2000);
                 }
                 return;
             }
@@ -2786,21 +2785,20 @@
     // =======================================================
     // START
     // =======================================================
+    let dashboardBooted = false;
     if(isMainPage){
+        const startDashboard = () => {
+            initUI(state);
+            registerEventListener();
+            setTimeout(() => startApiLoop(), 500);
+            setTimeout(() => startSchoolingLoop(), 1500);
+            setTimeout(() => updateBuildingCapacities(true), 2500);
+            setTimeout(() => { dashboardBooted = true; }, 5000);
+        };
         if(window.requestIdleCallback){
-            window.requestIdleCallback(() => {
-                initUI(state);
-                registerEventListener();
-            }, { timeout: 3000 });
+            window.requestIdleCallback(startDashboard, { timeout: 3000 });
         } else {
-            setTimeout(() => {
-                initUI(state);
-                registerEventListener();
-            }, 100);
+            setTimeout(startDashboard, 300)
         }
-
-        startApiLoop();
-        fetchSchoolings();
-        startSchoolingLoop();
     }
 })();
