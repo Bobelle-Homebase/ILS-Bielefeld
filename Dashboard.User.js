@@ -75,7 +75,6 @@
         { n:"RTH mit Winde", id:157, c:C_LUFT, cat:"Luft", s:["rth mit winde"]},
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
-        
         { n:"LF20", id:1, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
         { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
@@ -123,11 +122,9 @@
         { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-log","mtf-l"]},
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
-        
         { n:"MTW-V", id:140, c:C_FW, cat:"Versorgung", s:["mtw-v","mtw verpflegung"]},
         { n:"GW-Verpflegung", id:138, c:C_FW, cat:"Versorgung", s:["gw-verpflegung"]},
         { n:"GW-Küche", id:139, c:C_FW, cat:"Versorgung", s:["gw-küche"]},
-        
         { n:"RTW", id:28, c:C_RD, cat:"RD", s:["rtw"]},
         { n:"NEF", id:29, c:C_RD, cat:"RD", s:["nef"]},
         { n:"KTW", id:38, c:C_RD, cat:"RD", s:["ktw"]},
@@ -136,7 +133,6 @@
         { n:"KdoW-LNA", id:55, c:C_RD, cat:"RD", s:["lna"]},
         { n:"KdoW-OrgL", id:56, c:C_RD, cat:"RD", s:["orgl"]},
         { n:"GRTW", id:73, c:C_RD, cat:"RD", s:["grtw basis","grtw standard","grossraumrettungswagen"]},
-        
         { n:"FuStW", id:32, c:C_POL, cat:"POL", s:["fustw","streifenwagen"]},
         { n:"FuStW (DGL)", id:103, c:C_POL, cat:"POL", s:["dgl"]},
         { n:"GruKw", id:50, c:C_POL, cat:"POL", s:["grukw"]},
@@ -157,20 +153,16 @@
         { n:"Anh Pferdetransport", id:136, c:C_POL, cat:"POL", s:["anh pferde","anh pferdetransport"]},
         { n:"Zugfahrzeug Pferdetransport", id:137, c:C_POL, cat:"POL", s:["zugfahrzeug pferd"]},
         { n:"Außenlastbehälter", id:96, c:C_POL, cat:"POL", s:["außenlast"]},
-        
         { n:"MTF Drohne", id:126, c:"#9b9b9b", cat:"UAS", s:["mtf drohne","drohne"]},
         { n:"ELW Drohne", id:128, c:"#9b9b9b", cat:"UAS", s:["elw drohne"]},
         { n:"ELW 2 Drohne", id:129, c:"#9b9b9b", cat:"UAS", s:["elw 2 drohne"]},
         { n:"GW-UAS (Pilot Bobelle)", id:127, c:"#9b9b9b", cat:"UAS", s:["gw-uas"]},
-        
         { n:"FLF", id:75, c:"#721c24", cat:"FlugFW", s:["flf","flugfeldlöschfahrzeug"]},
         { n:"Rettungstreppe", id:76, c:"#721c24", cat:"FlugFW", s:["rt","rettungstreppe"]},
-        
         { n:"GW-Werkfeuerwehr", id:83, c:"#5a1a1f", cat:"WerkFW", s:["gw-werk"]},
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        
         { n:"Schmutzwasserpumpen", id:101, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
         { n:"Feuerlöschpumpen", id:[17,18,87], c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
@@ -206,7 +198,6 @@
         { n:"Anh DLE", id:44, c:C_THW, cat:"THW", s:["anh dle"]},
         { n:"Anh 12 Lbw (FGr Log-V)", id:178, c:C_THW, cat:"THW", s:["anh 12 lbw"]},
         { n:"Anh Plattform (FGr BrB)", id:183, c:C_THW, cat:"THW", s:["anh plattform"]},
-        
         { n:"ELW 1 (SEG)", id:59, c:C_SEG, cat:"SEG", s:["elw 1 (seg)","elw 1 seg"]},
         { n:"KTW Typ B", id:58, c:C_SEG, cat:"SEG", s:["ktw b","ktw typ b","nktw"]},
         { n:"GW-San", id:60, c:C_SEG, cat:"SEG", s:["gw-san"]},
@@ -219,13 +210,11 @@
         { n:"MTW-TeSi", id:173, c:C_SEG, cat:"SEG", s:["mtw-tesi"]},
         { n:"Anh TeSi", id:174, c:C_SEG, cat:"SEG", s:["anh tesi"]},
         { n:"Anh FKH", id:132, c:C_SEG, cat:"SEG", s:["anh fkh"]},
-        
         { n:"Anh NEA50 (SEG)", id:[175], c:"#5a5a5a", cat:"Netz", s:["anh nea50 seg"]},
         { n:"Anh NEA50 (THW)", id:[110], c:"#5a5a5a", cat:"Netz", s:["anh nea50 thw"]},
         { n:"Anh NEA200 (THW)", id:[112], c:"#5a5a5a", cat:"Netz", s:["anh nea200 thw"]},
         { n:"Anh NEA50 (FW)", id:[111], c:"#5a5a5a", cat:"Netz", s:["anh nea50 fw"]},
         { n:"Anh NEA200 (FW)", id:[113], c:"#5a5a5a", cat:"Netz", s:["anh nea200 fw"]},
-        
         { n:"ELW Bergrettung", id:151, c:"#B0AC97", cat:"BergRett", s:["elw berg"]},
         { n:"GW-Bergrettung", id:150, c:"#B0AC97", cat:"BergRett", s:["gw-bergrettung","gw-berg"]},
         { n:"GW-Höhenrettung (Bergrettung)", id:33, c:"#B0AC97", cat:"BergRett", s:["gw-höhen"]},
@@ -234,19 +223,15 @@
         { n:"Schneefahrzeug", id:154, c:"#B0AC97", cat:"BergRett", s:["schnee"]},
         { n:"Hundestaffel (Bergrettung)", id:153, c:"#B0AC97", cat:"BergRett", s:["hunde berg","hundestaffel berg"]},
         { n:"Anh Höhenrettung (Bergrettung)", id:155, c:"#B0AC97", cat:"BergRett", s:["höhe"]},
-        
         { n:"GW-Wasserrettung", id:64, c:C_WR, cat:"WasserRett", s:["gw-wasser"]},
         { n:"GW-Taucher", id:63, c:C_WR, cat:"WasserRett", s:["gw-taucher"]},
         { n:"MZB", id:70, c:C_WR, cat:"WasserRett", s:["mzb","boot"]},
-        
         { n:"SAR Boot", id:160, c:C_SR, cat:"SeenotRett", s:["seenotrettungsboot","sar boot"]},
         { n:"SAR Kreuzer", id:159, c:C_SR, cat:"SeenotRett", s:["seenotrettungskreuzer","sar kreuzer"]},
         { n:"SAR Hubschrauber", id:161, c:C_SR, cat:"SeenotRett", s:["sar hubschrauber"]},
-        
         { n:"RW-Schiene", id:162, c:"#5a5a5a", cat:"BahnRett", s:["rw schiene","rw-schiene"]},
         { n:"HLF Schiene", id:163, c:"#5a5a5a", cat:"BahnRett", s:["hlf schiene"]},
         { n:"AB-Schiene", id:164, c:"#5a5a5a", cat:"BahnRett", s:["ab-schiene"]},
-        
         { n:"Feuer-und Rettungswache Herford", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943238]},
         { n:"Feuer-und Rettungswache Gütersloh", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943286]},
         { n:"Feuer-und Rettungswache Halle(Westf.)", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943328]},
@@ -263,7 +248,6 @@
         { n:"Rettungswache Bremerhafen", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26794419]},
         { n:"DLRG Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016223]},
         { n:"DLRG Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016182]},
-        
         { n:"Patienten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Krankenhausbetten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Gefangene", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
@@ -2814,7 +2798,8 @@
         if(window.requestIdleCallback){
             window.requestIdleCallback(startDashboard, { timeout: 3000 });
         } else {
-            setTimeout(startDashboard, 300)
+            setTimeout(startDashboard, 0)
+
         }
     }
 })();
