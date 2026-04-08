@@ -3,8 +3,10 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.35
+// @version      v1.0.36
 // @description  Full All in One
+// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
+// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        GM_setValue
@@ -18,7 +20,7 @@
     if (window._bobelleDashboardRunning) return;
     window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.35 ");
+    console.log("[Bobelle Dashboard] v1.0.36 ");
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
@@ -318,7 +320,7 @@
         tileStatsMode:"both", tileBarReference:"yday", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.35 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.36 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:180,
         tileImgSize:38, tileImgAlign:"right"
     };
