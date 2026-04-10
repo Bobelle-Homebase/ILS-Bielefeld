@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.37
+// @version      v1.0.38
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,13 +20,12 @@
     if (window._bobelleDashboardRunning) return;
     window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.36 ");
+    console.log("[Bobelle Dashboard] v1.0.38 ");
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
     // =======================================================
     const CFG = { zIndex: 99999 };
-    const DEBOUNCE_TIME = 100;
 
     const VEHICLE_MATCH_CACHE = {
         _map: new Map(),
@@ -317,10 +316,10 @@
         toggleBtnSize:44, toggleBtnBg:"#f01606", toggleBtnBorderC:"#f3f035", toggleBtnBorderW:2,
         fmsFontSize:11, fmsHeight:1, fmsGap:4, debugMode:false, apiInterval:60,
         tileIdPrefix:"ID: ", tileIdSize:10, tileIdColor:"#999999", tileIdAlign:"right",
-        tileStatsMode:"both", tileBarReference:"yday", showTileTrend:true, showTileYday:true,
+        tileStatsMode:"both", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.37 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.38 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:180,
         tileImgSize:38, tileImgAlign:"right"
     };
@@ -437,7 +436,6 @@
     });
 
     const FMS_COLORS = {1:"#007bff",2:"#28a745",3:"#ffc107",4:"#dc3545",5:"#17a2b8",6:"#6c757d",7:"#fd7e14",8:"#20c997"};
-    const FMS_TEXT_COLORS = {3:"#000"};
 
     let apiTimer=null, schoolingTimer=null;
     let sysReady=true, lastUpdateStr="--:--:--", isUpdating=false;
@@ -566,15 +564,7 @@
         return false;
     }
 
-    function toArray(data){
-        if(Array.isArray(data)) return data;
-        if(data && typeof data === "object"){
-            for(const key of Object.keys(data)) {
-                if(Array.isArray(data[key])) return data[key];
-            }
-        }
-        return [];
-    }
+
 
     // =======================================================
     // GEBÄUDE & LEHRGÄNGE
@@ -598,7 +588,10 @@
             const ownRes = await fetch("/api/schoolings", {credentials:"same-origin"});
             let own = [];
             if(ownRes.ok){
-                try { own = toArray(await ownRes.json()); } catch(e) { own = []; }
+                try {
+                    const data = await ownRes.json();
+                    own = Array.isArray(data) ? data : (data && typeof data === "object" ? Object.values(data).find(v => Array.isArray(v)) || [] : []);
+                } catch(e) { own = []; }
             }
             const buildingIds = [...new Set(own.map(s => s.building_id).filter(Boolean))];
             await ensureBuildingNames(buildingIds);
@@ -1905,14 +1898,14 @@
             for(let s=1; s<=8; s++){
                 if(fmsCounts[s] > 0){
                     const pct = Math.round((fmsCounts[s] / fmsTotal) * 100);
-                    const textColor = FMS_TEXT_COLORS[s] || "#fff";
+                    const textColor = (s === 3) ? "#000" : "#fff";
                     segments += `<div title="S${s}: ${fmsCounts[s]}" style="width:${pct}%;background:${FMS_COLORS[s]};height:100%;display:flex;align-items:center;justify-content:center;transition:width 0.4s;">${pct>=10?`<span style="font-size:9px;color:${textColor};font-weight:bold;line-height:1;">${fmsCounts[s]}</span>`:""}</div>`;
                 }
             }
             fmsBarHtml += `<div style="display:flex;height:18px;border-radius:4px;overflow:hidden;margin-bottom:6px;border:1px solid #ddd;">${segments}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">`;
             for(let s=1; s<=8; s++){
                 if(fmsCounts[s] > 0){
-                    const textColor = FMS_TEXT_COLORS[s] || "#fff";
+                    const textColor = (s === 3) ? "#000" : "#fff";
                     fmsBarHtml += `<span style="font-size:11px;background:${FMS_COLORS[s]};color:${textColor};padding:2px 8px;border-radius:10px;font-weight:bold;">S${s}: ${fmsCounts[s]}</span>`;
                 }
             }
@@ -2645,7 +2638,7 @@
     function registerEventListener(){
         if(typeof $ !== 'undefined'){
             $(document).on('radio_message', function(){
-                if(!isUpdating) setTimeout(updateAvailability, DEBOUNCE_TIME);
+                if(!isUpdating) setTimeout(updateAvailability, 100);
             });
             $(document).on('mission_marker_add', function(){
                 setTimeout(() => {
@@ -2672,7 +2665,7 @@
                         updateAvailability();
                         const statsEl = document.getElementById("fzMissionStats");
                         if(statsEl) statsEl.innerHTML = getMissionStatsHTML();
-                    }, 200);
+                    }, 100);
                 }
             };
         }
