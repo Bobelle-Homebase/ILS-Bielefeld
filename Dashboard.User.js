@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.36
+// @version      v1.0.37
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -320,7 +320,7 @@
         tileStatsMode:"both", tileBarReference:"yday", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.36 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.37 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:180,
         tileImgSize:38, tileImgAlign:"right"
     };
@@ -400,6 +400,17 @@
     const TILE_LIST = AAO_TILES_RAW.map(t=>({...t, norm:normalize(t.n), search:(t.s||[]).map(normalize), cat:t.cat}));
     const KEYS = AAO_TILES_RAW.map(t=>t.n);
     const tileMetaByKey = Object.fromEntries(AAO_TILES_RAW.map(t=>[t.n,t]));
+    
+    // Pre-build search index for faster lookups
+    const SEARCH_INDEX = {};
+    TILE_LIST.forEach(t => {
+        SEARCH_INDEX[t.norm] = t;
+        t.search.forEach(s => {
+            if(!SEARCH_INDEX[s]) SEARCH_INDEX[s] = [];
+            if(!Array.isArray(SEARCH_INDEX[s])) SEARCH_INDEX[s] = [SEARCH_INDEX[s]];
+            SEARCH_INDEX[s].push(t);
+        });
+    });
 
     const RESOURCE_TILE_NAMES = new Set([
         "Patienten","Gefangene","Wasserbedarf","Betreuung/Versorgung","Krankentransporte",
@@ -832,8 +843,16 @@
     }
 
     let _cachedHeaderElements = {};
+    let _headerCacheExpiry = 0;
 
     function updateCategoryHeaders(){
+        const now = Date.now();
+        // Refresh cache if needed (every 1 minute)
+        if(now - _headerCacheExpiry > 60000) {
+            _cachedHeaderElements = {};
+            _headerCacheExpiry = now;
+        }
+
         const pV = state.today["Patienten"] || 0;
         let kV = 0;
         ["KTW","KTW Typ B","ITW","RTH [Christoph 13 (Bielefeld)]","RTH mit Winde","NAW"].forEach(k => { kV += (state.today[k] || 0); });
@@ -1109,17 +1128,20 @@
                         for(const k of nameCache[cacheKey]) matchedKeys.add(k);
                     } else {
                         const found = [];
-                        for(const t of TILE_LIST){
-                            let hit = false;
-                            if(t.norm && (vNameCustom.includes(t.norm) || vNameType.includes(t.norm))) hit = true;
-                            if(!hit && t.search.length > 0){
-                                for(let i=0; i < t.search.length; i++){
-                                    if(vNameCustom.includes(t.search[i]) || vNameType.includes(t.search[i])){ hit = true; break; }
-                                }
+                        // Use search index for faster lookups
+                        const searchTerms = [vNameCustom, vNameType];
+                        for(const term of searchTerms){
+                            if(SEARCH_INDEX[term]){
+                                const results = Array.isArray(SEARCH_INDEX[term]) ? SEARCH_INDEX[term] : [SEARCH_INDEX[term]];
+                                results.forEach(t => {
+                                    matchedKeys.add(t.n);
+                                    found.push(t.n);
+                                });
                             }
-                            if(hit){ matchedKeys.add(t.n); found.push(t.n); }
                         }
-                        nameCache[cacheKey] = Array.from(matchedKeys).filter(k => found.includes(k));
+                        if(nameCache[cacheKey] || Object.keys(nameCache).length < 500){
+                            nameCache[cacheKey] = found;
+                        }
                         for(const k of found) matchedKeys.add(k);
                     }
                 }
@@ -1218,6 +1240,38 @@
             });
         });
 
+        vehicleStateCache._initialized = true;
+
+        Object.keys(BUILDING_ID_TILE_MAP).forEach(bid => {
+            const keys = BUILDING_ID_TILE_MAP[bid] || [];
+            keys.forEach(k => {
+                vehicleExists[k] = true;
+                vehicleAvailability[k] = true;
+                if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 1;
+                if(!vehicleFreeCount[k]) vehicleFreeCount[k] = 1;
+            });
+        });
+
+        vehicleExists["Betreuung/Versorgung"] = true;
+        vehicleExists["Helikopter"] = true;
+
+        syncDerivedResourceCounts();
+
+        ["Wasserbedarf","Krankentransporte","Laufende Lehrgänge","Aktive Lehrgänge","Meine DJI Mini 4k (Pilot Bobelle)"].forEach(k => {
+            vehicleExists[k] = true;
+            vehicleAvailability[k] = true;
+            if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 0;
+        });
+
+        ["Helikopter","Betreuung/Versorgung"].forEach(k => {
+            vehicleExists[k] = true;
+            if((vehicleFreeCount[k] || 0) > 0) vehicleAvailability[k] = true;
+            else if(vehicleTotalCount[k] > 0) vehicleAvailability[k] = false;
+            else vehicleAvailability[k] = true;
+            if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 0;
+        });
+
+        // Single RAF for all DOM updates
         const doc = getTargetDoc();
         requestAnimationFrame(() => {
             const pillsContainer = doc.getElementById("fzResourcePills");
@@ -1266,28 +1320,7 @@
                     if(s6Div) s6Div.style.width = pS6 + "%";
                 }
             }
-        });
 
-        vehicleExists["Betreuung/Versorgung"] = true;
-        vehicleExists["Helikopter"] = true;
-
-        syncDerivedResourceCounts();
-
-        ["Wasserbedarf","Krankentransporte","Laufende Lehrgänge","Aktive Lehrgänge","Meine DJI Mini 4k (Pilot Bobelle)"].forEach(k => {
-            vehicleExists[k] = true;
-            vehicleAvailability[k] = true;
-            if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 0;
-        });
-
-        ["Helikopter","Betreuung/Versorgung"].forEach(k => {
-            vehicleExists[k] = true;
-            if((vehicleFreeCount[k] || 0) > 0) vehicleAvailability[k] = true;
-            else if(vehicleTotalCount[k] > 0) vehicleAvailability[k] = false;
-            else vehicleAvailability[k] = true;
-            if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 0;
-        });
-
-        requestAnimationFrame(() => {
             for(const k of KEYS) updateTile(k, state);
             updateCategoryHeaders();
             renderAvailabilityIndicator();
@@ -1334,7 +1367,7 @@
 
     async function updateBuildingCapacities(force=false){
         const now = Date.now();
-        if(!force && now - lastBuildingUpdate < 120000) return;
+        if(!force && now - lastBuildingUpdate < 300000) return;
 
         try{
             const response = await fetch("/api/buildings", { credentials: "same-origin" });
@@ -1393,7 +1426,7 @@
     // =======================================================
     function startApiLoop(){
         if(apiTimer) clearInterval(apiTimer);
-        const interval = Math.max(30, uiSettings.apiInterval || 120) * 1000;
+        const interval = Math.max(60, uiSettings.apiInterval || 120) * 1000;
         apiTimer = setInterval(updateAvailability, interval);
     }
 
@@ -2645,13 +2678,20 @@
         }
     }
 
+    let lastRefreshTime = 0;
     function refreshAllVisibleTiles(){
         if(!isMainPage) return;
-        KEYS.forEach(k => { if(tileEls[k]) updateTile(k, state); });
-        updateCategoryHeaders();
-        updateHeaderStats();
-        renderAvailabilityIndicator();
-        updateSubHeaderInfo();
+        const now = Date.now();
+        if(now - lastRefreshTime < 2000) return; // Skip if called too recently
+        lastRefreshTime = now;
+        
+        requestAnimationFrame(() => {
+            KEYS.forEach(k => { if(tileEls[k]) updateTile(k, state); });
+            updateCategoryHeaders();
+            updateHeaderStats();
+            renderAvailabilityIndicator();
+            updateSubHeaderInfo();
+        });
     }
 
     // =======================================================
@@ -2741,7 +2781,7 @@
             return;
         }
         refreshAllVisibleTiles();
-    }, 10000);
+    }, 30000);
 
     // =======================================================
     // API INTERCEPTS (FETCH/XHR)
@@ -2792,16 +2832,11 @@
         const startDashboard = () => {
             initUI(state);
             registerEventListener();
-            setTimeout(() => startApiLoop(), 500);
+            setTimeout(() => startApiLoop(), 1000);
             setTimeout(() => startSchoolingLoop(), 1500);
             setTimeout(() => updateBuildingCapacities(true), 2500);
             setTimeout(() => { dashboardBooted = true; }, 5000);
         };
-        if(window.requestIdleCallback){
-            window.requestIdleCallback(startDashboard, { timeout: 3000 });
-        } else {
-            setTimeout(startDashboard, 0)
-
-        }
+        setTimeout(startDashboard, 100);
     }
 })();
