@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.40
+// @version      v1.0.41
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     if (window._bobelleDashboardRunning) return;
     window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.40 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.41 gestartet");
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
@@ -76,7 +76,7 @@
         { n:"RTH mit Winde", id:157, c:C_LUFT, cat:"Luft", s:["rth mit winde"]},
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
-        { n:"LF20", id:1, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
+        { n:"LF20", id:0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
         { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
@@ -299,14 +299,14 @@
         headerElementSize:12, pillBgColor:"#ffffff", pillTextColor:"#000000",
         creditsGap:6, creditsFontSize:13, creditsLabelColor:"#333333", creditsValueColor:"#00cc00",
         funkalarmText:"Alarmierung", funkalarmSize:10, funkalarmColor:"#555555", funkalarmBold:false,
-        funkalarmBlinkColor:"#ff0000", funkalarmBlinkDuration:240,
+        funkalarmBlinkColor:"#ff0000", funkalarmBlinkDuration:120,
         toggleBtnSize:44, toggleBtnBg:"#f01606", toggleBtnBorderC:"#f3f035", toggleBtnBorderW:2,
         fmsFontSize:11, fmsHeight:1, fmsGap:4, debugMode:false, apiInterval:60,
         tileIdPrefix:"ID: ", tileIdSize:10, tileIdColor:"#999999", tileIdAlign:"right",
         tileStatsMode:"both", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.40 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.41 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:180,
         tileImgSize:38, tileImgAlign:"right"
     };
