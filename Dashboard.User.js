@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.39
+// @version      v1.0.40
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     if (window._bobelleDashboardRunning) return;
     window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.39 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.40 gestartet");
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
@@ -119,7 +119,7 @@
         { n:"AB-Sonderlöschmittel", id:169, c:C_FW, cat:"FW", s:["ab-sonderlöschmittel"]},
         { n:"AB-MzB", id:71, c:C_FW, cat:"FW", s:["ab-mzb"]},
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
-        { n:"AB-Logistik", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
+        { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
         { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-log","mtf-l"]},
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
@@ -191,7 +191,7 @@
         { n:"MTW-FGr (Log-V)", id:177, c:C_THW, cat:"THW", s:["mtw-fgr log"]},
         { n:"Anh Hund", id:92, c:C_THW, cat:"THW", s:["anh Hund"]},
         { n:"Anh 7", id:102, c:C_THW, cat:"THW", s:["anh 7 thw","anh fp thw"]},
-        { n:"Anh SwPu", id:101, c:C_THW, cat:"THW", s:["anh swpu thw","anh swpu"]},
+        { n:"Anh SwPu", id:103, c:C_THW, cat:"THW", s:["anh swpu thw","anh swpu"]},
         { n:"Anh FüLa", id:146, c:C_THW, cat:"THW", s:["anh füla"]},
         { n:"Anh MzB", id:66, c:C_THW, cat:"THW", s:["anh mzb"]},
         { n:"Anh MzAB", id:68, c:C_THW, cat:"THW", s:["anh mzab"]},
@@ -258,19 +258,6 @@
         { n:"Krankentransporte", id:[38,58], c:"#5a5a5a", cat:"Ressourcen", s:["ktw"]},
         { n:"Helikopter", id:[31,157,61,156,161], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Meine DJI Mini 4k (Pilot Bobelle)", id:[127,125], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Zugtrupp", id:[40], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Bergungsgruppe", id:[39], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Notversorgung", id:[41], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Räumen", id:[42,43,44,45], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Wassergefahren", id:[65,66,67,68,69], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Ortung", id:[92], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Wasserschaden/Pumpen", id:[101,102], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Schwere Bergung", id:[109], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Elektroversorgung", id:[112,122], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Führung und Kommunikation", id:[147], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Logistik-Verpflegung", id:[176,177], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"FG Brückenbau", id:[181,182,183], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        //{ n:"OV Mannschaftstransportwagen", id:[124], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Laufende Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
         { n:"Aktive Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
     ];
@@ -319,7 +306,7 @@
         tileStatsMode:"both", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.39 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.40 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:180,
         tileImgSize:38, tileImgAlign:"right"
     };
@@ -943,10 +930,6 @@
             "Patienten","Krankenhausbetten","Gefangene","Gefängniszellen",
             "Wasserbedarf","Betreuung/Versorgung","Krankentransporte","Helikopter",
             "Meine DJI Mini 4k (Pilot Bobelle)",
-            "FG Zugtrupp","FG Bergungsgruppe","FG Notversorgung","FG Räumen",
-            "FG Wassergefahren","FG Ortung","FG Wasserschaden/Pumpen","FG Schwere Bergung",
-            "FG Elektroversorgung","FG Führung und Kommunikation","FG Logistik-Verpflegung",
-            "FG Brückenbau","OV Mannschaftstransportwagen",
             "Laufende Lehrgänge","Aktive Lehrgänge",
             "Feuer-und Rettungswache Herford","Feuer-und Rettungswache Gütersloh",
             "Feuer-und Rettungswache Halle(Westf.)","Feuer-und Rettungswache Stukenbrock",
