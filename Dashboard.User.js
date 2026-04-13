@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.43
+// @version      v1.0.44
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     if (window._bobelleDashboardRunning) return;
     window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.43 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.44 gestartet");
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
@@ -306,7 +306,7 @@
         tileStatsMode:"both", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.43 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:180,
         tileImgSize:38, tileImgAlign:"right"
     };
@@ -514,7 +514,7 @@
     // =======================================================
     creditsData = json.load(STORAGE.CREDITS_DATA, {ein:0, aus:0, bilanz:0, date:""});
     const customStock = json.load(STORAGE.CUSTOM_STOCK, {});
-    tileImages = {...json.load(STORAGE.TILE_IMAGES, {})};
+    tileImages = {}; // Fahrzeuggrafiken entfernt
     const saveTileImages = () => json.save(STORAGE.TILE_IMAGES, tileImages);
 
     let uiSettings = {...DEFAULTS, ...json.load(STORAGE.UISETTINGS, {})};
