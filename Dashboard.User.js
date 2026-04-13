@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.42
+// @version      v1.0.43
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     if (window._bobelleDashboardRunning) return;
     window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.42 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.43 gestartet");
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
@@ -306,7 +306,7 @@
         tileStatsMode:"both", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized v1.0.42 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized v1.0.43 by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:180,
         tileImgSize:38, tileImgAlign:"right"
     };
@@ -1203,18 +1203,6 @@
                 });
             }
         }
-
-        vehicleStateCache._initialized = true;
-
-        Object.keys(BUILDING_ID_TILE_MAP).forEach(bid => {
-            const keys = BUILDING_ID_TILE_MAP[bid] || [];
-            keys.forEach(k => {
-                vehicleExists[k] = true;
-                vehicleAvailability[k] = true;
-                if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 1;
-                if(!vehicleFreeCount[k]) vehicleFreeCount[k] = 1;
-            });
-        });
 
         vehicleStateCache._initialized = true;
 
