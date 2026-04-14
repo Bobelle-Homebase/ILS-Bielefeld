@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.47
+// @version      v1.0.48
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,9 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.47 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.48 gestartet");
+
+    console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
@@ -2420,7 +2422,12 @@
     }
 
     function initUI(state){
-        if(fzWrapper || !isMainPage) return;
+        console.log("initUI called");
+        if(fzWrapper || !isMainPage) {
+            console.log("fzWrapper exists or not main page, returning");
+            return;
+        }
+        console.log("injecting CSS");
         injectCSS();
 
         fzWrapper = document.createElement("div");
@@ -2790,10 +2797,11 @@
 
     // =======================================================
     // START
-    // =======================================================
     let dashboardBooted = false;
     if(isMainPage){
+        console.log("isMainPage true, starting dashboard");
         const startDashboard = () => {
+            console.log("startDashboard called");
             initUI(state);
             registerEventListener();
             setTimeout(() => startApiLoop(), 1000);
@@ -2802,5 +2810,7 @@
             setTimeout(() => { dashboardBooted = true; }, 5000);
         };
         setTimeout(startDashboard, 100);
+    } else {
+        console.log("isMainPage false, not starting dashboard");
     }
 })();
