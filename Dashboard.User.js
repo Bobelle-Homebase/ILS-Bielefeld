@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.44
+// @version      v1.0.45
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     if (window._bobelleDashboardRunning) return;
     window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.44 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.45 gestartet");
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
@@ -164,7 +164,7 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        { n:"Schmutzwasserpumpen", id:101, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
+        { n:"Schmutzwasserpumpen", id:103, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
         { n:"Feuerlöschpumpen", id:[17,18,87], c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
@@ -191,7 +191,7 @@
         { n:"MTW-FGr (Log-V)", id:177, c:C_THW, cat:"THW", s:["mtw-fgr log"]},
         { n:"Anh Hund", id:92, c:C_THW, cat:"THW", s:["anh Hund"]},
         { n:"Anh 7", id:102, c:C_THW, cat:"THW", s:["anh 7 thw","anh fp thw"]},
-        { n:"Anh SwPu", id:103, c:C_THW, cat:"THW", s:["anh swpu thw","anh swpu"]},
+        { n:"Anh SwPu", id:101, c:C_THW, cat:"THW", s:["anh swpu thw","anh swpu"]},
         { n:"Anh FüLa", id:146, c:C_THW, cat:"THW", s:["anh füla"]},
         { n:"Anh MzB", id:66, c:C_THW, cat:"THW", s:["anh mzb"]},
         { n:"Anh MzAB", id:68, c:C_THW, cat:"THW", s:["anh mzab"]},
