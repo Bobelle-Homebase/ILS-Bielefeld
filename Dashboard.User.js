@@ -166,8 +166,8 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        { n:"Schmutzwasserpumpen", id:184, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
-        { n:"Feuerlöschpumpen", id:188, c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg"]},
+        { n:"Schmutzwasserpumpen", id:184, c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
+        { n:"Feuerlöschpumpen", id:188, c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
@@ -376,7 +376,9 @@
         18:  { del: ["TLF", "PTLF 4000"], add: ["TLF"] },
         87:  { del: ["TLF", "PTLF 4000"], add: ["TLF"] },
         149: { del: ["GW-Bergrettung", "GW-Bergrettung (NEF)"], add: ["GW-Bergrettung (NEF)"] },
-        150: { del: ["GW-Bergrettung", "GW-Bergrettung (NEF)"], add: ["GW-Bergrettung"] }
+        150: { del: ["GW-Bergrettung", "GW-Bergrettung (NEF)"], add: ["GW-Bergrettung"] },
+        184: { del: [], add: ["Schmutzwasserpumpen"] },
+        188: { del: [], add: ["Feuerlöschpumpen"] }
     };
 
     const pathLoc = window.location.pathname;
