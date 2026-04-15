@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.48
+// @version      v1.0.49
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.48 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.49 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -121,7 +121,7 @@
         { n:"AB-Sonderlöschmittel", id:169, c:C_FW, cat:"FW", s:["ab-sonderlöschmittel"]},
         { n:"AB-MzB", id:71, c:C_FW, cat:"FW", s:["ab-mzb"]},
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
-        { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
+        //{ n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
         { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-log","mtf-l"]},
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
@@ -166,8 +166,8 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        { n:"Schmutzwasserpumpen", id:103, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
-        { n:"Feuerlöschpumpen", id:[17,18,87], c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg"]},
+        { n:"Schmutzwasserpumpen", id:184, c:C_THW, cat:"THW", s:["schmutzwasserpumpe","swpu-fzg"]},
+        { n:"Feuerlöschpumpen", id:188, c:C_THW, cat:"THW", s:["feuerlöschpumpe","fp-fzg"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
