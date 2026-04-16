@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.51
+// @version      v1.0.52
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.51 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.52 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -309,8 +309,7 @@
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
         footerText:"Design & Optimized by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
-        schoolingApiInterval:180,
-        tileImgSize:38, tileImgAlign:"right"
+        schoolingApiInterval:180
     };
 
     const MISSION_SELECTORS = {
@@ -330,14 +329,12 @@
         SYNC_SIGNAL:"fz_v9_sync_signal_ls",
         CREDITS_DATA:"fz_v28_credits_data",
         CUSTOM_STOCK:"fz_v31_custom_stock",
-        TOGGLE_BTN_POS:"fz_toggle_btn_pos",
-        TILE_IMAGES:"fz_v3_tile_images"
+        TOGGLE_BTN_POS:"fz_toggle_btn_pos"
     };
 
     // =======================================================
     // VARIABLEN & STATUS
     // =======================================================
-    let tileImages = {};
     const TYPE_ID_MAPPING = {};
     AAO_TILES_RAW.forEach(tile => {
         if (tile.id !== undefined && tile.id !== null) {
@@ -518,8 +515,6 @@
     // =======================================================
     creditsData = json.load(STORAGE.CREDITS_DATA, {ein:0, aus:0, bilanz:0, date:""});
     const customStock = json.load(STORAGE.CUSTOM_STOCK, {});
-    tileImages = {}; // Fahrzeuggrafiken entfernt
-    const saveTileImages = () => json.save(STORAGE.TILE_IMAGES, tileImages);
 
     let uiSettings = {...DEFAULTS, ...json.load(STORAGE.UISETTINGS, {})};
     for (const k in DEFAULTS) { if (uiSettings[k] === undefined) uiSettings[k] = DEFAULTS[k]; }
@@ -1405,7 +1400,6 @@
     }
 
     function prepareCSSString(){
-        const imgH = uiSettings.tileImgSize || 38;
         return `
             :root{
                 --fz-bg:${uiSettings.winBg};--fz-bc:${uiSettings.winBorderC};--fz-bw:${uiSettings.winBorderW}px;--fz-br:${uiSettings.winRadius}px;
@@ -1419,7 +1413,7 @@
                 --fz-sub-up-c:${uiSettings.subUpdateColor};--fz-sub-dp-sz:${uiSettings.subDispSize}px;--fz-sub-dp-fw:${uiSettings.subDispWeight};--fz-sub-dp-c:${uiSettings.subDispColor};
                 --fz-cat-stat-c:${uiSettings.catStatusTextColor};--fz-res-bg:${uiSettings.resourceTileBgColor};--fz-logo-sz:${uiSettings.logoSize}px;--fz-bar-c:${uiSettings.barColor};
                 --fz-funk-sz:${uiSettings.funkalarmSize}px;--fz-funk-c:${uiSettings.funkalarmColor};--fz-funk-fw:${uiSettings.funkalarmBold?'bold':'normal'};
-                --fz-funk-blink-c:${uiSettings.funkalarmBlinkColor};--fz-aus:${C_AUS};--fz-img-h:${imgH}px;
+                --fz-funk-blink-c:${uiSettings.funkalarmBlinkColor};--fz-aus:${C_AUS};
             }
             .fzWrapper{position:fixed;z-index:${CFG.zIndex};top:${uiSettings.winTop}px;left:5px;right:5px;width:auto;display:flex;flex-direction:column;background:var(--fz-bg);border:var(--fz-bw) solid var(--fz-bc);border-radius:0 0 var(--fz-br) var(--fz-br);box-shadow:0 10px 30px rgba(0,0,0,0.5);transition:opacity 0.4s ease-out,transform 0.4s ease-out;}
             .fzWrapper.fzFullscreen{top:0!important;left:0!important;right:0!important;bottom:0!important;width:100%!important;height:100%!important;border-radius:0;max-height:100vh;transform:none;}
@@ -1448,8 +1442,7 @@
             .fzTile:hover{filter:brightness(0.95);}
             .fzStatusDot{width:6px;height:6px;border-radius:50%;z-index:1;border:1px solid rgba(0,0,0,0.2);flex-shrink:0;margin-top:auto;margin-bottom:auto;}
             .fzContentWrapper{display:flex;flex-direction:column;justify-content:center;flex:1;overflow:hidden;height:100%;}
-            .fzRightWrapper{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;flex-shrink:0;min-width:max-content;padding-top:3px;padding-bottom:calc(var(--fz-img-h) + 6px);}
-            .fzTile.fzNoImg .fzRightWrapper{padding-bottom:3px;justify-content:center;}
+            .fzRightWrapper{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;flex-shrink:0;min-width:max-content;padding-top:3px;padding-bottom:3px;}
             .fzBadgeSlot{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:2px;min-height:0;}
             .fzBadge{font-weight:bold;font-size:var(--fz-badge-fs);padding:0px 4px;border-radius:2px;color:#fff;white-space:nowrap;line-height:1.2;}.fzBadgeInUse{background:#dc3545;}
             .fzTileName{font-size:var(--fz-name-fs);font-weight:var(--fz-name-fw);white-space:nowrap;text-overflow:ellipsis;width:100%;overflow:hidden;line-height:1.2;}
@@ -1506,8 +1499,6 @@
             .fzCompactBusy{font-size:10px;color:#dc3545;font-weight:bold;flex-shrink:0;}
             .fzTileCollapseToggle{cursor:pointer;font-size:14px;padding:1px 3px;background:transparent;border:none;line-height:1.5;user-select:none;transition:transform 0.1s,opacity 0.15s;flex-shrink:0;opacity:0.75;}
             .fzTileCollapseToggle:hover{opacity:1;transform:scale(1.2);}.fzTileCollapseToggle.fzTCactive{opacity:1;}
-            .fzVehicleImg{position:absolute;bottom:3px;right:${uiSettings.tileImgAlign==="left"?"auto":"4px"};left:${uiSettings.tileImgAlign==="left"?"4px":"auto"};width:${imgH}px;height:auto;max-height:${imgH}px;object-fit:contain;opacity:0;pointer-events:none;transition:opacity 0.3s ease;z-index:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.25));}
-            .fzTile.fzInUse .fzVehicleImg{opacity:1;}.fzTile.fzTileCompact .fzVehicleImg{display:none;}.fzTile.fzNoImg .fzVehicleImg{display:none;}
         `;
     }
 
@@ -1746,21 +1737,12 @@
         if(meta && (meta.cat === "Ressourcen" || meta.cat === "Ausbildung" || meta.cat === "Versorgung")) div.classList.add("fzResource");
         div.style.borderLeftColor = color;
 
-        const imgUrl = tileImages[key] || "";
-        const imgEl = document.createElement("img");
-        imgEl.className = "fzVehicleImg";
-        imgEl.alt = "";
-        imgEl.draggable = false;
-        if(imgUrl) imgEl.src = imgUrl;
-        else { div.classList.add("fzNoImg"); imgEl.style.display = "none"; }
-
         div.innerHTML = `
             <div class="fzTileCompactRow"><span class="fzCompactDot"></span><span class="fzCompactLabel">${key}</span><span class="fzCompactCount"></span><span class="fzCompactBusy" style="display:none;"></span></div>
             <div class="fzStatusDot" style="background-color:#ff0000;margin-right:5px;"></div>
             <div class="fzContentWrapper"><span class="fzBadgeSlot"></span><span class="fzTileName">${key}</span><div class="fzTileIdLabel"></div><div class="fzBottomBar"><div class="fzBottomBarFill"></div></div></div>
             <div class="fzRightWrapper"><div class="fzFunkalarmLabel">${uiSettings.funkalarmText || 'Funk-Alarm'}</div><div class="fzTileCount"><span class="fzNumToday">0</span><span class="fzNumYday">(0)</span><span class="fzTrend"></span></div><div class="fzResourceCounter"></div></div>
         `;
-        div.appendChild(imgEl);
         div.onclick = () => showDetails(key, state);
 
         tileEls[key] = div;
@@ -1781,7 +1763,6 @@
             resCounter: div.querySelector(".fzResourceCounter"),
             idLabel: div.querySelector(".fzTileIdLabel"),
             funkalarmLabel: div.querySelector(".fzFunkalarmLabel"),
-            vehicleImg: imgEl,
             lastState: null
         };
         return div;
@@ -2110,8 +2091,7 @@
             {t:"Sub-Infos",i:[["Status Größe","subStatusSize","number"],["Status (Bereit)","subStatusColorOk","color"],["Status (Fehler)","subStatusColorErr","color"],["Update Farbe","subUpdateColor","color"],["Dispo Farbe","subDispColor","color"]]},
             {t:"Credits Counter",i:[["Abstand (px)","creditsGap","number"],["Schriftgröße","creditsFontSize","number"],["Label Farbe","creditsLabelColor","color"],["Zahlen Farbe","creditsValueColor","color"]]},
             {t:"Funkalarmierung",i:[["Beschriftung","funkalarmText","text"],["Schriftgröße","funkalarmSize","number"],["Textfarbe","funkalarmColor","color"],["Blinkfarbe","funkalarmBlinkColor","color"],["Blink-Dauer (Sek)","funkalarmBlinkDuration","number"]]},
-            {t:"System & Verhalten",i:[["Auto-Hide (sek)","autoHideSeconds","number"],["API Update (sek)","apiInterval","number"],["Lehrgänge Update (sek)","schoolingApiInterval","number"],["Klick-Erhöhung","clickIncrement","number"]]},
-            {t:"Fahrzeuggrafiken",i:[["Größe (px)","tileImgSize","number"],["Position","tileImgAlign","select",["right","left"]]]}
+            {t:"System & Verhalten",i:[["Auto-Hide (sek)","autoHideSeconds","number"],["API Update (sek)","apiInterval","number"],["Lehrgänge Update (sek)","schoolingApiInterval","number"],["Klick-Erhöhung","clickIncrement","number"]]}
         ];
 
         groups.forEach((g,index) => {
@@ -2140,16 +2120,9 @@
         btnImp.textContent = "📂 Laden";
         btnImp.onclick = triggerImport;
 
-        const btnImgs = document.createElement("button");
-        btnImgs.className = "fzBtn";
-        btnImgs.style.cssText = "background:#edf3ff;";
-        btnImgs.textContent = "🖼 Fahrzeuggrafiken";
-        btnImgs.onclick = () => { ol.remove(); openImageEditor(); };
-
         btnRow.appendChild(btnSync);
         btnRow.appendChild(btnExp);
         btnRow.appendChild(btnImp);
-        btnRow.appendChild(btnImgs);
         dataGroup.appendChild(btnRow);
         rightCol.appendChild(dataGroup);
 
@@ -2167,90 +2140,6 @@
 
         ol.appendChild(modal);
         getTargetBody().appendChild(ol);
-    }
-
-    function openImageEditor(){
-        const vehicleKeys = KEYS.filter(k => !RESOURCE_TILE_NAMES.has(k) && !SCHOOLING_TILE_NAMES.has(k));
-        const ol = document.createElement("div");
-        ol.className = "fzModalOverlay";
-        ol.onclick = (e) => { if(e.target === ol) ol.remove(); };
-
-        const modal = document.createElement("div");
-        modal.className = "fzModal";
-        modal.style.cssText = "max-width:700px;width:95%;";
-        modal.innerHTML = `<h3>🖼 Fahrzeuggrafiken verwalten</h3><p style="font-size:12px;color:#666;margin-bottom:12px;">Grafik-URL pro Kachel eintragen. Die Grafik erscheint <strong>nur wenn mindestens ein Fahrzeug im Einsatz ist</strong>.</p><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;"><input id="fzImgSearch" type="text" placeholder="Kachel suchen..." style="flex:1;min-width:120px;padding:4px 8px;border:1px solid #ccc;border-radius:4px;font-size:12px;"><button class="fzBtn" id="fzImgClearAll" style="background:#fce4ec;font-size:11px;">🗑 Alle löschen</button></div><div id="fzImgList" style="max-height:480px;overflow-y:auto;"></div><div style="margin-top:12px;display:flex;gap:8px;"><button class="fzBtn" style="flex:1;" id="fzImgSave">💾 Speichern & schließen</button><button class="fzBtn" style="flex:1;" onclick="this.closest('.fzModalOverlay').remove()">Abbrechen</button></div>`;
-
-        const tempImages = {...tileImages};
-
-        const renderList = (filter="") => {
-            const listEl = modal.querySelector("#fzImgList");
-            const filtered = filter ? vehicleKeys.filter(k => k.toLowerCase().includes(filter.toLowerCase())) : vehicleKeys;
-            listEl.innerHTML = filtered.map(k => {
-                const url = tempImages[k] || "";
-                const hasImg = !!url;
-                const rowBg = hasImg ? "rgba(40,167,69,0.06)" : "";
-                return `<div style="display:flex;align-items:center;gap:6px;padding:4px 2px;border-bottom:1px solid #f0f0f0;background:${rowBg};"><span style="min-width:160px;max-width:160px;font-size:11px;font-weight:${hasImg?"bold":"normal"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0;" title="${k}">${k}</span><input type="text" data-key="${k}" value="${url}" placeholder="https://... Bild-URL" style="flex:1;padding:3px 6px;border:1px solid ${hasImg?"#28a745":"#ccc"};border-radius:3px;font-size:11px;"/>${hasImg?`<img src="${url}" style="width:36px;height:24px;object-fit:contain;border-radius:2px;flex-shrink:0;background:#f5f5f5;" onerror="this.style.opacity='0.2'">`:`<span style="width:36px;height:24px;flex-shrink:0;"></span>`}<button data-del="${k}" style="border:none;background:transparent;cursor:pointer;font-size:14px;opacity:0.5;padding:0 2px;" title="Löschen">✕</button></div>`;
-            }).join("") || `<div style="padding:20px;text-align:center;color:#999;">Keine Kacheln gefunden.</div>`;
-
-            listEl.querySelectorAll("input[data-key]").forEach(inp => {
-                inp.oninput = () => {
-                    const k = inp.dataset.key;
-                    const val = inp.value.trim();
-                    if(val) tempImages[k] = val;
-                    else delete tempImages[k];
-                    inp.style.borderColor = val ? "#28a745" : "#ccc";
-                };
-            });
-
-            listEl.querySelectorAll("button[data-del]").forEach(btn => {
-                btn.onclick = () => {
-                    delete tempImages[btn.dataset.del];
-                    renderList(modal.querySelector("#fzImgSearch").value);
-                };
-            });
-        };
-
-        renderList();
-        ol.appendChild(modal);
-        getTargetBody().appendChild(ol);
-
-        setTimeout(() => {
-            const searchEl = modal.querySelector("#fzImgSearch");
-            if(searchEl) searchEl.oninput = (e) => renderList(e.target.value);
-
-            const clearBtn = modal.querySelector("#fzImgClearAll");
-            if(clearBtn) clearBtn.onclick = () => {
-                vehicleKeys.forEach(k => delete tempImages[k]);
-                renderList(searchEl ? searchEl.value : "");
-            };
-
-            const saveBtn = modal.querySelector("#fzImgSave");
-            if(saveBtn) saveBtn.onclick = () => {
-                vehicleKeys.forEach(k => {
-                    if(tempImages[k]) tileImages[k] = tempImages[k];
-                    else delete tileImages[k];
-                });
-                saveTileImages();
-
-                vehicleKeys.forEach(k => {
-                    const cached = tileCache[k];
-                    if(!cached || !cached.vehicleImg) return;
-                    const url = tileImages[k] || "";
-                    const el = cached.el;
-                    if(url){
-                        cached.vehicleImg.src = url;
-                        cached.vehicleImg.style.display = "";
-                        el.classList.remove("fzNoImg");
-                    } else {
-                        cached.vehicleImg.src = "";
-                        cached.vehicleImg.style.display = "none";
-                        el.classList.add("fzNoImg");
-                    }
-                });
-
-                ol.remove();
-            };
-        },50);
     }
 
     function startCountdown(){
