@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.53
+// @version      v1.0.54
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.53 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.54 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -137,7 +137,7 @@
         { n:"KdoW-OrgL", id:56, c:C_RD, cat:"RD", s:["orgl"]},
         { n:"GRTW", id:73, c:C_RD, cat:"RD", s:["grtw basis","grtw standard","grossraumrettungswagen"]},
         { n:"FuStW", id:32, c:C_POL, cat:"POL", s:["fustw","streifenwagen"]},
-        { n:"FuStW (AB)", id:32, c:C_POL, cat:"POL", s:["fustw","streifenwagen"]},
+        { n:"FuStW (AB)", id:184, c:C_POL, cat:"POL", s:["fustw","streifenwagen"]},
         { n:"FuStW (DGL)", id:103, c:C_POL, cat:"POL", s:["dgl"]},
         { n:"GruKw", id:50, c:C_POL, cat:"POL", s:["grukw"]},
         { n:"LauKw", id:165, c:C_POL, cat:"POL", s:["laukw"]},
