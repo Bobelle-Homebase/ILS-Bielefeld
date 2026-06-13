@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.56
+// @version      v1.0.57
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.56 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.57 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -121,7 +121,7 @@
         { n:"AB-Sonderlöschmittel", id:169, c:C_FW, cat:"FW", s:["ab-sonderlöschmittel"]},
         { n:"AB-MzB", id:71, c:C_FW, cat:"FW", s:["ab-mzb"]},
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
-        //{ n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
+        { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
         { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-log","mtf-l"]},
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
@@ -236,10 +236,10 @@
         { n:"RW-Schiene", id:162, c:"#5a5a5a", cat:"BahnRett", s:["rw schiene","rw-schiene"]},
         { n:"HLF Schiene", id:163, c:"#5a5a5a", cat:"BahnRett", s:["hlf schiene"]},
         { n:"AB-Schiene", id:164, c:"#5a5a5a", cat:"BahnRett", s:["ab-schiene"]},
-        //{ n:"Feuer-und Rettungswache Herford", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943238]},
-        //{ n:"Feuer-und Rettungswache Gütersloh", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943286]},
-        //{ n:"Feuer-und Rettungswache Halle(Westf.)", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943328]},
-        //{ n:"Feuer-und Rettungswache Stukenbrock", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943379]},
+        { n:"Feuer-und Rettungswache Herford", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943238]},
+        { n:"Feuer-und Rettungswache Gütersloh", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943286]},
+        { n:"Feuer-und Rettungswache Halle(Westf.)", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943328]},
+        { n:"Feuer-und Rettungswache Stukenbrock", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943379]},
         //{ n:"Kreispolizeibehörde Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945351]},
         //{ n:"Kreispolizeibehörde Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945356]},
         //{ n:"Kreispolizeibehörde Halle(Westf.)", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945367]},
