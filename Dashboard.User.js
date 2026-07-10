@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.57
+// @version      v1.0.58
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.57 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.58 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -240,18 +240,18 @@
         { n:"Feuer-und Rettungswache Gütersloh", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943286]},
         { n:"Feuer-und Rettungswache Halle(Westf.)", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943328]},
         { n:"Feuer-und Rettungswache Stukenbrock", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943379]},
-        //{ n:"Kreispolizeibehörde Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945351]},
-        //{ n:"Kreispolizeibehörde Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945356]},
-        //{ n:"Kreispolizeibehörde Halle(Westf.)", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945367]},
-        //{ n:"Kreispolizeibehörde Stukenbrock", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945361]},
-        //{ n:"Polizeibehörde Warnemünde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979980]},
-        //{ n:"Polizeibehörde Eckernförde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979964]},
-        //{ n:"Polizeibehörde Bremerhafen", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979987]},
-        //{ n:"Rettungswache Warnemünde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26793826]},
-        //{ n:"Rettungswache Eckernförde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26794114]},
-        //{ n:"Rettungswache Bremerhafen", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26794419]},
-        //{ n:"DLRG Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016223]},
-        //{ n:"DLRG Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016182]},
+        { n:"Kreispolizeibehörde Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945351]},
+        { n:"Kreispolizeibehörde Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945356]},
+        { n:"Kreispolizeibehörde Halle(Westf.)", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945367]},
+        { n:"Kreispolizeibehörde Stukenbrock", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945361]},
+        { n:"Polizeibehörde Warnemünde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979980]},
+        { n:"Polizeibehörde Eckernförde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979964]},
+        { n:"Polizeibehörde Bremerhafen", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979987]},
+        { n:"Rettungswache Warnemünde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26793826]},
+        { n:"Rettungswache Eckernförde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26794114]},
+        { n:"Rettungswache Bremerhafen", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26794419]},
+        { n:"DLRG Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016223]},
+        { n:"DLRG Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016182]},
         { n:"Patienten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Krankenhausbetten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Gefangene", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
@@ -309,7 +309,7 @@
         tileStatsMode:"both", showTileTrend:true, showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
-        footerText:"Design & Optimized by Bobelle 2026", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
+        footerText:"Design & Optimized by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
         schoolingApiInterval:180
     };
 
@@ -550,8 +550,6 @@
         }
         return false;
     }
-
-
 
     // =======================================================
     // GEBÄUDE & LEHRGÄNGE
