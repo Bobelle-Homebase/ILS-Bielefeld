@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.59
+// @version      v1.0.61
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.59 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.601 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -70,7 +70,7 @@
     const CATEGORY_ORDER = [
         "Luft","FW","RD","POL","THW","SEG","WerkFW","FlugFW","UAS",
         "BergRett","WasserRett","SeenotRett","BahnRett","Netz","Sonstiges","Versorgung",
-        "Ressourcen","Ausbildung"
+        "Ressourcen","Ausbildung","Waldbrand"
     ];
 
     const AAO_TILES_RAW = [
@@ -83,8 +83,10 @@
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
         { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
-        { n:"TLF", id:[17,18,87], c:C_FW, cat:"FW", s:["tlf"]},
+        { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf"]},
+                { n:"TLF-W", id:[188], c:C_FW, cat:"FW", s:["tlfw"]},
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf","großtank"]},
+                { n:"GTLF-W", id:189, c:C_FW, cat:"FW", s:["gtlf-w","großtank"]},
         { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
         { n:"Kleintankwagen", id:118, c:C_FW, cat:"FW", s:["kleintankwagen"]},
         { n:"Tankwagen", id:120, c:C_FW, cat:"FW", s:["tankwagen"]},
@@ -95,19 +97,18 @@
         { n:"Dekon-P", id:53, c:C_FW, cat:"FW", s:["dekon-p"]},
         { n:"WLF", id:46, c:C_FW, cat:"FW", s:["wlf","wechsellader"]},
         { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw 2000tr"]},
-        { n:"Anh Lüfter", id:115, c:C_FW, cat:"FW", s:["anh lüfter","anh-lüfter"]},
         { n:"GW-Lüfter", id:114, c:C_FW, cat:"FW", s:["gw-lüfter"]},
-        { n:"AB-Lüfter", id:116, c:C_FW, cat:"FW", s:["ab-lüfter"]},
-        { n:"Anh Schlauch", id:143, c:C_FW, cat:"FW", s:["anh schlauch"]},
-        { n:"Anh Sonderlöschmittel", id:168, c:C_FW, cat:"FW", s:["sonderlöschmittel"]},
+        { n:"GW-Tierrettung", id:185, c:C_FW, cat:"FW", s:["gw-Tier","gw-tierrettung"]},
         { n:"GW-Atemschutz", id:5, c:C_FW, cat:"FW", s:["gw-a","gw-atemschutz"]},
         { n:"GW-Öl", id:10, c:C_FW, cat:"FW", s:["gw-öl"]},
         { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-messtechnik"]},
         { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahrgut"]},
+                { n:"GW-Waldbrand", id:27, c:C_FW, cat:"FW", s:["gw-wald"]},
         { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
         { n:"GW-L2", id:[105,11], c:C_FW, cat:"FW", s:["gw-l2"]},
         { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhenrettung","gw-höhen fw"]},
         { n:"GW-Logistik", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","gw-logistik"]},
+                { n:"GW-Hygiene", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","gw-hygiene"]},
         { n:"AB-Einsatzleitung", id:78, c:C_FW, cat:"FW", s:["ab-einsatz","ab-el"]},
         { n:"AB-Atemschutz", id:48, c:C_FW, cat:"FW", s:["ab-atemschutz"]},
         { n:"AB-Öl", id:49, c:C_FW, cat:"FW", s:["ab-öl"]},
@@ -116,15 +117,23 @@
         { n:"AB-Wasser/Schaum", id:170, c:C_FW, cat:"FW", s:["ab-wasser"]},
         { n:"AB-Dekon-P", id:54, c:C_FW, cat:"FW", s:["ab-dekon-p"]},
         { n:"AB-Gefahrgut", id:77, c:C_FW, cat:"FW", s:["ab-gefahrgut","ab-gefahr"]},
+                { n:"AB-Waldbrand", id:77, c:C_FW, cat:"FW", s:["ab-gefahrgut","ab-gefahr","ab-wald"]},
         { n:"AB-Tank", id:117, c:C_FW, cat:"FW", s:["ab-tank"]},
         { n:"AB-Lösch", id:119, c:C_FW, cat:"FW", s:["ab-lösch"]},
         { n:"AB-Sonderlöschmittel", id:169, c:C_FW, cat:"FW", s:["ab-sonderlöschmittel"]},
         { n:"AB-MzB", id:71, c:C_FW, cat:"FW", s:["ab-mzb"]},
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
+        { n:"AB-Lüfter", id:116, c:C_FW, cat:"FW", s:["ab-lüfter"]},
         { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
-        { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-log","mtf-l"]},
+                { n:"AB-Hygiene", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","ab-hygiene"]},
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
+        { n:"Anh Tierrettungl", id:186, c:C_FW, cat:"FW", s:["anh tierrettung"]},
+        { n:"Anh Schlauch", id:143, c:C_FW, cat:"FW", s:["anh schlauch"]},
+                { n:"Anh Waldbrand", id:143, c:C_FW, cat:"FW", s:["anh wald"]},
+        { n:"Anh Sonderlöschmittel", id:168, c:C_FW, cat:"FW", s:["sonderlöschmittel"]},
+        { n:"Anh Lüfter", id:115, c:C_FW, cat:"FW", s:["anh lüfter","anh-lüfter"]},
+        { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-log","mtf-l"]},
         { n:"MTW-V", id:140, c:C_FW, cat:"Versorgung", s:["mtw-v","mtw verpflegung"]},
         { n:"GW-Verpflegung", id:138, c:C_FW, cat:"Versorgung", s:["gw-verpflegung"]},
         { n:"GW-Küche", id:139, c:C_FW, cat:"Versorgung", s:["gw-küche"]},
@@ -240,10 +249,10 @@
         { n:"Feuer-und Rettungswache Gütersloh", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943286]},
         { n:"Feuer-und Rettungswache Halle(Westf.)", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943328]},
         { n:"Feuer-und Rettungswache Stukenbrock", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943379]},
-        { n:"Kreispolizeibehörde Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945351]},
-        { n:"Kreispolizeibehörde Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945356]},
-        { n:"Kreispolizeibehörde Halle(Westf.)", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945367]},
-        { n:"Kreispolizeibehörde Stukenbrock", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945361]},
+        { n:"Polizeibehörde Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945351]},
+        { n:"Polizeibehörde Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945356]},
+        { n:"Polizeibehörde Halle(Westf.)", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945367]},
+        { n:"Polizeibehörde Stukenbrock", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945361]},
         { n:"Polizeibehörde Warnemünde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979980]},
         { n:"Polizeibehörde Eckernförde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979964]},
         { n:"Polizeibehörde Bremerhafen", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979987]},
