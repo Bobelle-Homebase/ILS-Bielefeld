@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.65
+// @version      v1.0.70
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.65 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.70 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -31,7 +31,7 @@
 
     const VEHICLE_MATCH_CACHE = {
         _map: new Map(),
-        _max: 5000,
+        _max: 1000,
         get(key) { return this._map.get(key); },
         set(key, val) {
             if (this._map.size >= this._max) {
@@ -246,22 +246,6 @@
         { n:"RW-Schiene", id:162, c:"#5a5a5a", cat:"BahnRett", s:["rw schiene","rw-schiene"]},
         { n:"HLF Schiene", id:163, c:"#5a5a5a", cat:"BahnRett", s:["hlf schiene"]},
         { n:"AB-Schiene", id:164, c:"#5a5a5a", cat:"BahnRett", s:["ab-schiene"]},
-        { n:"Feuer-und Rettungswache Herford", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943238]},
-        { n:"Feuer-und Rettungswache Gütersloh", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943286]},
-        { n:"Feuer-und Rettungswache Halle(Westf.)", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943328]},
-        { n:"Feuer-und Rettungswache Stukenbrock", id:[], c:"#b00000", cat:"Sonstiges", s:[], p:50, building_ids:[26943379]},
-        { n:"Polizeibehörde Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945351]},
-        { n:"Polizeibehörde Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945356]},
-        { n:"Polizeibehörde Halle(Westf.)", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945367]},
-        { n:"Polizeibehörde Stukenbrock", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26945361]},
-        { n:"Polizeibehörde Warnemünde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979980]},
-        { n:"Polizeibehörde Eckernförde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979964]},
-        { n:"Polizeibehörde Bremerhafen", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[26979987]},
-        { n:"Rettungswache Warnemünde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26793826]},
-        { n:"Rettungswache Eckernförde", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26794114]},
-        { n:"Rettungswache Bremerhafen", id:[], c:C_POL, cat:"Sonstiges", s:[], p:10, building_ids:[26794419]},
-        { n:"DLRG Herford", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016223]},
-        { n:"DLRG Gütersloh", id:[], c:C_POL, cat:"Sonstiges", s:[], p:30, building_ids:[27016182]},
         { n:"Patienten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Krankenhausbetten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Gefangene", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
