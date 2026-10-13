@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.62
+// @version      v1.0.65
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.62 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.65 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -64,13 +64,13 @@
         "FlugFW": "Flughafenfeuerwehr", "UAS": "UAS", "WasserRett": "Wasserrettung",
         "SeenotRett": "Seenotrettung", "BergRett": "Bergrettung", "BahnRett": "Bahnrettung",
         "Netz": "Netzversorgung", "Sonstiges": "Feuer-und Rettungswachen & Kreispolizeibehörden", "Versorgung": "Versorgung",
-        "Ressourcen": "Einsatz-Statistik", "Ausbildung": "Ausbildung & Lehrgänge"
+        "Ressourcen": "Einsatz-Statistik", "Ausbildung":"Ausbildung & Lehrgänge"
     };
 
     const CATEGORY_ORDER = [
         "Luft","FW","RD","POL","THW","SEG","WerkFW","FlugFW","UAS",
         "BergRett","WasserRett","SeenotRett","BahnRett","Netz","Sonstiges","Versorgung",
-        "Ressourcen","Ausbildung","Waldbrand"
+        "Ressourcen","Ausbildung"
     ];
 
     const AAO_TILES_RAW = [
@@ -85,7 +85,7 @@
         { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf"]},
         { n:"TLF3000W", id:[187], c:C_FW, cat:"FW", s:["tlfw"]},
-        { n:"TLF5000W", id:[188], c:C_FW, cat:"FW", s:["tlfw"]},        
+        { n:"TLF5000W", id:[188], c:C_FW, cat:"FW", s:["tlfw"]},
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf","großtank"]},
         { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w","großtank"]},
         { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
@@ -104,12 +104,12 @@
         { n:"GW-Öl", id:10, c:C_FW, cat:"FW", s:["gw-öl"]},
         { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-messtechnik"]},
         { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahrgut"]},
-         { n:"GW-Waldbrand", id:190, c:C_FW, cat:"FW", s:["gw-wald"]},
+        { n:"GW-Waldbrand", id:190, c:C_FW, cat:"FW", s:["gw-wald"]},
         { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
         { n:"GW-L2", id:[105,11], c:C_FW, cat:"FW", s:["gw-l2"]},
         { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhenrettung","gw-höhen fw"]},
         { n:"GW-Logistik", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","gw-logistik"]},
-                { n:"GW-Hygiene", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","gw-hygiene"]},
+        { n:"GW-Hygiene", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","gw-hygiene"]},
         { n:"AB-Einsatzleitung", id:78, c:C_FW, cat:"FW", s:["ab-einsatz","ab-el"]},
         { n:"AB-Atemschutz", id:48, c:C_FW, cat:"FW", s:["ab-atemschutz"]},
         { n:"AB-Öl", id:49, c:C_FW, cat:"FW", s:["ab-öl"]},
@@ -126,12 +126,12 @@
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
         { n:"AB-Lüfter", id:116, c:C_FW, cat:"FW", s:["ab-lüfter"]},
         { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
-                { n:"AB-Hygiene", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","ab-hygiene"]},
+        { n:"AB-Hygiene", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","ab-hygiene"]},
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
         { n:"Anh Tierrettungl", id:186, c:C_FW, cat:"FW", s:["anh tierrettung"]},
         { n:"Anh Schlauch", id:143, c:C_FW, cat:"FW", s:["anh schlauch"]},
-                { n:"Anh Waldbrand", id:143, c:C_FW, cat:"FW", s:["anh wald"]},
+        { n:"Anh Waldbrand", id:[143,191], c:C_FW, cat:"FW", s:["anh wald"]},
         { n:"Anh Sonderlöschmittel", id:168, c:C_FW, cat:"FW", s:["sonderlöschmittel"]},
         { n:"Anh Lüfter", id:115, c:C_FW, cat:"FW", s:["anh lüfter","anh-lüfter"]},
         { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-log","mtf-l"]},
