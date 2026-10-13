@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.61
+// @version      v1.0.62
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -84,9 +84,10 @@
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
         { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf"]},
-                { n:"TLF-W", id:[188], c:C_FW, cat:"FW", s:["tlfw"]},
+        { n:"TLF3000W", id:[187], c:C_FW, cat:"FW", s:["tlfw"]},
+        { n:"TLF5000W", id:[188], c:C_FW, cat:"FW", s:["tlfw"]},        
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf","großtank"]},
-                { n:"GTLF-W", id:189, c:C_FW, cat:"FW", s:["gtlf-w","großtank"]},
+        { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w","großtank"]},
         { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
         { n:"Kleintankwagen", id:118, c:C_FW, cat:"FW", s:["kleintankwagen"]},
         { n:"Tankwagen", id:120, c:C_FW, cat:"FW", s:["tankwagen"]},
@@ -103,7 +104,7 @@
         { n:"GW-Öl", id:10, c:C_FW, cat:"FW", s:["gw-öl"]},
         { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-messtechnik"]},
         { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahrgut"]},
-                { n:"GW-Waldbrand", id:27, c:C_FW, cat:"FW", s:["gw-wald"]},
+         { n:"GW-Waldbrand", id:190, c:C_FW, cat:"FW", s:["gw-wald"]},
         { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
         { n:"GW-L2", id:[105,11], c:C_FW, cat:"FW", s:["gw-l2"]},
         { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhenrettung","gw-höhen fw"]},
@@ -117,7 +118,7 @@
         { n:"AB-Wasser/Schaum", id:170, c:C_FW, cat:"FW", s:["ab-wasser"]},
         { n:"AB-Dekon-P", id:54, c:C_FW, cat:"FW", s:["ab-dekon-p"]},
         { n:"AB-Gefahrgut", id:77, c:C_FW, cat:"FW", s:["ab-gefahrgut","ab-gefahr"]},
-                { n:"AB-Waldbrand", id:77, c:C_FW, cat:"FW", s:["ab-gefahrgut","ab-gefahr","ab-wald"]},
+        { n:"AB-Waldbrand", id:192, c:C_FW, cat:"FW", s:["ab-gefahrgut","ab-gefahr","ab-wald"]},
         { n:"AB-Tank", id:117, c:C_FW, cat:"FW", s:["ab-tank"]},
         { n:"AB-Lösch", id:119, c:C_FW, cat:"FW", s:["ab-lösch"]},
         { n:"AB-Sonderlöschmittel", id:169, c:C_FW, cat:"FW", s:["ab-sonderlöschmittel"]},
