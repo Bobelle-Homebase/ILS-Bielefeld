@@ -1,18 +1,15 @@
 // ==UserScript==
 // @name         Dashboard Button UI
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.35
+// @version      v1.0.73
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Fügt einen Stil hinzu, welcher alle AAO-Links auf dieselbe Breite setzt
 // @icon         https://www.leitstellenspiel.de/favicon.ico
-// @match        https://www.leitstellenspiel.de/
-// @match        https://www.leitstellenspiel.de/aaos
-// @match        https://www.leitstellenspiel.de/missions/*
+// @match        https://www.leitstellenspiel.de/*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addStyle
-// @grant        none
 // ==/UserScript==
 
 (function () {
@@ -32,16 +29,16 @@
     // Apply width to button links on the AAO page
     const parentButtonGroup = link.closest(".btn-group.aao_btn_group");
     if (parentButtonGroup) {
-      link.style.minWidth = "90%";
+      link.style.minWidth = "115%";
       link.style.textAlign = "left";
 
-      parentButtonGroup.style.width = "112%";
+      parentButtonGroup.style.width = "115%";
       parentButtonGroup.style.margin = "0";
     }
 
     // Apply width to button links on the mission page
     if (link.classList.contains("aao_btn")) {
-      link.style.minWidth = "110%";
+      link.style.minWidth = "115%";
       link.style.textAlign = "left";
 
       const iconElement = link.querySelector("span.label");
@@ -49,7 +46,7 @@
       const timerElement = link.querySelector(".aao_timer");
 
       if (iconElement) {
-        iconElement.style.marginRight = "5px";
+        iconElement.style.marginRight = "0px";
       }
 
       if (timerElement) {
@@ -76,4 +73,3 @@
     });
   }
 })();
-
