@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.72
+// @version      v1.0.75
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -177,7 +177,7 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        { n:"Schmutzwasserpumpen", id:[17,18,87,184], c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
+        { n:"Schmutzwasserpumpen", id:[17,18,87], c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
         { n:"Feuerlöschpumpen", id:[30,188], c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
