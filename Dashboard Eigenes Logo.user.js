@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Eigenes Logo
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.80
+// @version      v1.0.90
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und legt ein eigenes darüber
