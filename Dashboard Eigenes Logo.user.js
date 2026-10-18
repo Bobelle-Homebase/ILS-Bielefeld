@@ -12,6 +12,7 @@
 // @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @run-at       document-end
 // ==/UserScript==
 
 (function () {
