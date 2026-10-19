@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.95
+// @version      v1.0.96
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -20,7 +20,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.95 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.96 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -55,7 +55,7 @@
         "Luft": C_LUFT, "FW": C_FW, "RD": C_RD, "POL": C_POL, "THW": C_THW, "SEG": C_SEG,
         "WerkFW": "#b00000", "FlugFW": "#b00000", "UAS": "#9b9b9b", "BergRett": "#B0AC97",
         "WasserRett": C_WR, "SeenotRett": C_SR, "BahnRett": "#5a5a5a", "Netz": "#5a5a5a", "Versorgung": "#b00000",
-        "Ressourcen": C_RES, "Ausbildung": C_AUS, "Sonstiges": "#b00000"
+        "Ausbildung": C_AUS, "Sonstiges": "#b00000"
     };
 
     const CAT_DISPLAY_NAMES = {
@@ -64,13 +64,13 @@
         "FlugFW": "Flughafenfeuerwehr", "UAS": "UAS", "WasserRett": "Wasserrettung",
         "SeenotRett": "Seenotrettung", "BergRett": "Bergrettung", "BahnRett": "Bahnrettung",
         "Netz": "Netzversorgung", "Sonstiges": "Feuer-und Rettungswachen & Kreispolizeibehörden", "Versorgung": "Versorgung",
-        "Ressourcen": "Einsatz-Statistik", "Ausbildung":"Ausbildung & Lehrgänge"
+        "Ausbildung":"Ausbildung & Lehrgänge"
     };
 
     const CATEGORY_ORDER = [
         "Luft","FW","RD","POL","THW","SEG","WerkFW","FlugFW","UAS",
         "BergRett","WasserRett","SeenotRett","BahnRett","Netz","Sonstiges","Versorgung",
-        "Ressourcen","Ausbildung"
+        "Ausbildung"
     ];
 
     const AAO_TILES_RAW = [
@@ -246,15 +246,15 @@
         { n:"RW-Schiene", id:162, c:"#5a5a5a", cat:"BahnRett", s:["rw schiene","rw-schiene"]},
         { n:"HLF Schiene", id:163, c:"#5a5a5a", cat:"BahnRett", s:["hlf schiene"]},
         { n:"AB-Schiene", id:164, c:"#5a5a5a", cat:"BahnRett", s:["ab-schiene"]},
-        { n:"Patienten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Krankenhausbetten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Gefangene", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Gefängniszellen", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Wasserbedarf", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Betreuung/Versorgung", id:[130,131,133], c:"#5a5a5a", cat:"Ressourcen", s:["bt-kombi","gw-bt","bt lkw"]},
-        { n:"Krankentransporte", id:[38,58], c:"#5a5a5a", cat:"Ressourcen", s:["ktw"]},
-        { n:"Helikopter", id:[31,157,61,156,161], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Meine DJI Mini 4k (Pilot Bobelle)", id:[127,125], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        //{ n:"Patienten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        //{ n:"Krankenhausbetten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        //{ n:"Gefangene", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        //{ n:"Gefängniszellen", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        //{ n:"Wasserbedarf", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        //{ n:"Betreuung/Versorgung", id:[130,131,133], c:"#5a5a5a", cat:"Ressourcen", s:["bt-kombi","gw-bt","bt lkw"]},
+        //{ n:"Krankentransporte", id:[38,58], c:"#5a5a5a", cat:"Ressourcen", s:["ktw"]},
+        //{ n:"Helikopter", id:[31,157,61,156,161], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        //{ n:"Meine DJI Mini 4k (Pilot Bobelle)", id:[127,125], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Laufende Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
         { n:"Aktive Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
     ];
