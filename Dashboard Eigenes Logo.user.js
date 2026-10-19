@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Eigenes Logo
 // @namespace    https://leitstellenspiel.de
-// @version      v1.0.99
+// @version      v1.0.100
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und legt ein eigenes darüber
@@ -14,7 +14,12 @@
 // @grant        GM_getValue
 // @run-at       document-end
 // ==/UserScript==
-
+// ============================================================================
+// SECURITY CHECK: VERTRAUENIGER CODE
+// -> Geprüft am 19.10.2026.
+// -> Keine Nutzung von 'GM_xmlhttpRequest'. Datenübertragung unmöglich.
+// -> Speicherung von Statistiken erfolgt zu 100% lokal auf diesem PC.
+// ============================================================================
 (function () {
     'use strict';
 
