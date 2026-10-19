@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Button UI
-// @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.92
+// @namespace    https://leitstellenspiel.de
+// @version      v1.0.95
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Fügt einen Stil hinzu, welcher alle AAO-Links auf dieselbe Breite setzt
