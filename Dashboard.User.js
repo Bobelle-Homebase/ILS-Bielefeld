@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.04
+// @version      v1.0.05
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -21,7 +21,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.04 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.05 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -48,13 +48,13 @@
         person: "👤", target: "⌖", alliance: "🤝", event: "🎉", water: "💧", heli: "🚁", school: "🎓"
     };
 
-    const C_FW ="#ff0000", C_RD = "#FF9D0A", C_POL = "#54B509", C_THW = "#00387b";
+    const C_FW ="#e60606", C_RD = "#FF9D0A", C_POL = "#54B509", C_THW = "#00387b";
     const C_SEG = "#ecbc85dc", C_WR = "#004F9F", C_SR = "#004F9F";
     const C_LUFT = "#5e879e", C_RES = "#5a5a5a", C_AUS = "#7b3fa0";
 
     const CAT_COLORS = {
         "Luft": C_LUFT, "FW": C_FW, "RD": C_RD, "POL": C_POL, "THW": C_THW, "SEG": C_SEG,
-        "WerkFW": "#ff0000", "FlugFW": "#ff0000", "UAS": "#9b9b9b", "BergRett": "#B0AC97",
+        "WerkFW": "#e60606", "FlugFW": "#e60606", "UAS": "#9b9b9b", "BergRett": "#B0AC97",
         "WasserRett": C_WR, "SeenotRett": C_SR, "BahnRett": "#5a5a5a", "Netz": "#5a5a5a", "Versorgung": "#b00000",
         "Ausbildung": C_AUS, "Sonstiges": "#b00000"
     };
