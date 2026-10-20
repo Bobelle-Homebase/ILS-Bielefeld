@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Eigenes Logo
 // @namespace    https://leitstellenspiel.de
-// @version      v1.0.06
+// @version      v1.0.10
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und legt ein eigenes darüber
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    // >>> HIER deine Logo-URL eintragen:
+    
     const CUSTOM_LOGO_URL = 'https://deine-domain.de/dein_logo.png';
 
     GM_addStyle(`

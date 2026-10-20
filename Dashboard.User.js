@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.06
+// @version      v1.0.10
 // @description  Full All in One
 // @updateURL    https://raw.githubusercontent.com/Bobelle-Homebase/ILS-Bielefeld/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://raw.githubusercontent.com/Bobelle-Homebase/ILS-Bielefeld/refs/heads/main/Dashboard.User.js
@@ -21,13 +21,11 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.06 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.10 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
-    // =======================================================
-    // KONFIGURATION & KONSTANTEN
-    // =======================================================
+
     const CFG = { zIndex: 99999 };
 
     const VEHICLE_MATCH_CACHE = {
@@ -319,9 +317,7 @@
         TOGGLE_BTN_POS:"fz_toggle_btn_pos"
     };
 
-    // =======================================================
-    // VARIABLEN & STATUS
-    // =======================================================
+
     const TYPE_ID_MAPPING = {};
     AAO_TILES_RAW.forEach(tile => {
         if (tile.id !== undefined && tile.id !== null) {
@@ -429,9 +425,7 @@
     let _restzeitTimerId=null;
     let _buildingsFullyLoaded=false;
 
-    // =======================================================
-    // HILFSFUNKTIONEN
-    // =======================================================
+
     function formatRestzeit(finishAtMs) {
         const diff = finishAtMs - Date.now();
         if(diff <= 0) return "✅ Fertig";
@@ -497,9 +491,7 @@
         }
     };
 
-    // =======================================================
-    // INITIALISIERUNG
-    // =======================================================
+
     creditsData = json.load(STORAGE.CREDITS_DATA, {ein:0, aus:0, bilanz:0, date:""});
     const customStock = json.load(STORAGE.CUSTOM_STOCK, {});
 
@@ -537,9 +529,7 @@
         return false;
     }
 
-    // =======================================================
-    // GEBÄUDE & LEHRGÄNGE
-    // =======================================================
+
     async function ensureBuildingNames(buildingIds){
         if(_buildingsFullyLoaded || buildingIds.length === 0) return;
         const missingIds = buildingIds.filter(id => !buildingNameCache[id]);
@@ -710,9 +700,7 @@
         getTargetBody().appendChild(ol);
     }
 
-    // =======================================================
-    // UI UPDATES & STATUS
-    // =======================================================
+   
     function updateSubHeaderInfo(){
         const sysEl = document.getElementById("fzSysStatus");
         const updEl = document.getElementById("fzLastUpdate");
@@ -948,9 +936,7 @@
         }, durationMs);
     }
 
-    // =======================================================
-    // HAUPT-API-SCHLEIFE (FAHRZEUGE & CREDITS)
-    // =======================================================
+
     async function fetchCreditsDaily() {
         try {
             const res = await fetch('/credits/daily');
@@ -1219,7 +1205,7 @@
             if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 0;
         });
 
-        // Single RAF for all DOM updates
+        
         const doc = getTargetDoc();
         requestAnimationFrame(() => {
             const pillsContainer = doc.getElementById("fzResourcePills");
@@ -1369,9 +1355,7 @@
         pill.style.color = uiSettings.creditsLabelColor;
     }
 
-    // =======================================================
-    // LOOPS & STYLES
-    // =======================================================
+
     function startApiLoop(){
         if(apiTimer) clearInterval(apiTimer);
         const interval = Math.max(60, uiSettings.apiInterval || 120) * 1000;
@@ -1515,9 +1499,7 @@
         }
     }
 
-    // =======================================================
-    // KACHEL RENDER LOGIK
-    // =======================================================
+
     function updateTile(key, state){
         if(SCHOOLING_TILE_NAMES.has(key)){ updateSchoolingTiles(); return; }
         const cached = tileCache[key];
@@ -2541,9 +2523,7 @@
         });
     }
 
-    // =======================================================
-    // CLICK LISTENER & INTERCEPTS
-    // =======================================================
+
     const CLICK_PATTERNS = [
         { test: (url, text) => /\/patients?\/\d+\/hospitals?\/\d+/.test(url) || /\/missions\/\d+\/patients?\/\d+\/hospital/.test(url) || text.includes("ins krankenhaus"), action: "Patienten" },
         { test: (url, text) => /\/patients?\/\d+\/ambulances?\/\d+/.test(url) || /\/transports?\/\d+/.test(url) || text.includes("krankentransport"), action: "Krankentransporte" },
@@ -2630,9 +2610,7 @@
         refreshAllVisibleTiles();
     }, 30000);
 
-    // =======================================================
-    // API INTERCEPTS (FETCH/XHR)
-    // =======================================================
+
     (function(){
         const API_HANDLERS = {
             patient: { pattern: /\/patients?\/.*\/hospitals?/, action: "Patienten", callback: () => updateBuildingCapacities(true).then(() => { syncDerivedResourceCounts(); if(isMainPage) { KEYS.forEach(k => tileEls[k] && updateTile(k, state)); updateCategoryHeaders(); } }) },
@@ -2671,8 +2649,7 @@
         };
     })();
 
-    // =======================================================
-    // START
+
     let dashboardBooted = false;
     if(isMainPage){
         console.log("isMainPage true, starting dashboard");

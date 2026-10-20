@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Button UI
 // @namespace    https://leitstellenspiel.de
-// @version      v1.0.06
+// @version      v1.0.10
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Fügt einen Stil hinzu, welcher alle AAO-Links auf dieselbe Breite setzt
@@ -24,12 +24,13 @@
     const parentColumn = link?.closest(".col-sm-2");
     const isInColumn = parentColumn && parentColumn.className.startsWith("col-");
 
-    // Skip applying width to elements outside of columns as it would make them too wide
+    
     if (!isInColumn) {
       return;
+    
     }
 
-    // Apply width to button links on the AAO page
+    
     const parentButtonGroup = link.closest(".btn-group.aao_btn_group");
     if (parentButtonGroup) {
       link.style.minWidth = "115%";
@@ -39,7 +40,7 @@
       parentButtonGroup.style.margin = "0";
     }
 
-    // Apply width to button links on the mission page
+    
     if (link.classList.contains("aao_btn")) {
       link.style.minWidth = "115%";
       link.style.textAlign = "left";
