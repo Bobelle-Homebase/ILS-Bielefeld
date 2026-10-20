@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.02
+// @version      v1.0.03
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -14,19 +14,14 @@
 // @grant        GM_getValue
 // @run-at       document-end
 // ==/UserScript==
-// ============================================================================
-// SECURITY CHECK: VERTRAUENIGER CODE
-// -> Geprüft am 20.10.2026.
-// -> Keine Nutzung von 'GM_xmlhttpRequest'. Datenübertragung unmöglich.
-// -> Speicherung von Statistiken erfolgt zu 100% lokal auf diesem PC.
-// ============================================================================
+
 (function() {
     'use strict';
 
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.02 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.03 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -53,8 +48,8 @@
         person: "👤", target: "⌖", alliance: "🤝", event: "🎉", water: "💧", heli: "🚁", school: "🎓"
     };
 
-    const C_FW ="#b00000", C_RD = "#FF9D0A", C_POL = "#54B509", C_THW = "#00387b";
-    const C_SEG = "#FFD7A8", C_WR = "#004F9F", C_SR = "#004F9F";
+    const C_FW ="#a15b5b", C_RD = "#FF9D0A", C_POL = "#54B509", C_THW = "#00387b";
+    const C_SEG = "#ecbc85dc", C_WR = "#004F9F", C_SR = "#004F9F";
     const C_LUFT = "#5e879e", C_RES = "#5a5a5a", C_AUS = "#7b3fa0";
 
     const CAT_COLORS = {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Button UI
 // @namespace    https://leitstellenspiel.de
-// @version      v1.0.02
+// @version      v1.0.3
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Fügt einen Stil hinzu, welcher alle AAO-Links auf dieselbe Breite setzt
@@ -14,12 +14,7 @@
 // @grant        GM_getValue
 // @run-at       document-end
 // ==/UserScript==
-// ============================================================================
-// SECURITY CHECK: VERTRAUENIGER CODE
-// -> Geprüft am 20.10.2026.
-// -> Keine Nutzung von 'GM_xmlhttpRequest'. Datenübertragung unmöglich.
-// -> Speicherung von Statistiken erfolgt zu 100% lokal auf diesem PC.
-// ============================================================================
+
 (function () {
   let timerActive = false;
   // Wähle alle .aao_btn-Links aus
