@@ -3,7 +3,7 @@
 // @namespace    https://leitstellenspiel.de
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.01
+// @version      v1.0.02
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -16,7 +16,7 @@
 // ==/UserScript==
 // ============================================================================
 // SECURITY CHECK: VERTRAUENIGER CODE
-// -> Geprüft am 19.10.2026.
+// -> Geprüft am 20.10.2026.
 // -> Keine Nutzung von 'GM_xmlhttpRequest'. Datenübertragung unmöglich.
 // -> Speicherung von Statistiken erfolgt zu 100% lokal auf diesem PC.
 // ============================================================================
@@ -26,7 +26,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.01 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.02 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
