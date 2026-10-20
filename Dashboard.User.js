@@ -5,8 +5,8 @@
 // @author       Design by Bobelle
 // @version      v1.0.05
 // @description  Full All in One
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
+// @updateURL    https://raw.githubusercontent.com/Bobelle-Homebase/ILS-Bielefeld/refs/heads/main/Dashboard.User.js
+// @downloadURL  https://raw.githubusercontent.com/Bobelle-Homebase/ILS-Bielefeld/refs/heads/main/Dashboard.User.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        GM_setValue
