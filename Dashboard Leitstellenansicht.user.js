@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Leitstellenansicht
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.03
+// @version      v1.0.04
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Leitstellenansicht: Übersicht aller Fahrzeuge nach Gebäuden mit Live-Status
@@ -271,10 +271,10 @@
         overlay.id = "lsd-overlay";
         overlay.innerHTML = `
             <div id="lsd-header">
-                <h3>Leitstellenansicht</h3>
+                <h3>Leitstellenansicht</h4>
                 <span class="lsd-sub" id="lsd-sub">Lade Daten …</span>
                 <input type="text" id="lsd-search" placeholder="Suche (Gebäude, FW, RD, Pol …)">
-                <button id="lsd-close" type="button">Schließen (Esc)</button>
+                <button id="lsd-close" type="button">Schließen</button>
             </div>
             <div id="lsd-body"><div class="lsd-empty">Lade Daten …</div></div>`;
         document.body.appendChild(overlay);
