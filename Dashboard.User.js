@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      v1.0.02
+// @version      v1.0.03
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Full All in One
@@ -21,7 +21,7 @@
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.02 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.03 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -79,14 +79,13 @@
         { n:"RTH mit Winde", id:157, c:C_LUFT, cat:"Luft", s:["rth mit winde"]},
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
-        { n:"LF20", id:0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
+        { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
         { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
         { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf"]},
-        { n:"TLF3000W", id:[187], c:C_FW, cat:"FW", s:["tlfw"]},
-        { n:"TLF5000W", id:[188], c:C_FW, cat:"FW", s:["tlfw"]},
+        { n:"TLF3000W", id:[187,188], c:C_FW, cat:"FW", s:["tlfw"]},
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf","großtank"]},
         { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w","großtank"]},
         { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
@@ -178,8 +177,8 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        { n:"Schmutzwasserpumpen", id:[17,18,187], c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
-        { n:"Feuerlöschpumpen", id:[30,188], c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
+        { n:"Schmutzwasserpumpen", id:[17,18], c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
+        { n:"Feuerlöschpumpen", id:[30], c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
