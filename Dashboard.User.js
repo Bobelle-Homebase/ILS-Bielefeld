@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Dashboard
 // @namespace    https://leitstellenspiel.de/dashboard
+// @version      v1.0.02
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.01
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -14,13 +14,14 @@
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==
+
 (function() {
     'use strict';
 
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.92 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.02 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 

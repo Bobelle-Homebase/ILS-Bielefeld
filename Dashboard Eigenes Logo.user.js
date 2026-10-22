@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Eigenes Logo
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.01
+// @version      v1.0.02
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und legt ein eigenes darüber
@@ -18,7 +18,7 @@
 (function () {
     'use strict';
 
-    // >>> HIER deine Logo-URL eintragen:
+    // >>> HIER deine Logo-URL eintragen
     const CUSTOM_LOGO_URL = 'https://deine-domain.de/dein_logo.png';
 
     GM_addStyle(`
