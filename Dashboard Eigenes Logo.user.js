@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Eigenes Logo
-// @namespace    https://leitstellenspiel.de
-// @version      v1.0.10
+// @namespace    https://leitstellenspiel.de/bielefeld
+// @version      v1.0.01
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und legt ein eigenes darüber
@@ -9,16 +9,16 @@
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard Eigenes Logo.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
+// @grant        GM_addStyle
 // @grant        GM_setValue
 // @grant        GM_getValue
-// @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    
+    // >>> HIER deine Logo-URL eintragen:
     const CUSTOM_LOGO_URL = 'https://deine-domain.de/dein_logo.png';
 
     GM_addStyle(`

@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Dashboard
-// @namespace    https://leitstellenspiel.de
+// @namespace    https://leitstellenspiel.de/dashboard
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @version      v1.0.10
+// @version      v1.0.01
 // @description  Full All in One
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.user.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.user.js
+// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
+// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        GM_setValue
@@ -14,18 +14,19 @@
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==
-
 (function() {
     'use strict';
 
     // if (window._bobelleDashboardRunning) return;
     // window._bobelleDashboardRunning = true;
 
-    console.log("[Bobelle Dashboard] v1.0.10 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.92 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
-
+    // =======================================================
+    // KONFIGURATION & KONSTANTEN
+    // =======================================================
     const CFG = { zIndex: 99999 };
 
     const VEHICLE_MATCH_CACHE = {
@@ -46,30 +47,30 @@
         person: "👤", target: "⌖", alliance: "🤝", event: "🎉", water: "💧", heli: "🚁", school: "🎓"
     };
 
-    const C_FW ="#c40404", C_RD = "#FF9D0A", C_POL = "#54B509", C_THW = "#00387b";
-    const C_SEG = "#ecbc85dc", C_WR = "#004F9F", C_SR = "#004F9F";
+    const C_FW ="#b00000", C_RD = "#FF9D0A", C_POL = "#54B509", C_THW = "#00387b";
+    const C_SEG = "#FFD7A8", C_WR = "#004F9F", C_SR = "#004F9F";
     const C_LUFT = "#5e879e", C_RES = "#5a5a5a", C_AUS = "#7b3fa0";
 
     const CAT_COLORS = {
         "Luft": C_LUFT, "FW": C_FW, "RD": C_RD, "POL": C_POL, "THW": C_THW, "SEG": C_SEG,
-        "WerkFW": "#c40404", "FlugFW": "#c40404", "UAS": "#9b9b9b", "BergRett": "#B0AC97",
+        "WerkFW": "#b00000", "FlugFW": "#b00000", "UAS": "#9b9b9b", "BergRett": "#B0AC97",
         "WasserRett": C_WR, "SeenotRett": C_SR, "BahnRett": "#5a5a5a", "Netz": "#5a5a5a", "Versorgung": "#b00000",
-        "Ausbildung": C_AUS, "Sonstiges": "#b00000"
+        "Ressourcen": C_RES, "Ausbildung": C_AUS, "Sonstiges": "#b00000"
     };
 
     const CAT_DISPLAY_NAMES = {
-        "Luft": "Luftlagezentrum", "FW": "Feuerwehr", "FlugFW": "Flughafenfeuerwehr", "WerkFW": "Werkfeuerwehr",
-        "RD": "Rettungsdienst", "POL": "Polizei",
-        "THW": "Technisches Hilfswerk", "SEG": "Schnelleinsatzgruppe",
-        "UAS": "UAS", "WasserRett": "Wasserrettung",
+        "Luft": "Luftlagezentrum", "FW": "Feuerwehr", "RD": "Rettungsdienst", "POL": "Polizei",
+        "THW": "Technisches Hilfswerk", "SEG": "Schnelleinsatzgruppe", "WerkFW": "Werkfeuerwehr",
+        "FlugFW": "Flughafenfeuerwehr", "UAS": "UAS", "WasserRett": "Wasserrettung",
         "SeenotRett": "Seenotrettung", "BergRett": "Bergrettung", "BahnRett": "Bahnrettung",
-        "Netz": "Netzversorgung", "Versorgung": "Versorgung", "Ausbildung":"Ausbildung & Lehrgänge"
+        "Netz": "Netzversorgung", "Sonstiges": "Feuer-und Rettungswachen & Kreispolizeibehörden", "Versorgung": "Versorgung",
+        "Ressourcen": "Einsatz-Statistik", "Ausbildung":"Ausbildung & Lehrgänge"
     };
 
     const CATEGORY_ORDER = [
-        "Luft","FW","FlugFW","WerkFW","RD","POL","THW","SEG","UAS",
+        "Luft","FW","RD","POL","THW","SEG","WerkFW","FlugFW","UAS",
         "BergRett","WasserRett","SeenotRett","BahnRett","Netz","Sonstiges","Versorgung",
-        "Ausbildung"
+        "Ressourcen","Ausbildung"
     ];
 
     const AAO_TILES_RAW = [
@@ -244,7 +245,16 @@
         { n:"SAR Hubschrauber", id:161, c:C_SR, cat:"SeenotRett", s:["sar hubschrauber"]},
         { n:"RW-Schiene", id:162, c:"#5a5a5a", cat:"BahnRett", s:["rw schiene","rw-schiene"]},
         { n:"HLF Schiene", id:163, c:"#5a5a5a", cat:"BahnRett", s:["hlf schiene"]},
-        { n:"AB-Schiene", id:164, c:"#5a5a5a", cat:"BahnRett", s:["ab-schiene"]},      
+        { n:"AB-Schiene", id:164, c:"#5a5a5a", cat:"BahnRett", s:["ab-schiene"]},
+        { n:"Patienten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        { n:"Krankenhausbetten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        { n:"Gefangene", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        { n:"Gefängniszellen", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        { n:"Wasserbedarf", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        { n:"Betreuung/Versorgung", id:[130,131,133], c:"#5a5a5a", cat:"Ressourcen", s:["bt-kombi","gw-bt","bt lkw"]},
+        { n:"Krankentransporte", id:[38,58], c:"#5a5a5a", cat:"Ressourcen", s:["ktw"]},
+        { n:"Helikopter", id:[31,157,61,156,161], c:"#5a5a5a", cat:"Ressourcen", s:[]},
+        { n:"Meine DJI Mini 4k (Pilot Bobelle)", id:[127,125], c:"#5a5a5a", cat:"Ressourcen", s:[]},
         { n:"Laufende Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
         { n:"Aktive Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
     ];
@@ -317,7 +327,9 @@
         TOGGLE_BTN_POS:"fz_toggle_btn_pos"
     };
 
-
+    // =======================================================
+    // VARIABLEN & STATUS
+    // =======================================================
     const TYPE_ID_MAPPING = {};
     AAO_TILES_RAW.forEach(tile => {
         if (tile.id !== undefined && tile.id !== null) {
@@ -425,7 +437,9 @@
     let _restzeitTimerId=null;
     let _buildingsFullyLoaded=false;
 
-
+    // =======================================================
+    // HILFSFUNKTIONEN
+    // =======================================================
     function formatRestzeit(finishAtMs) {
         const diff = finishAtMs - Date.now();
         if(diff <= 0) return "✅ Fertig";
@@ -491,7 +505,9 @@
         }
     };
 
-
+    // =======================================================
+    // INITIALISIERUNG
+    // =======================================================
     creditsData = json.load(STORAGE.CREDITS_DATA, {ein:0, aus:0, bilanz:0, date:""});
     const customStock = json.load(STORAGE.CUSTOM_STOCK, {});
 
@@ -529,7 +545,9 @@
         return false;
     }
 
-
+    // =======================================================
+    // GEBÄUDE & LEHRGÄNGE
+    // =======================================================
     async function ensureBuildingNames(buildingIds){
         if(_buildingsFullyLoaded || buildingIds.length === 0) return;
         const missingIds = buildingIds.filter(id => !buildingNameCache[id]);
@@ -700,7 +718,9 @@
         getTargetBody().appendChild(ol);
     }
 
-   
+    // =======================================================
+    // UI UPDATES & STATUS
+    // =======================================================
     function updateSubHeaderInfo(){
         const sysEl = document.getElementById("fzSysStatus");
         const updEl = document.getElementById("fzLastUpdate");
@@ -899,17 +919,17 @@
 
     function getAvailabilitySummary(){
         const EXCLUDE_FROM_AVAIL = new Set([
-            //"Patienten","Krankenhausbetten","Gefangene","Gefängniszellen",
-            //"Wasserbedarf","Betreuung/Versorgung","Krankentransporte","Helikopter",
-            //"Meine DJI Mini 4k (Pilot Bobelle)",
-            //"Laufende Lehrgänge","Aktive Lehrgänge",
-            //"Feuer-und Rettungswache Herford","Feuer-und Rettungswache Gütersloh",
-            //"Feuer-und Rettungswache Halle(Westf.)","Feuer-und Rettungswache Stukenbrock",
-            //"Kreispolizeibehörde Herford","Kreispolizeibehörde Gütersloh",
-            //"Kreispolizeibehörde Halle(Westf.)","Kreispolizeibehörde Stukenbrock",
-            //"Polizeibehörde Warnemünde","Polizeibehörde Eckernförde","Polizeibehörde Bremerhafen",
-            //"Rettungswache Warnemünde","Rettungswache Eckernförde","Rettungswache Bremerhafen",
-            //"DLRG Herford","DLRG Gütersloh"
+            "Patienten","Krankenhausbetten","Gefangene","Gefängniszellen",
+            "Wasserbedarf","Betreuung/Versorgung","Krankentransporte","Helikopter",
+            "Meine DJI Mini 4k (Pilot Bobelle)",
+            "Laufende Lehrgänge","Aktive Lehrgänge",
+            "Feuer-und Rettungswache Herford","Feuer-und Rettungswache Gütersloh",
+            "Feuer-und Rettungswache Halle(Westf.)","Feuer-und Rettungswache Stukenbrock",
+            "Kreispolizeibehörde Herford","Kreispolizeibehörde Gütersloh",
+            "Kreispolizeibehörde Halle(Westf.)","Kreispolizeibehörde Stukenbrock",
+            "Polizeibehörde Warnemünde","Polizeibehörde Eckernförde","Polizeibehörde Bremerhafen",
+            "Rettungswache Warnemünde","Rettungswache Eckernförde","Rettungswache Bremerhafen",
+            "DLRG Herford","DLRG Gütersloh"
         ]);
 
         const relevantKeys = KEYS.filter(k => !EXCLUDE_FROM_AVAIL.has(k));
@@ -936,7 +956,9 @@
         }, durationMs);
     }
 
-
+    // =======================================================
+    // HAUPT-API-SCHLEIFE (FAHRZEUGE & CREDITS)
+    // =======================================================
     async function fetchCreditsDaily() {
         try {
             const res = await fetch('/credits/daily');
@@ -1205,7 +1227,7 @@
             if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 0;
         });
 
-        
+        // Single RAF for all DOM updates
         const doc = getTargetDoc();
         requestAnimationFrame(() => {
             const pillsContainer = doc.getElementById("fzResourcePills");
@@ -1355,7 +1377,9 @@
         pill.style.color = uiSettings.creditsLabelColor;
     }
 
-
+    // =======================================================
+    // LOOPS & STYLES
+    // =======================================================
     function startApiLoop(){
         if(apiTimer) clearInterval(apiTimer);
         const interval = Math.max(60, uiSettings.apiInterval || 120) * 1000;
@@ -1499,7 +1523,9 @@
         }
     }
 
-
+    // =======================================================
+    // KACHEL RENDER LOGIK
+    // =======================================================
     function updateTile(key, state){
         if(SCHOOLING_TILE_NAMES.has(key)){ updateSchoolingTiles(); return; }
         const cached = tileCache[key];
@@ -2523,7 +2549,9 @@
         });
     }
 
-
+    // =======================================================
+    // CLICK LISTENER & INTERCEPTS
+    // =======================================================
     const CLICK_PATTERNS = [
         { test: (url, text) => /\/patients?\/\d+\/hospitals?\/\d+/.test(url) || /\/missions\/\d+\/patients?\/\d+\/hospital/.test(url) || text.includes("ins krankenhaus"), action: "Patienten" },
         { test: (url, text) => /\/patients?\/\d+\/ambulances?\/\d+/.test(url) || /\/transports?\/\d+/.test(url) || text.includes("krankentransport"), action: "Krankentransporte" },
@@ -2610,7 +2638,9 @@
         refreshAllVisibleTiles();
     }, 30000);
 
-
+    // =======================================================
+    // API INTERCEPTS (FETCH/XHR)
+    // =======================================================
     (function(){
         const API_HANDLERS = {
             patient: { pattern: /\/patients?\/.*\/hospitals?/, action: "Patienten", callback: () => updateBuildingCapacities(true).then(() => { syncDerivedResourceCounts(); if(isMainPage) { KEYS.forEach(k => tileEls[k] && updateTile(k, state)); updateCategoryHeaders(); } }) },
@@ -2649,7 +2679,8 @@
         };
     })();
 
-
+    // =======================================================
+    // START
     let dashboardBooted = false;
     if(isMainPage){
         console.log("isMainPage true, starting dashboard");

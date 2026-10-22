@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
-// @namespace    https://leitstellenspiel.de
-// @version      v1.0.10
+// @namespace    https://leitstellenspiel.de/bielefeld
+// @version      v1.0.01
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
@@ -18,6 +18,9 @@
 (function () {
   'use strict';
 
+  // =========================================================
+  // 0) Tab-Titel fix
+  // =========================================================
   const TARGET_TITLE = 'Leitstelle Bielefeld';
 
   function initTitleFix() {
@@ -39,6 +42,9 @@
     }
   }
 
+  // =========================================================
+  // Helfer
+  // =========================================================
   const isMainPage = () => {
     const path = window.location.pathname;
     return path === '/' || path === '/index.php' || path === '/map';
@@ -108,6 +114,9 @@
   const getTodayKey = () => new Date().toISOString().split('T')[0];
   const formatNumber = (num) => Number(num).toLocaleString('de-DE');
 
+  // =========================================================
+  // 1) Tageszähler
+  // =========================================================
   const DAILY_CONFIG = {
     storageKey: 'lss_daily_mission_counter',
     labelToday: 'Einsätze heute:',
@@ -393,6 +402,9 @@
     document.addEventListener('click', handleDailyClickFallback, true);
   }
 
+  // =========================================================
+  // 2) Credits (Zeile1/Zeile2 frei einstellbar + Abstand + Hilfe)
+  // =========================================================
   const CREDITS_CONFIG = {
     resetHour: 0,
     resetMinute: 0,
@@ -674,6 +686,9 @@
     }, 300000);
   }
 
+  // =========================================================
+  // Init
+  // =========================================================
   function initAll() {
     try {
       initTitleFix();
