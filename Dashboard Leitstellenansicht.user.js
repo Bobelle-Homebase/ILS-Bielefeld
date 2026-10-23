@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Leitstellenansicht
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.07
+// @version      v1.0.09
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Leitstellenansicht: Übersicht aller Fahrzeuge nach Gebäuden mit Live-Status
@@ -16,7 +16,6 @@
 (function () {
     'use strict';
 
-    // Nur im Hauptfenster der Startseite ausführen
     if (window.top !== window.self) return;
     if (window.location.pathname !== '/') return;
 

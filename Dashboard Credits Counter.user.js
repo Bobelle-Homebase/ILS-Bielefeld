@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.02
+// @version      v1.0.10
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
@@ -19,7 +19,7 @@
   'use strict';
 
   // =========================================================
-  // 0) Tab-Titel fix
+  // Tab-Titel fix
   // =========================================================
   const TARGET_TITLE = 'Leitstelle Bielefeld';
 
