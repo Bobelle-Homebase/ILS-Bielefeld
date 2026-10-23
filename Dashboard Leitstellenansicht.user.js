@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Leitstellenansicht
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.06
+// @version      v1.0.07
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Leitstellenansicht: Übersicht aller Fahrzeuge nach Gebäuden mit Live-Status
@@ -101,6 +101,7 @@
         log: [],
         statusFilter: new Set(),
         typeFilter: '',
+        catFilter: '',
         sort: 'name',
         search: '',
         tab: 'wachen'
@@ -216,6 +217,15 @@
         .lsd-chip.on { background:var(--sc, #2980b9); border-color:var(--sc, #2980b9); color:#fff; }
         .lsd-chip.lsd-s5.pulse { animation:lsd-blink 1s infinite; }
 
+        .lsd-cat { display:inline-flex; align-items:center; gap:7px; border:1px solid var(--line); background:var(--panel2);
+            color:var(--text); border-radius:6px; padding:5px 12px; cursor:pointer; font-size:13px; }
+        .lsd-cat:hover { background:var(--hover); }
+        .lsd-cat.on { background:var(--cc, #2980b9); border-color:var(--cc, #2980b9); color:#fff; font-weight:600; }
+        .lsd-cat .lsd-dot { box-shadow:0 0 0 1px rgba(255,255,255,.5); }
+        .lsd-cat small { opacity:.8; font-size:12px; }
+        .lsd-grouphead { grid-column:1 / -1; display:flex; align-items:center; gap:8px; font-size:15px; font-weight:600;
+            padding:6px 2px 2px; border-bottom:2px solid var(--gc, var(--line)); margin-top:6px; }
+        .lsd-grouphead small { color:var(--muted); font-weight:normal; }
         .lsd-tabs { display:flex; gap:2px; flex-wrap:wrap; }
         .lsd-tab { background:transparent; border:0; border-bottom:3px solid transparent; color:var(--muted);
             padding:8px 14px; cursor:pointer; font-size:14px; }
@@ -494,6 +504,28 @@
         if (S.statusFilter.size) chips += `<button type="button" class="lsd-chip" data-status="all">Filter zurücksetzen</button>`;
         overlay.querySelector('#lsd-chips').innerHTML = chips;
 
+        // Kategorien (Organisationen)
+        const catStats = {};
+        for (const [bid, list] of S.byBuilding) {
+            const b = S.buildings.get(bid);
+            if (!b) continue;
+            const k = groupKeyOf(b);
+            const st = catStats[k] || (catStats[k] = { total: 0, free: 0 });
+            st.total += list.length;
+            st.free += list.filter(isFree).length;
+        }
+        if (S.catFilter && !catStats[S.catFilter]) S.catFilter = '';
+        const catKeys = Object.keys(GROUPS).filter(k => catStats[k]);
+        let cats = '';
+        if (catKeys.length > 1) {
+            cats = `<button type="button" class="lsd-cat${S.catFilter ? '' : ' on'}" data-cat="">Alle Kategorien
+                <small>${S.vehicles.length}</small></button>` +
+                catKeys.map(k => `<button type="button" class="lsd-cat${S.catFilter === k ? ' on' : ''}" data-cat="${k}"
+                    style="--cc:${GROUPS[k].color}"><span class="lsd-dot" style="background:${GROUPS[k].color}"></span>
+                    ${esc(GROUPS[k].name)} <small>${catStats[k].free}/${catStats[k].total} frei</small></button>`).join('');
+        }
+        overlay.querySelector('#lsd-cats').innerHTML = cats;
+
         // Typ-Filter
         const types = [...new Set(S.vehicles.map(typeLabel))].sort(collator);
         const sig = types.join('|');
@@ -510,6 +542,7 @@
         overlay.querySelectorAll('.lsd-tab').forEach(t => t.classList.toggle('on', t.dataset.tab === S.tab));
         overlay.querySelectorAll('.lsd-pane').forEach(p => p.classList.toggle('on', p.id === 'lsd-pane-' + S.tab));
         overlay.querySelector('#lsd-filters').style.display = S.tab === 'wachen' ? '' : 'none';
+        overlay.querySelector('#lsd-cats').style.display = S.tab === 'wachen' || S.tab === 'karte' ? '' : 'none';
         overlay.querySelector('#lsd-chips').style.display = S.tab === 'wachen' || S.tab === 'protokoll' ? '' : 'none';
     }
 
@@ -517,7 +550,7 @@
     function renderWachen() {
         const pane = overlay.querySelector('#lsd-pane-wachen');
         const term = S.search.trim().toLowerCase();
-        const filtersActive = !!(S.statusFilter.size || S.typeFilter || term);
+        const filtersActive = !!(S.statusFilter.size || S.typeFilter || S.catFilter || term);
         const reqs = reqRegexes();
 
         const passFilters = v =>
@@ -530,6 +563,7 @@
             const b = S.buildings.get(bid);
             if (!b) continue;
             const gk = groupKeyOf(b);
+            if (S.catFilter && gk !== S.catFilter) continue;
             const g = GROUPS[gk];
             const bMatch = !term || `${g.terms} ${b.caption}`.toLowerCase().includes(term);
             const shown = list.filter(v => passFilters(v) && (bMatch || vText(v).includes(term)));
@@ -558,8 +592,18 @@
             return;
         }
 
+        let lastGroup = null;
         pane.innerHTML = cards.map(c => {
             const { b, g, list, shown, free, warnings } = c;
+            let head = '';
+            if (S.sort === 'group' && c.gk !== lastGroup) {
+                lastGroup = c.gk;
+                const inGroup = cards.filter(x => x.gk === c.gk);
+                const gFree = inGroup.reduce((n, x) => n + x.free, 0);
+                const gTotal = inGroup.reduce((n, x) => n + x.list.length, 0);
+                head = `<div class="lsd-grouphead" style="--gc:${g.color}"><span class="lsd-dot" style="background:${g.color}"></span>
+                    ${esc(g.name)} <small>${inGroup.length} Wachen · ${gFree}/${gTotal} Fahrzeuge frei</small></div>`;
+            }
             const collapsed = !!cfg.collapsed[b.id];
             const meta = [];
             if (b.personal_count != null) meta.push(`Personal: ${esc(b.personal_count)}`);
@@ -583,7 +627,7 @@
                 </a>`;
             }).join('')}</div>`;
 
-            return `<div class="lsd-card${warnings.length ? ' warn' : ''}" data-bid="${b.id}">
+            return `${head}<div class="lsd-card${warnings.length ? ' warn' : ''}" data-bid="${b.id}">
                 <div class="lsd-card-head">
                     <span class="lsd-caret">${collapsed ? '▸' : '▾'}</span>
                     <span class="lsd-dot" style="background:${g.color}" title="${esc(g.name)}"></span>
@@ -653,6 +697,7 @@
             const b = S.buildings.get(bid);
             if (!b || b.latitude == null || b.longitude == null) continue;
             const gk = groupKeyOf(b);
+            if (S.catFilter && gk !== S.catFilter) continue;
             const free = list.filter(isFree).length;
             let warn = free === 0;
             const req = reqs[gk];
@@ -872,6 +917,7 @@
                     <button type="button" class="lsd-btn" data-act="fullscreen" title="Vollbild">⛶ Vollbild</button>
                     <button type="button" class="lsd-btn lsd-danger" data-act="close">Schließen (Esc)</button>
                 </div>
+                <div class="lsd-row" id="lsd-cats"></div>
                 <div class="lsd-row" id="lsd-chips"></div>
                 <div class="lsd-row" id="lsd-filters">
                     <select id="lsd-type"><option value="">Alle Fahrzeugtypen</option></select>
@@ -951,6 +997,14 @@
             scrollPauseUntil = 0;
             if (S.tab === 'verband' && !S.alliance) loadAlliance().then(scheduleRender);
             render();
+            return;
+        }
+
+        const cat = t.closest('[data-cat]');
+        if (cat) {
+            S.catFilter = cat.dataset.cat;
+            if (S.tab === 'karte') mapFitted = false;
+            scheduleRender();
             return;
         }
 
