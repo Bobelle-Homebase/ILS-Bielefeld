@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Leitstellenansicht
 // @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0.05
+// @version      v1.0.06
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Leitstellenansicht: Übersicht aller Fahrzeuge nach Gebäuden mit Live-Status
@@ -12,21 +12,20 @@
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
-/* global $ */
 
 (function () {
     'use strict';
- 
+
     // Nur im Hauptfenster der Startseite ausführen
     if (window.top !== window.self) return;
     if (window.location.pathname !== '/') return;
- 
+
     // ==================================================================
     // Konstanten & Einstellungen
     // ==================================================================
     const LS_KEY = 'lsd_settings_v3';
     const OPEN_HASH = '#leitstellenansicht';
- 
+
     const GROUPS = {
         fw:    { name: 'Feuerwehr',      color: '#DB1111', terms: 'feuerwehr fw' },
         rd:    { name: 'Rettungsdienst', color: '#F36F22', terms: 'rettungsdienst rd' },
@@ -34,12 +33,12 @@
         thw:   { name: 'THW',            color: '#3b6ea5', terms: 'thw technisches hilfswerk' },
         other: { name: 'Sonstige',       color: '#8a8f98', terms: 'sonstige' }
     };
- 
+
     const STATUS_LABEL = {
         1: 'Einsatzbereit (Funk)', 2: 'Einsatzbereit (Wache)', 3: 'Anfahrt', 4: 'Am Einsatzort',
         5: 'Sprechwunsch', 6: 'Nicht einsatzbereit', 7: 'Patient aufgenommen', 8: 'Am Transportziel', 9: 'Status 9'
     };
- 
+
     const DEFAULTS = {
         theme: 'dark',
         minCard: 340,
@@ -54,7 +53,7 @@
         requirements: { fw: '', rd: 'RTW', pol: '', thw: '' },
         collapsed: {}
     };
- 
+
     function loadSettings() {
         try {
             const raw = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
@@ -68,14 +67,14 @@
             return JSON.parse(JSON.stringify(DEFAULTS));
         }
     }
- 
+
     function saveSettings() {
         try { localStorage.setItem(LS_KEY, JSON.stringify(cfg)); } catch (e) { /* ignorieren */ }
     }
- 
+
     let cfg = loadSettings();
     let typeGroup = {};
- 
+
     function buildTypeMap() {
         typeGroup = {};
         for (const key of Object.keys(GROUPS)) {
@@ -85,7 +84,7 @@
         }
     }
     buildTypeMap();
- 
+
     // ==================================================================
     // Zustand
     // ==================================================================
@@ -106,7 +105,7 @@
         search: '',
         tab: 'wachen'
     };
- 
+
     let overlay = null;
     let pollTimer = null;
     let renderTimer = null;
@@ -119,34 +118,34 @@
     let scrollPauseUntil = 0;
     let bottomSince = 0;
     let audioCtx = null;
- 
+
     // ==================================================================
     // Hilfsfunktionen
     // ==================================================================
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => (
         { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
     ));
- 
+
     const nowTime = () => new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
     const collator = (a, b) => String(a).localeCompare(String(b), 'de', { sensitivity: 'base', numeric: true });
- 
+
     async function getJSON(url) {
         const r = await fetch(url, { credentials: 'same-origin' });
         if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
         return r.json();
     }
- 
+
     const vehicleFms = v => Number(v.fms_real ?? v.fms_show ?? 6);
     const isFreeFms = f => f === 1 || f === 2;
     const isFree = v => isFreeFms(vehicleFms(v));
     const typeLabel = v => v.vehicle_type_caption || S.typeNames[v.vehicle_type] || `Typ ${v.vehicle_type}`;
     const groupKeyOf = b => typeGroup[String(b.building_type)] || 'other';
     const isMissionTarget = v => String(v.target_type || '').toLowerCase() === 'mission' && v.target_id != null;
- 
+
     function freeCount(buildingId) {
         return (S.byBuilding.get(buildingId) || []).filter(isFree).length;
     }
- 
+
     function reqRegexes() {
         const res = {};
         for (const key of Object.keys(GROUPS)) {
@@ -156,7 +155,7 @@
         }
         return res;
     }
- 
+
     // ==================================================================
     // Ton & Benachrichtigungen
     // ==================================================================
@@ -175,12 +174,12 @@
             o.stop(audioCtx.currentTime + 0.25);
         } catch (e) { /* Browser blockt Ton bis zur ersten Interaktion */ }
     }
- 
+
     function notify(title, body, tag) {
         if (!cfg.notify || !('Notification' in window) || Notification.permission !== 'granted') return;
         try { new Notification(title, { body, tag }); } catch (e) { /* ignorieren */ }
     }
- 
+
     // ==================================================================
     // Styles
     // ==================================================================
@@ -195,7 +194,7 @@
         #lsd-overlay.open { display:block; }
         #lsd-overlay * { box-sizing:border-box; }
         #lsd-overlay a { color:inherit; }
- 
+
         #lsd-header { position:sticky; top:0; z-index:1100; background:var(--panel); border-bottom:1px solid var(--line);
             padding:10px 20px 0; }
         .lsd-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
@@ -210,25 +209,25 @@
         .lsd-btn:hover { background:var(--hover); }
         .lsd-btn.lsd-danger { background:#DB1111; border-color:#DB1111; color:#fff; }
         .lsd-btn.lsd-primary { background:#2980b9; border-color:#2980b9; color:#fff; }
- 
+
         .lsd-chip { border:1px solid var(--line); background:var(--panel2); color:var(--text); border-radius:14px;
             padding:3px 11px; cursor:pointer; font-size:13px; }
         .lsd-chip b { margin-right:4px; }
         .lsd-chip.on { background:var(--sc, #2980b9); border-color:var(--sc, #2980b9); color:#fff; }
         .lsd-chip.lsd-s5.pulse { animation:lsd-blink 1s infinite; }
- 
+
         .lsd-tabs { display:flex; gap:2px; flex-wrap:wrap; }
         .lsd-tab { background:transparent; border:0; border-bottom:3px solid transparent; color:var(--muted);
             padding:8px 14px; cursor:pointer; font-size:14px; }
         .lsd-tab.on { color:var(--text); border-bottom-color:#DB1111; font-weight:600; }
- 
+
         #lsd-body { padding:16px 20px 40px; }
         .lsd-pane { display:none; }
         .lsd-pane.on { display:block; }
         #lsd-pane-wachen.on { display:grid; gap:14px; grid-template-columns:repeat(auto-fill, minmax(var(--lsd-min), 1fr));
             align-items:start; }
         .lsd-empty { grid-column:1 / -1; text-align:center; color:var(--muted); padding:40px; }
- 
+
         .lsd-card { background:var(--panel); border:1px solid var(--line); border-radius:6px; overflow:hidden; }
         .lsd-card.warn { border-color:#c0392b; }
         .lsd-card-head { display:flex; gap:8px; align-items:center; padding:8px 10px; background:var(--panel2);
@@ -254,14 +253,14 @@
             text-overflow:ellipsis; white-space:nowrap; }
         .lsd-time { color:var(--muted); font-size:12px; width:42px; text-align:right; flex:none; }
         @keyframes lsd-blink { 50% { opacity:.45; } }
- 
+
         .lsd-status { min-width:26px; height:22px; line-height:22px; text-align:center; border-radius:3px; font-weight:700;
             font-size:13px; color:#fff; background:var(--sc, #6b7280); flex:none; padding:0 4px; display:inline-block; }
         .lsd-s1 { --sc:#2e9e3e; } .lsd-s2 { --sc:#1f7a2e; } .lsd-s3 { --sc:#e08a00; } .lsd-s4 { --sc:#c46a00; }
         .lsd-s5 { --sc:#c9a800; } .lsd-s6 { --sc:#4b5563; } .lsd-s7 { --sc:#c0392b; } .lsd-s8 { --sc:#8e44ad; }
         .lsd-s9 { --sc:#2980b9; }
         .lsd-status.lsd-s5 { color:#111; }
- 
+
         .lsd-list { display:flex; flex-direction:column; gap:8px; max-width:1100px; }
         .lsd-mission { background:var(--panel); border:1px solid var(--line); border-left:5px solid #6b7280; border-radius:6px;
             padding:8px 12px; }
@@ -273,15 +272,15 @@
         .lsd-vchip { display:inline-flex; gap:5px; align-items:center; background:var(--panel2); border:1px solid var(--line);
             border-radius:4px; padding:1px 6px 1px 1px; font-size:12px; text-decoration:none !important; }
         .lsd-vchip .lsd-status { height:18px; line-height:18px; min-width:20px; font-size:11px; }
- 
+
         .lsd-logrow { display:flex; gap:10px; align-items:center; padding:4px 8px; border-bottom:1px solid var(--line);
             font-size:13px; }
         .lsd-logrow .lsd-time { width:46px; }
         .lsd-logrow .arrow { color:var(--muted); }
- 
+
         #lsd-map { height:calc(100vh - 230px); min-height:420px; border-radius:6px; border:1px solid var(--line); }
         #lsd-overlay:not(.light) #lsd-map .leaflet-tile-pane { filter:invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
- 
+
         .lsd-modal-bg { position:fixed; inset:0; z-index:1200; background:rgba(0,0,0,.55); display:flex;
             align-items:flex-start; justify-content:center; padding:40px 16px; overflow-y:auto; }
         .lsd-modal { background:var(--panel); border:1px solid var(--line); border-radius:8px; width:100%; max-width:640px;
@@ -294,13 +293,16 @@
         .lsd-field input[type=text] { width:220px; }
         .lsd-field input[type=number] { width:90px; }
         .lsd-modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
- 
-        #lsd-floating-btn { position:fixed; right:14px; bottom:14px; z-index:9999; background:#DB1111; color:#fff; border:0;
-            border-radius:4px; padding:8px 14px; font-weight:600; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.4); }
-        #lsd-floating-btn:hover { background:#b80d0d; }
+
+        #lsd-floating-btn { position:fixed; z-index:9999; width:44px; height:44px; padding:0; margin:0; border:0;
+            background:transparent; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none;
+            filter:drop-shadow(0 1px 3px rgba(0,0,0,.85)); opacity:.92; }
+        #lsd-floating-btn:hover { opacity:1; transform:scale(1.08); }
+        #lsd-floating-btn.dragging { cursor:grabbing; transform:scale(1.12); opacity:1; }
+        #lsd-floating-btn svg { width:100%; height:100%; display:block; pointer-events:none; }
     `;
     document.head.appendChild(style);
- 
+
     // ==================================================================
     // Daten laden & zusammenführen
     // ==================================================================
@@ -313,7 +315,7 @@
             console.warn('[Leitstellenansicht] Fahrzeugtyp-Namen nicht geladen:', e);
         }
     }
- 
+
     async function fetchMissions() {
         try {
             const m = await getJSON('/api/missions');
@@ -323,12 +325,12 @@
             return [];
         }
     }
- 
+
     function setMissions(list) {
         S.missions = list;
         S.missionById = new Map(list.map(m => [m.id, m]));
     }
- 
+
     function rebuildIndex() {
         S.vehicles = [...S.vmap.values()];
         S.byBuilding = new Map();
@@ -337,7 +339,7 @@
             S.byBuilding.get(v.building_id).push(v);
         }
     }
- 
+
     async function loadAll() {
         const [vs, bs] = await Promise.all([
             getJSON('/api/vehicles'),
@@ -349,7 +351,7 @@
         rebuildIndex();
         setMissions(await fetchMissions());
     }
- 
+
     async function loadAlliance() {
         const [info, blds] = await Promise.allSettled([
             getJSON('/api/allianceinfo'),
@@ -360,21 +362,21 @@
             buildings: blds.status === 'fulfilled' && Array.isArray(blds.value) ? blds.value : null
         };
     }
- 
+
     // Statuswechsel verarbeiten (Log, Ton, Benachrichtigung)
     function onFmsChange(v, oldFms, newFms) {
         S.lastChange[v.id] = nowTime();
         const b = S.buildings.get(v.building_id);
         const bName = b ? b.caption : '';
- 
+
         S.log.unshift({ t: nowTime(), name: v.caption, bname: bName, from: oldFms, to: newFms });
         if (S.log.length > 200) S.log.length = 200;
- 
+
         if (newFms === 5 && oldFms !== 5) {
             beep();
             notify('Sprechwunsch', `${v.caption}${bName ? ' (' + bName + ')' : ''}`, 'lsd-sw-' + v.id);
         }
- 
+
         if (b) {
             const newFree = freeCount(v.building_id);
             const oldFree = newFree - (isFreeFms(newFms) ? 1 : 0) + (isFreeFms(oldFms) ? 1 : 0);
@@ -383,7 +385,7 @@
             }
         }
     }
- 
+
     function applyFmsMessage(id, fms) {
         const v = S.vmap.get(id);
         if (!v || !Number.isFinite(fms)) return;
@@ -393,7 +395,7 @@
         onFmsChange(v, old, fms);
         scheduleRender();
     }
- 
+
     function mergeVehicles(fresh) {
         const seen = new Set();
         let structural = false;
@@ -416,7 +418,7 @@
         rebuildIndex();
         return structural;
     }
- 
+
     async function poll() {
         hookRadioMessage();
         try {
@@ -429,12 +431,12 @@
             console.warn('[Leitstellenansicht] Abgleich fehlgeschlagen:', e);
         }
     }
- 
+
     function restartPoll() {
         clearInterval(pollTimer);
         pollTimer = setInterval(poll, Math.max(15, Number(cfg.poll) || 60) * 1000);
     }
- 
+
     // Live-Updates über die radioMessage-Funktion des Spiels
     function hookRadioMessage() {
         if (typeof window.radioMessage !== 'function' || window.radioMessage.__lsd) return;
@@ -451,7 +453,7 @@
         wrapped.__lsd = true;
         window.radioMessage = wrapped;
     }
- 
+
     // ==================================================================
     // Rendering
     // ==================================================================
@@ -459,7 +461,7 @@
         if (renderTimer) return;
         renderTimer = setTimeout(render, 150);
     }
- 
+
     function render() {
         renderTimer = null;
         if (!overlay || !overlay.classList.contains('open')) return;
@@ -472,7 +474,7 @@
             case 'protokoll': renderLog(); break;
         }
     }
- 
+
     function updateHeader() {
         // Status-Chips
         const counts = {};
@@ -480,7 +482,7 @@
         const total = S.vehicles.length;
         const avail = (counts[1] || 0) + (counts[2] || 0);
         overlay.querySelector('#lsd-sub').textContent = `${avail}/${total} Fahrzeuge verfügbar (S1/S2)`;
- 
+
         let chips = '';
         for (let n = 1; n <= 9; n++) {
             const c = counts[n] || 0;
@@ -491,7 +493,7 @@
         }
         if (S.statusFilter.size) chips += `<button type="button" class="lsd-chip" data-status="all">Filter zurücksetzen</button>`;
         overlay.querySelector('#lsd-chips').innerHTML = chips;
- 
+
         // Typ-Filter
         const types = [...new Set(S.vehicles.map(typeLabel))].sort(collator);
         const sig = types.join('|');
@@ -503,26 +505,26 @@
             sel.value = S.typeFilter;
             S.typeFilter = sel.value;
         }
- 
+
         // Tabs & Panes
         overlay.querySelectorAll('.lsd-tab').forEach(t => t.classList.toggle('on', t.dataset.tab === S.tab));
         overlay.querySelectorAll('.lsd-pane').forEach(p => p.classList.toggle('on', p.id === 'lsd-pane-' + S.tab));
         overlay.querySelector('#lsd-filters').style.display = S.tab === 'wachen' ? '' : 'none';
         overlay.querySelector('#lsd-chips').style.display = S.tab === 'wachen' || S.tab === 'protokoll' ? '' : 'none';
     }
- 
+
     // ---- Wachen --------------------------------------------------------
     function renderWachen() {
         const pane = overlay.querySelector('#lsd-pane-wachen');
         const term = S.search.trim().toLowerCase();
         const filtersActive = !!(S.statusFilter.size || S.typeFilter || term);
         const reqs = reqRegexes();
- 
+
         const passFilters = v =>
             (!S.statusFilter.size || S.statusFilter.has(vehicleFms(v))) &&
             (!S.typeFilter || typeLabel(v) === S.typeFilter);
         const vText = v => `${v.caption} ${typeLabel(v)}`.toLowerCase();
- 
+
         const cards = [];
         for (const [bid, list] of S.byBuilding) {
             const b = S.buildings.get(bid);
@@ -532,7 +534,7 @@
             const bMatch = !term || `${g.terms} ${b.caption}`.toLowerCase().includes(term);
             const shown = list.filter(v => passFilters(v) && (bMatch || vText(v).includes(term)));
             if (!shown.length && filtersActive) continue;
- 
+
             const freeList = list.filter(isFree);
             const warnings = [];
             if (freeList.length === 0) warnings.push('keine Fahrzeuge frei');
@@ -542,7 +544,7 @@
             }
             cards.push({ b, gk, g, list, shown, free: freeList.length, warnings });
         }
- 
+
         const sorters = {
             name:     (x, y) => collator(x.b.caption, y.b.caption),
             group:    (x, y) => collator(x.g.name, y.g.name) || collator(x.b.caption, y.b.caption),
@@ -550,12 +552,12 @@
             free_asc: (x, y) => (x.free - y.free) || collator(x.b.caption, y.b.caption)
         };
         cards.sort(sorters[S.sort] || sorters.name);
- 
+
         if (!cards.length) {
             pane.innerHTML = `<div class="lsd-empty">${S.vehicles.length ? 'Keine Treffer für die aktuelle Filterung.' : 'Keine Fahrzeuge gefunden.'}</div>`;
             return;
         }
- 
+
         pane.innerHTML = cards.map(c => {
             const { b, g, list, shown, free, warnings } = c;
             const collapsed = !!cfg.collapsed[b.id];
@@ -564,12 +566,12 @@
             if (b.level != null) meta.push(`Stufe: ${esc(b.level)}`);
             if (Array.isArray(b.extensions)) meta.push(`Ausbauten: ${b.extensions.length}`);
             warnings.forEach(w => meta.push(`<span class="lsd-warnbadge">⚠ ${esc(w)}</span>`));
- 
+
             const vsorted = shown.slice().sort((x, y) => {
                 const sx = vehicleFms(x) === 5 ? 0 : 1, sy = vehicleFms(y) === 5 ? 0 : 1;
                 return (sx - sy) || collator(x.caption, y.caption);
             });
- 
+
             const rows = collapsed ? '' : `<div class="lsd-vehicles">${vsorted.map(v => {
                 const fms = vehicleFms(v);
                 const m = isMissionTarget(v) ? S.missionById.get(v.target_id) : null;
@@ -580,7 +582,7 @@
                     <span class="lsd-time" title="Letzter Statuswechsel (seit Öffnen der Ansicht)">${esc(S.lastChange[v.id] || '–')}</span>
                 </a>`;
             }).join('')}</div>`;
- 
+
             return `<div class="lsd-card${warnings.length ? ' warn' : ''}" data-bid="${b.id}">
                 <div class="lsd-card-head">
                     <span class="lsd-caret">${collapsed ? '▸' : '▾'}</span>
@@ -593,7 +595,7 @@
             </div>`;
         }).join('');
     }
- 
+
     // ---- Einsätze ------------------------------------------------------
     function renderMissions() {
         const pane = overlay.querySelector('#lsd-pane-einsaetze');
@@ -624,7 +626,7 @@
             </div>`;
         }).join('')}</div>`;
     }
- 
+
     // ---- Karte ---------------------------------------------------------
     function renderMap() {
         const pane = overlay.querySelector('#lsd-pane-karte');
@@ -642,11 +644,11 @@
             mapLayer = L.layerGroup().addTo(map);
         }
         setTimeout(() => { try { map.invalidateSize(); } catch (e) { /* ignorieren */ } }, 50);
- 
+
         const reqs = reqRegexes();
         mapLayer.clearLayers();
         const pts = [];
- 
+
         for (const [bid, list] of S.byBuilding) {
             const b = S.buildings.get(bid);
             if (!b || b.latitude == null || b.longitude == null) continue;
@@ -662,7 +664,7 @@
               .addTo(mapLayer);
             pts.push([b.latitude, b.longitude]);
         }
- 
+
         const mColors = { 0: '#c0392b', 1: '#e0b400', 2: '#2e9e3e' };
         for (const m of S.missions) {
             if (m.latitude == null || m.longitude == null) continue;
@@ -670,12 +672,12 @@
                 radius: 5, color: '#111', weight: 1, fillColor: mColors[m.vehicle_state] || '#999', fillOpacity: 0.95
             }).bindPopup(`<b>${esc(m.caption)}</b><br>${esc(m.address || '')}`).addTo(mapLayer);
         }
- 
+
         if (!mapFitted && pts.length) {
             try { map.fitBounds(pts, { padding: [30, 30] }); mapFitted = true; } catch (e) { /* ignorieren */ }
         }
     }
- 
+
     // ---- Verband -------------------------------------------------------
     function renderAlliance() {
         const pane = overlay.querySelector('#lsd-pane-verband');
@@ -718,7 +720,7 @@
         html += '</div>';
         pane.innerHTML = html;
     }
- 
+
     // ---- Protokoll -----------------------------------------------------
     function renderLog() {
         const pane = overlay.querySelector('#lsd-pane-protokoll');
@@ -736,7 +738,7 @@
             <span class="lsd-status lsd-s${l.to}">${l.to}</span>
             <b>${esc(l.name)}</b><span class="lsd-muted">${esc(l.bname)}</span></div>`).join('')}</div>`;
     }
- 
+
     // ==================================================================
     // Einstellungen
     // ==================================================================
@@ -745,14 +747,14 @@
         overlay.classList.toggle('light', cfg.theme === 'light');
         overlay.style.setProperty('--lsd-min', `${Math.max(220, Math.min(700, Number(cfg.minCard) || 340))}px`);
     }
- 
+
     function openSettings() {
         if (modalEl) return;
         const gi = k => `<div class="lsd-field"><label>${esc(GROUPS[k].name)}</label>
             <input type="text" data-g="${k}" value="${esc(cfg.groupIds[k])}" placeholder="z. B. 0,1,18"></div>`;
         const rq = k => `<div class="lsd-field"><label>${esc(GROUPS[k].name)}</label>
             <input type="text" data-r="${k}" value="${esc(cfg.requirements[k])}" placeholder="z. B. RTW oder LF|HLF"></div>`;
- 
+
         modalEl = document.createElement('div');
         modalEl.className = 'lsd-modal-bg';
         modalEl.innerHTML = `<div class="lsd-modal">
@@ -791,11 +793,11 @@
         overlay.appendChild(modalEl);
         modalEl.querySelector('[data-s="theme"]').value = cfg.theme;
     }
- 
+
     function closeSettings() {
         if (modalEl) { modalEl.remove(); modalEl = null; }
     }
- 
+
     function saveSettingsFromModal() {
         const next = JSON.parse(JSON.stringify(cfg));
         modalEl.querySelectorAll('[data-s]').forEach(el => {
@@ -819,7 +821,7 @@
         closeSettings();
         scheduleRender();
     }
- 
+
     // ==================================================================
     // Auto-Scroll, Vollbild
     // ==================================================================
@@ -827,7 +829,7 @@
         clearInterval(scrollTimer);
         scrollTimer = null;
     }
- 
+
     function startAutoScroll() {
         stopAutoScroll();
         if (!cfg.autoScroll) return;
@@ -845,14 +847,14 @@
             overlay.scrollTop += Math.max(1, Math.round((Number(cfg.scrollSpeed) || 30) * 0.05));
         }, 50);
     }
- 
+
     function toggleFullscreen() {
         try {
             if (document.fullscreenElement) document.exitFullscreen();
             else if (overlay.requestFullscreen) overlay.requestFullscreen();
         } catch (e) { /* ignorieren */ }
     }
- 
+
     // ==================================================================
     // Overlay
     // ==================================================================
@@ -899,12 +901,12 @@
             </div>`;
         document.body.appendChild(overlay);
         applyTheme();
- 
+
         overlay.addEventListener('click', onClick);
         overlay.querySelector('#lsd-search').addEventListener('input', e => { S.search = e.target.value; scheduleRender(); });
         overlay.querySelector('#lsd-type').addEventListener('change', e => { S.typeFilter = e.target.value; scheduleRender(); });
         overlay.querySelector('#lsd-sort').addEventListener('change', e => { S.sort = e.target.value; scheduleRender(); });
- 
+
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape' && overlay.classList.contains('open')) {
                 if (modalEl) closeSettings(); else closeOverlay();
@@ -913,10 +915,10 @@
         ['wheel', 'touchstart', 'mousedown', 'keydown'].forEach(ev =>
             overlay.addEventListener(ev, () => { scrollPauseUntil = Date.now() + 15000; }, { passive: true }));
     }
- 
+
     function onClick(e) {
         const t = e.target;
- 
+
         const act = t.closest('[data-act]');
         if (act) {
             switch (act.dataset.act) {
@@ -942,7 +944,7 @@
             }
             return;
         }
- 
+
         const tab = t.closest('[data-tab]');
         if (tab) {
             S.tab = tab.dataset.tab;
@@ -951,7 +953,7 @@
             render();
             return;
         }
- 
+
         const chip = t.closest('[data-status]');
         if (chip) {
             if (chip.dataset.status === 'all') S.statusFilter.clear();
@@ -962,7 +964,7 @@
             scheduleRender();
             return;
         }
- 
+
         const head = t.closest('.lsd-card-head');
         if (head && !t.closest('a')) {
             const bid = head.parentElement.dataset.bid;
@@ -971,7 +973,7 @@
             scheduleRender();
         }
     }
- 
+
     async function openOverlay() {
         if (!overlay) buildOverlay();
         overlay.classList.add('open');
@@ -988,7 +990,7 @@
         restartPoll();
         startAutoScroll();
     }
- 
+
     function closeOverlay() {
         closeSettings();
         overlay.classList.remove('open');
@@ -997,19 +999,79 @@
         stopAutoScroll();
         try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* ignorieren */ }
     }
- 
+
     // ==================================================================
     // Start: fester Button
     // ==================================================================
+    const ICON_KEY = 'lsd_icon_pos';
+    const ICON_SIZE = 44;
+
+    function loadIconPos() {
+        try {
+            const p = JSON.parse(localStorage.getItem(ICON_KEY) || 'null');
+            if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) return p;
+        } catch (e) { /* ignorieren */ }
+        return { x: window.innerWidth - ICON_SIZE - 16, y: window.innerHeight - ICON_SIZE - 16 };
+    }
+
     function addButton() {
         const btn = document.createElement('button');
         btn.id = 'lsd-floating-btn';
         btn.type = 'button';
-        btn.textContent = 'Leitstellenansicht';
-        btn.addEventListener('click', openOverlay);
+        btn.title = 'Leitstellenansicht öffnen (zum Verschieben ziehen)';
+        btn.setAttribute('aria-label', 'Leitstellenansicht');
+        btn.innerHTML = `<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="#ffffff">
+            <rect x="5" y="5" width="17" height="17" rx="3"/>
+            <rect x="26" y="5" width="17" height="10" rx="3"/>
+            <rect x="26" y="19" width="17" height="24" rx="3"/>
+            <rect x="5" y="26" width="17" height="17" rx="3"/>
+        </svg>`;
         document.body.appendChild(btn);
+
+        const clamp = (x, y) => ({
+            x: Math.min(Math.max(0, x), Math.max(0, window.innerWidth - ICON_SIZE)),
+            y: Math.min(Math.max(0, y), Math.max(0, window.innerHeight - ICON_SIZE))
+        });
+        const place = pos => {
+            const c = clamp(pos.x, pos.y);
+            btn.style.left = c.x + 'px';
+            btn.style.top = c.y + 'px';
+            return c;
+        };
+        let pos = place(loadIconPos());
+
+        let drag = null;
+        btn.addEventListener('pointerdown', e => {
+            if (e.button !== undefined && e.button !== 0) return;
+            drag = { sx: e.clientX, sy: e.clientY, ox: pos.x, oy: pos.y, moved: false };
+            try { btn.setPointerCapture(e.pointerId); } catch (err) { /* ignorieren */ }
+        });
+        btn.addEventListener('pointermove', e => {
+            if (!drag) return;
+            const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+            if (!drag.moved && Math.hypot(dx, dy) < 5) return;
+            drag.moved = true;
+            btn.classList.add('dragging');
+            pos = place({ x: drag.ox + dx, y: drag.oy + dy });
+        });
+        const end = e => {
+            if (!drag) return;
+            const moved = drag.moved;
+            drag = null;
+            btn.classList.remove('dragging');
+            try { btn.releasePointerCapture(e.pointerId); } catch (err) { /* ignorieren */ }
+            if (moved) {
+                try { localStorage.setItem(ICON_KEY, JSON.stringify(pos)); } catch (err) { /* ignorieren */ }
+            } else {
+                openOverlay();
+            }
+        };
+        btn.addEventListener('pointerup', end);
+        btn.addEventListener('pointercancel', () => { drag = null; btn.classList.remove('dragging'); });
+        btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openOverlay(); } });
+        window.addEventListener('resize', () => { pos = place(pos); });
     }
- 
+
     addButton();
     if (window.location.hash === OPEN_HASH) openOverlay();
 })();
