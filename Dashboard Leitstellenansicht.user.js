@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Leitstellenansicht
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      v1.0
+// @version      v1.0.13
 // @author       Design by Bobelle
 // @description  Leitstellenansicht: Übersicht aller Fahrzeuge nach Gebäuden mit Live-Status
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Leitstellenansicht.user.js
@@ -15,7 +15,7 @@
 (function () {
     'use strict';
 
-    // Nur im Hauptfenster der Startseite ausführen
+    // Hauptfenster der Startseite ausführen
     if (window.top !== window.self) return;
     if (window.location.pathname !== '/') return;
 

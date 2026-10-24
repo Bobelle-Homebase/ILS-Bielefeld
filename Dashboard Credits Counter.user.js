@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      v1.0
+// @version      v1.0.13
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
@@ -15,9 +15,9 @@
 (function () {
   'use strict';
 
-  // =========================================================
+  // ========================================================
   // Helfer
-  // =========================================================
+  // ========================================================
   const IS_TOP = window.top === window;
 
   // Trailing Slashes ignorieren (/map/ == /map)
