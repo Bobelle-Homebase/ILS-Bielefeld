@@ -16,7 +16,7 @@
 (function() {
     'use strict';
 
-    console.log("[Bobelle Dashboard] v1.0.10 gestartet");
+    console.log("[Bobelle Dashboard] v1.0 gestartet");
 
     // =======================================================
     // KONFIGURATION & KONSTANTEN
