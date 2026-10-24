@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Dashboard (ohne Statistik)
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.15
+// @version      1.0.16
 // @author       Design by Bobelle
 // @description  Full All in One - ohne Statistik
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard-ohne-Statistik.User.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard-ohne-Statistik.User.js
+// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20ohne%20Statistik.user.js
+// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20ohne%20Statistik.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
@@ -15,7 +15,7 @@
 (function() {
     'use strict';
 
-    console.log("[Bobelle Dashboard] 1.0.15 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.16 gestartet");
 
     // =====================================================
     // KONFIGURATION & KONSTANTEN
