@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard (ohne Statistik)
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      v1.0.11
+// @version      v1.0
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Full All in One - ohne Statistik
