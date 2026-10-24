@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      v1.0.13
+// @version      1.0.14
 // @author       Design by Bobelle
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
@@ -15,13 +15,13 @@
 (function() {
     'use strict';
 
-    console.log("[Bobelle Dashboard] v1.0.13 gestartet");
+    console.log("[Bobelle Dashboard] v1.0.14 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
-    // ======================================================
+    // =====================================================
     // KONFIGURATION & KONSTANTEN
-    // ======================================================
+    // =====================================================
     const CFG = { zIndex: 99999 };
 
     const VEHICLE_MATCH_CACHE = {

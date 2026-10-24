@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         Dashboard Eigenes Logo
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      v1.0.13
+// @version      1.0.14
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und legt ein eigenes darüber
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Eigenes%20Logo.user.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Eigenes%20Logo.user.js
+// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard-Eigenes-Logo.user.js
+// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard-Eigenes-Logo.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
@@ -15,7 +15,7 @@
 (function () {
     'use strict';
 
-    const CUSTOM_LOGO_URL = 'https://DEINE-ECHTE-URL/dein_logo.png';
+    const CUSTOM_LOGO_URL = 'https://deine-domain.de/dein_logo.png';
 
     const style = document.createElement('style');
     style.textContent = `
