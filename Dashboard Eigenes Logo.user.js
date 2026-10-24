@@ -1,8 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Eigenes Logo
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      v1.0.12
-// @license      Design by Bobelle
+// @version      v1.0
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und legt ein eigenes darüber
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Eigenes%20Logo.user.js
