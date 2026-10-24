@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.14
+// @version      1.0.15
 // @author       Design by Bobelle
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.User.js
