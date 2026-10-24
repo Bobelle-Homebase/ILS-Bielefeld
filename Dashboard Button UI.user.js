@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Button UI
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.14
+// @version      1.0.15
 // @author       Design by Bobelle
 // @description  Setzt alle AAO-Buttons auf dieselbe Breite
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard-Button-UI.user.js
