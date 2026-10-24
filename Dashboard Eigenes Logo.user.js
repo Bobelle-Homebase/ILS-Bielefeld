@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Dashboard Eigenes Logo
-// @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0
+// @namespace    https://leitstellenspiel.de/dashboard
+// @version      v1.0.12
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und legt ein eigenes darüber
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard Eigenes Logo.user.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard Eigenes Logo.user.js
+// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Eigenes%20Logo.user.js
+// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Eigenes%20Logo.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
@@ -16,33 +16,31 @@
 (function () {
     'use strict';
 
-    const CUSTOM_LOGO_URL = 'https://deine-domain.de/dein_logo.png';
+    const CUSTOM_LOGO_URL = 'https://DEINE-ECHTE-URL/dein_logo.png';
 
-    GM_addStyle(`
-        /* Container um das Original-Logo als Bezug für das Overlay verwenden */
+    const style = document.createElement('style');
+    style.textContent = `
         #bielefeld-original-brand {
-            position: relative !important;   /* übersteuert das inline "position: static" */
-            display: inline-flex !important; /* bleibt schön ausgerichtet */
+            position: relative !important;
+            display: inline-flex !important;
             align-items: center;
         }
 
-        /* Original-Logo unsichtbar machen, bleibt aber im Layout */
         #bielefeld-original-brand img.logoSmall {
             opacity: 0 !important;
         }
 
-        /* Eigenes Logo darüber legen */
         #bielefeld-original-brand::after {
             content: "";
             position: absolute;
-            inset: 0;                        /* füllt den gesamten Span aus */
+            inset: 0;
             background-image: url("${CUSTOM_LOGO_URL}");
             background-repeat: no-repeat;
-            background-position: center;     /* nach Wunsch: center left / center right etc. */
+            background-position: center;
             background-size: contain;
-            pointer-events: none;            /* Klicks gehen weiter an den Link */
+            pointer-events: none;
             z-index: 10;
         }
-    `);
+    `;
+    document.head.appendChild(style);
 })();
-

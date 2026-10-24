@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Dashboard Button UI
-// @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0
+// @namespace    https://leitstellenspiel.de/dashboard
+// @version      v1.0.12
 // @license      Design by Bobelle
 // @author       Design by Bobelle
-// @description  Alle AAO Bouton auf dieselbe Breite setzt
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard Button UI.user.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard Button UI.user.js
+// @description  Setzt alle AAO-Buttons auf dieselbe Breite
+// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard-Button-UI.user.js
+// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard-Button-UI.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
@@ -14,63 +14,78 @@
 // ==/UserScript==
 
 (function () {
-  let timerActive = false;
-  // Wähle alle .aao_btn-Links aus
-  const links = document.querySelectorAll("a");
+  "use strict";
 
-  links.forEach(link => {
-    const parentColumn = link?.closest(".col-sm-2");
-    const isInColumn = parentColumn && parentColumn.className.startsWith("col-");
+  function apply() {
+    let timerActive = false;
 
-    // Skip applying width to elements outside of columns as it would make them too wide
-    if (!isInColumn) {
-      return;
-    }
+    // Nur AAO-Buttons und Links in AAO-Button-Gruppen auswählen
+    document.querySelectorAll("a.aao_btn, .aao_btn_group a").forEach(link => {
+      // Bereits bearbeitete Links überspringen
+      if (link.dataset.uiApplied) return;
 
-    // Apply width to button links on the AAO page
-    const parentButtonGroup = link.closest(".btn-group.aao_btn_group");
-    if (parentButtonGroup) {
-      link.style.minWidth = "115%";
-      link.style.textAlign = "left";
+      // Elemente außerhalb der Spalten überspringen (wären sonst zu breit)
+      if (!link.closest(".col-sm-2")) return;
 
-      parentButtonGroup.style.width = "115%";
-      parentButtonGroup.style.margin = "0";
-    }
+      link.dataset.uiApplied = "1";
 
-    // Apply width to button links on the mission page
-    if (link.classList.contains("aao_btn")) {
-      link.style.minWidth = "115%";
-      link.style.textAlign = "left";
+      // Buttons auf der AAO-Seite
+      const group = link.closest(".btn-group.aao_btn_group");
+      if (group) {
+        link.style.minWidth = "115%";
+        link.style.textAlign = "left";
 
-      const iconElement = link.querySelector("span.label");
-      const descriptionElement = link.querySelector("span");
-      const timerElement = link.querySelector(".aao_timer");
-
-      if (iconElement) {
-        iconElement.style.marginRight = "0px";
+        group.style.width = "115%";
+        group.style.margin = "0";
       }
 
-      if (timerElement) {
-        timerActive = true;
+      // Buttons auf der Einsatzseite
+      if (link.classList.contains("aao_btn")) {
+        link.style.minWidth = "115%";
+        link.style.textAlign = "left";
 
-        link.style.display = "flex";
-        link.style.alignItems = "center";
-        link.style.width = "110%";
-        link.style.boxSizing = "border-box";
-        link.style.margin = "0";
+        const icon = link.querySelector("span.label");
+        if (icon) icon.style.marginRight = "0";
 
-        const timerContainer = document.createElement("span");
-        timerContainer.style.marginLeft = "auto";
-        timerContainer.appendChild(timerElement);
-        link.appendChild(timerContainer);
+        const timer = link.querySelector(".aao_timer");
+        if (timer) {
+          timerActive = true;
+
+          Object.assign(link.style, {
+            display: "flex",
+            alignItems: "center",
+            boxSizing: "border-box",
+            margin: "0"
+          });
+
+          const container = document.createElement("span");
+          container.style.marginLeft = "auto";
+          container.appendChild(timer);
+          link.appendChild(container);
+        }
       }
-    }
-  });
-
-  if (timerActive) {
-    const brElements = document.getElementById("mission-aao-group").querySelectorAll("br");
-    brElements.forEach(br => {
-      br.style.display = "none";
     });
+
+    // Zeilenumbrüche ausblenden, wenn Timer aktiv sind
+    const aaoGroup = document.getElementById("mission-aao-group");
+    if (timerActive && aaoGroup) {
+      aaoGroup.querySelectorAll("br").forEach(br => {
+        br.style.display = "none";
+      });
+    }
   }
+
+  // Erstanwendung
+  apply();
+
+  // Nachträglich geladene Inhalte (AJAX) ebenfalls bearbeiten
+  let scheduled = false;
+  new MutationObserver(() => {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      apply();
+    });
+  }).observe(document.body, { childList: true, subtree: true });
 })();

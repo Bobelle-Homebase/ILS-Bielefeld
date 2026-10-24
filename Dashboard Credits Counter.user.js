@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
-// @namespace    https://leitstellenspiel.de/bielefeld
-// @version      v1.0
+// @namespace    https://leitstellenspiel.de/dashboard
+// @version      v1.0.12
 // @license      Design by Bobelle
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard Credits Counter.user.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard Credits Counter.user.js
+// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
+// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
@@ -17,11 +17,63 @@
   'use strict';
 
   // =========================================================
-  // Tab-Titel fix
+  // Helfer
+  // =========================================================
+  const IS_TOP = window.top === window;
+
+  // Trailing Slashes ignorieren (/map/ == /map)
+  const isMainPage = () => {
+    if (!IS_TOP) return false;
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
+    return path === '/' || path === '/index.php' || path === '/map';
+  };
+
+  // Sicherer localStorage-Zugriff (voller / blockierter Speicher wirft sonst Exceptions)
+  const store = {
+    get(key) {
+      try { return localStorage.getItem(key); } catch { return null; }
+    },
+    set(key, value) {
+      try { localStorage.setItem(key, value); return true; } catch { return false; }
+    },
+    remove(key) {
+      try { localStorage.removeItem(key); } catch { /* ignore */ }
+    }
+  };
+
+  const getNavbarBrand = () =>
+    document.querySelector('.navbar .navbar-brand') || document.querySelector('.navbar-brand');
+
+  const NAV_ORDER = { DAILY: 20, CREDITS: 30 };
+
+  const normalizeText = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+
+  // LOKALES Datum (nicht UTC!) -> YYYY-MM-DD
+  const getTodayString = () => {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  };
+  const getTodayKey = getTodayString;
+
+  // Kalendertage zwischen zwei YYYY-MM-DD-Strings (zeitumstellungssicher)
+  const diffInDays = (a, b) => {
+    const toUtc = (s) => {
+      const [y, m, d] = s.split('-').map(Number);
+      return Date.UTC(y, m - 1, d);
+    };
+    return Math.round((toUtc(b) - toUtc(a)) / 86400000);
+  };
+
+  const formatNumber = (num) => Number(num).toLocaleString('de-DE');
+
+  // =========================================================
+  // Tab-Titel fix (nur im Hauptfenster)
   // =========================================================
   const TARGET_TITLE = 'Leitstelle Bielefeld';
 
   function initTitleFix() {
+    if (!IS_TOP) return;
     try {
       let titleEl = document.querySelector('title');
       if (!titleEl) {
@@ -33,7 +85,6 @@
       const observer = new MutationObserver(() => {
         if (titleEl.textContent !== TARGET_TITLE) titleEl.textContent = TARGET_TITLE;
       });
-
       observer.observe(titleEl, { childList: true, characterData: true, subtree: true });
     } catch (e) {
       console.error('Titel-Fix Fehler:', e);
@@ -41,18 +92,8 @@
   }
 
   // =========================================================
-  // Helfer
+  // Navbar-Wrapper
   // =========================================================
-  const isMainPage = () => {
-    const path = window.location.pathname;
-    return path === '/' || path === '/index.php' || path === '/map';
-  };
-
-  const getNavbarBrand = () =>
-    document.querySelector('.navbar .navbar-brand') || document.querySelector('.navbar-brand');
-
-  const NAV_ORDER = { DAILY: 20, CREDITS: 30 };
-
   function getBielefeldWrapper() {
     if (!isMainPage()) return null;
 
@@ -62,12 +103,10 @@
     let wrapper = document.getElementById('bielefeld-navbar-wrapper');
     if (wrapper) return wrapper;
 
-    // Original-Inhalt in Container verschieben (bleibt sichtbar)
     let origContainer = document.getElementById('bielefeld-original-brand');
     if (!origContainer) {
       origContainer = document.createElement('span');
       origContainer.id = 'bielefeld-original-brand';
-
       while (brand.firstChild) origContainer.appendChild(brand.firstChild);
       brand.appendChild(origContainer);
     }
@@ -106,12 +145,6 @@
     return wrapper;
   }
 
-  const normalizeText = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
-
-  const getTodayString = () => new Date().toISOString().slice(0, 10);
-  const getTodayKey = () => new Date().toISOString().split('T')[0];
-  const formatNumber = (num) => Number(num).toLocaleString('de-DE');
-
   // =========================================================
   // 1) Tageszähler
   // =========================================================
@@ -134,7 +167,15 @@
     line2NumberFontSize: '12px',
     numberFontWeight: 'bold',
 
-    buttons: ['alarmieren', 'einsatz starten', 'mission starten', 'alarmieren und zurück', 'alarmieren und zum nächsten einsatz']
+    // Der Alarm im Spiel läuft meist als Formular-Submit im Einsatz-iFrame
+    // (kein fetch/XHR). Deshalb bleibt der Klick-Zähler aktiv, ist aber
+    // jetzt exakt (Text muss GENAU einem Eintrag entsprechen).
+    useClickCounter: true,
+    buttons: ['alarmieren', 'einsatz starten', 'mission starten', 'alarmieren und zurück', 'alarmieren und zum nächsten einsatz'],
+
+    // Mindestabstand zwischen zwei Zählungen (verhindert Doppelzählung
+    // durch Klick + Netzwerk-Hook für denselben Alarm)
+    dedupeMs: 4000
   };
 
   const DAILY_STORAGE_KEY = DAILY_CONFIG.storageKey;
@@ -143,7 +184,7 @@
     const today = getTodayString();
     const empty = { date: today, count: 0, prevDate: null, prevCount: 0 };
     try {
-      const data = JSON.parse(localStorage.getItem(DAILY_STORAGE_KEY));
+      const data = JSON.parse(store.get(DAILY_STORAGE_KEY));
       return data && data.date ? data : empty;
     } catch {
       return empty;
@@ -154,7 +195,7 @@
   const dailyUi = { count: null, record: null };
 
   function saveDailyState() {
-    localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(dailyState));
+    store.set(DAILY_STORAGE_KEY, JSON.stringify(dailyState));
   }
 
   function updateDailyDisplay() {
@@ -163,14 +204,13 @@
   }
 
   function checkDailyDayReset() {
+    // Frischen Stand holen (iFrame und Hauptfenster teilen sich localStorage)
+    dailyState = loadDailyState();
+
     const today = getTodayString();
     if (dailyState.date === today) return;
 
-    const lastDate = new Date(dailyState.date);
-    const currDate = new Date(today);
-    const oneDay = 24 * 60 * 60 * 1000;
-
-    if (currDate - lastDate === oneDay) {
+    if (diffInDays(dailyState.date, today) === 1) {
       dailyState.prevDate = dailyState.date;
       dailyState.prevCount = dailyState.count;
     } else {
@@ -188,11 +228,8 @@
     if (document.getElementById('lss-daily-counter-style')) return;
 
     const textAlign =
-      DAILY_CONFIG.align === 'right'
-        ? 'right'
-        : DAILY_CONFIG.align === 'center'
-          ? 'center'
-          : 'left';
+      DAILY_CONFIG.align === 'right' ? 'right' :
+      DAILY_CONFIG.align === 'center' ? 'center' : 'left';
 
     const line1NumSize = DAILY_CONFIG.line1NumberFontSize || DAILY_CONFIG.line1FontSize;
     const line2NumSize = DAILY_CONFIG.line2NumberFontSize || DAILY_CONFIG.line2FontSize;
@@ -229,12 +266,12 @@
     document.head.appendChild(style);
   }
 
-  function buildDailyUI() {
+  function buildDailyUI(attempt = 0) {
     if (!isMainPage()) return;
 
     const wrapper = getBielefeldWrapper();
     if (!wrapper) {
-      setTimeout(buildDailyUI, 300);
+      if (attempt < 40) setTimeout(() => buildDailyUI(attempt + 1), 300); // max. ~12 s
       return;
     }
     if (document.getElementById('lss-daily-counter')) return;
@@ -269,23 +306,23 @@
   let lastDailyCountAt = 0;
   function countDailyOnce() {
     const now = Date.now();
-    if (now - lastDailyCountAt < 900) return;
+    if (now - lastDailyCountAt < DAILY_CONFIG.dedupeMs) return;
     lastDailyCountAt = now;
 
-    checkDailyDayReset();
+    checkDailyDayReset(); // lädt auch den aktuellen Stand
     dailyState.count++;
     saveDailyState();
     updateDailyDisplay();
   }
 
-  const DAILY_TRIGGERS = Array.from(new Set(DAILY_CONFIG.buttons.map(normalizeText)));
+  const DAILY_TRIGGERS = new Set(DAILY_CONFIG.buttons.map(normalizeText));
 
   function urlLooksLikeAlarm(url) {
     try {
       const u = new URL(url, location.origin);
       const p = (u.pathname || '').toLowerCase();
 
-      if (p.includes('alarm') && (p.includes('mission') || p.includes('missions'))) return true;
+      if (/\/missions?\/\d+\/alarm/.test(p)) return true;
       if (p.includes('aao') && p.includes('alarm')) return true;
 
       return false;
@@ -294,6 +331,7 @@
     }
   }
 
+  // Hooks laufen bewusst auch im Einsatz-iFrame (dort passiert der Alarm).
   function hookFetchAlarmCounter() {
     if (!window.fetch || window.fetch.__bielefeldDailyWrapped) return;
 
@@ -302,13 +340,11 @@
       const res = await originalFetch.apply(this, arguments);
 
       try {
-        if (!isMainPage()) return res;
-
         const url =
           typeof input === 'string' ? input :
-            (input && input.url) ? input.url : '';
+          (input && input.url) ? input.url : '';
 
-        const method = init && init.method ? String(init.method).toUpperCase() : 'GET';
+        const method = (init && init.method ? init.method : (input && input.method) || 'GET').toUpperCase();
 
         if (method !== 'GET' && urlLooksLikeAlarm(url) && res && res.ok) {
           countDailyOnce();
@@ -330,7 +366,7 @@
     XMLHttpRequest.prototype.open = function (method, url) {
       try {
         this.__bielefeld_method = method ? String(method).toUpperCase() : 'GET';
-        this.__bielefeld_url = url || '';
+        this.__bielefeld_url = url ? String(url) : '';
       } catch { /* ignore */ }
       return origOpen.apply(this, arguments);
     };
@@ -339,8 +375,6 @@
       try {
         this.addEventListener('load', () => {
           try {
-            if (!isMainPage()) return;
-
             const method = this.__bielefeld_method || 'GET';
             const url = this.__bielefeld_url || '';
 
@@ -358,18 +392,16 @@
     XMLHttpRequest.prototype.__bielefeldDailyWrapped = true;
   }
 
+  // Exakter Treffer statt "includes": "Alarmierungsregeln" o. ä. zählt nicht mehr.
   function handleDailyClickFallback(e) {
-    const el = e.target.closest('a, button, input[type="submit"], input[type="button"]');
+    const el = e.target.closest && e.target.closest('a, button, input[type="submit"], input[type="button"]');
     if (!el) return;
 
-    const combined = normalizeText([
-      el.textContent,
-      el.value,
-      el.getAttribute('aria-label'),
-      el.getAttribute('title')
-    ].filter(Boolean).join(' '));
+    const candidates = [el.textContent, el.value, el.getAttribute('aria-label')]
+      .filter(Boolean)
+      .map(normalizeText);
 
-    if (combined && DAILY_TRIGGERS.some(t => combined.includes(t))) {
+    if (candidates.some(t => DAILY_TRIGGERS.has(t))) {
       countDailyOnce();
     }
   }
@@ -384,24 +416,29 @@
   }
 
   function initDailyCounterModule() {
+    // Zähl-Hooks überall (Hauptfenster + iFrames)
+    hookFetchAlarmCounter();
+    hookXHRAlarmCounter();
+    if (DAILY_CONFIG.useClickCounter) {
+      document.addEventListener('click', handleDailyClickFallback, true);
+    }
+
+    // Anzeige nur im Hauptfenster
+    if (!IS_TOP) return;
+
     checkDailyDayReset();
     buildDailyUI();
     scheduleDailyReset();
-
-    hookFetchAlarmCounter();
-    hookXHRAlarmCounter();
 
     window.addEventListener('storage', (e) => {
       if (e.key !== DAILY_STORAGE_KEY) return;
       dailyState = loadDailyState();
       updateDailyDisplay();
     });
-
-    document.addEventListener('click', handleDailyClickFallback, true);
   }
 
   // =========================================================
-  // 2) Credits (Zeile1/Zeile2 frei einstellbar + Abstand + Hilfe)
+  // 2) Credits
   // =========================================================
   const CREDITS_CONFIG = {
     resetHour: 0,
@@ -442,7 +479,9 @@
 
     boxWidth: '210px',
     boxHeight: 'auto',
-    boxPadding: '4px 8px'
+    boxPadding: '4px 8px',
+
+    refreshIntervalMs: 300000
   };
 
   const CREDITS_CACHE_KEY = 'credits_daily_cache';
@@ -451,7 +490,7 @@
   function resetCreditsDailyDataIfNeeded() {
     const now = new Date();
     const todayKey = getTodayKey();
-    const lastReset = localStorage.getItem(CREDITS_LAST_RESET_KEY);
+    const lastReset = store.get(CREDITS_LAST_RESET_KEY);
 
     const resetToday = new Date(
       now.getFullYear(), now.getMonth(), now.getDate(),
@@ -461,8 +500,8 @@
     if (lastReset === todayKey) return false;
     if (now < resetToday) return false;
 
-    localStorage.removeItem(CREDITS_CACHE_KEY);
-    localStorage.setItem(CREDITS_LAST_RESET_KEY, todayKey);
+    store.remove(CREDITS_CACHE_KEY);
+    store.set(CREDITS_LAST_RESET_KEY, todayKey);
     return true;
   }
 
@@ -483,6 +522,39 @@
     }
   }
 
+  // Baut ein Label/Wert-Paar per DOM-API (kein innerHTML, kein Escaping-Problem)
+  function buildCreditsItem(label, valueText, valueColor, helpText) {
+    const item = document.createElement('div');
+    Object.assign(item.style, {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      lineHeight: '1.1'
+    });
+    if (helpText) item.setAttribute('title', helpText);
+
+    const l = document.createElement('span');
+    Object.assign(l.style, {
+      fontSize: CREDITS_CONFIG.line1FontSize,
+      color: CREDITS_CONFIG.line1Color,
+      fontWeight: CREDITS_CONFIG.line1FontWeight,
+      textTransform: 'uppercase',
+      marginBottom: CREDITS_CONFIG.lineGap
+    });
+    l.textContent = label;
+
+    const v = document.createElement('span');
+    Object.assign(v.style, {
+      fontSize: CREDITS_CONFIG.line2FontSize,
+      fontWeight: CREDITS_CONFIG.line2FontWeight,
+      color: valueColor
+    });
+    v.textContent = valueText;
+
+    item.append(l, v);
+    return item;
+  }
+
   function createOrUpdateCreditsBox(einnahme, ausgabe, differenz) {
     if (!isMainPage()) {
       removeCreditsBox();
@@ -496,9 +568,9 @@
     if (!box) {
       box = document.createElement('div');
       box.id = 'lss-credits-draggable-box';
-      box.style.order = NAV_ORDER.CREDITS;
 
       Object.assign(box.style, {
+        order: String(NAV_ORDER.CREDITS),
         backgroundColor: 'transparent',
         border: 'none',
         padding: CREDITS_CONFIG.boxPadding,
@@ -531,45 +603,33 @@
     }
 
     const diffIcon = differenz >= 0 ? '▲' : '▼';
+    const help = (key) => (CREDITS_CONFIG.showHelp && CREDITS_CONFIG.helpText?.[key]) || '';
 
-    const itemStyle = 'display:flex;flex-direction:column;align-items:center;line-height:1.1;';
-
-    const labelStyle =
-      `font-size:${CREDITS_CONFIG.line1FontSize};` +
-      `color:${CREDITS_CONFIG.line1Color};` +
-      `font-weight:${CREDITS_CONFIG.line1FontWeight};` +
-      `text-transform:uppercase;` +
-      `margin-bottom:${CREDITS_CONFIG.lineGap};`;
-
-    const valBaseStyle =
-      `font-size:${CREDITS_CONFIG.line2FontSize};` +
-      `font-weight:${CREDITS_CONFIG.line2FontWeight};`;
-
-    const helpBilanz = (CREDITS_CONFIG.showHelp && CREDITS_CONFIG.helpText?.bilanz) ? CREDITS_CONFIG.helpText.bilanz : '';
-    const helpEin = (CREDITS_CONFIG.showHelp && CREDITS_CONFIG.helpText?.einnahme) ? CREDITS_CONFIG.helpText.einnahme : '';
-    const helpAus = (CREDITS_CONFIG.showHelp && CREDITS_CONFIG.helpText?.ausgabe) ? CREDITS_CONFIG.helpText.ausgabe : '';
-
-    const bilanzValColor =
-      (CREDITS_CONFIG.line2BilanzColor ?? null) ??
+    const bilanzColor =
+      CREDITS_CONFIG.line2BilanzColor ??
       (differenz >= 0 ? CREDITS_CONFIG.bilanzPositiveColor : CREDITS_CONFIG.bilanzNegativeColor);
+    const einColor = CREDITS_CONFIG.line2EinColor ?? CREDITS_CONFIG.einnahmeColor;
+    const ausColor = CREDITS_CONFIG.line2AusColor ?? CREDITS_CONFIG.ausgabeColor;
 
-    const einValColor = (CREDITS_CONFIG.line2EinColor ?? null) ?? CREDITS_CONFIG.einnahmeColor;
-    const ausValColor = (CREDITS_CONFIG.line2AusColor ?? null) ?? CREDITS_CONFIG.ausgabeColor;
+    box.replaceChildren(
+      buildCreditsItem('Bilanz', `${diffIcon} ${formatNumber(differenz)}`, bilanzColor, help('bilanz')),
+      buildCreditsItem('Ein', `+${formatNumber(einnahme)}`, einColor, help('einnahme')),
+      buildCreditsItem('Aus', `-${formatNumber(Math.abs(ausgabe))}`, ausColor, help('ausgabe'))
+    );
+  }
 
-    box.innerHTML = `
-      <div style="${itemStyle}" title="${helpBilanz}">
-        <span style="${labelStyle}">Bilanz</span>
-        <span style="${valBaseStyle};color:${bilanzValColor};">${diffIcon} ${formatNumber(differenz)}</span>
-      </div>
-      <div style="${itemStyle}" title="${helpEin}">
-        <span style="${labelStyle}">Ein</span>
-        <span style="${valBaseStyle};color:${einValColor};">+${formatNumber(einnahme)}</span>
-      </div>
-      <div style="${itemStyle}" title="${helpAus}">
-        <span style="${labelStyle}">Aus</span>
-        <span style="${valBaseStyle};color:${ausValColor};">-${formatNumber(Math.abs(ausgabe))}</span>
-      </div>
-    `;
+  // Zahl aus einer Tabellenzelle lesen: data-sort-value bevorzugt,
+  // sonst Text. Vorzeichen (auch Unicode-Minus) wird nur am Anfang akzeptiert.
+  function parseCreditsCell(cell) {
+    const sortVal = cell.getAttribute('data-sort-value') ?? cell.getAttribute('sortvalue');
+    if (sortVal !== null && /^\s*-?\d+\s*$/.test(sortVal)) return parseInt(sortVal, 10);
+
+    const text = (cell.textContent || '').replace(/\u2212|\u2013/g, '-');
+    const m = text.match(/(-?)\s*(\d{1,3}(?:\.\d{3})*|\d+)/);
+    if (!m) return NaN;
+
+    const num = parseInt(m[2].replace(/\./g, ''), 10);
+    return m[1] === '-' ? -num : num;
   }
 
   async function updateCreditsHeader() {
@@ -581,7 +641,7 @@
     resetCreditsDailyDataIfNeeded();
 
     const todayKey = getTodayKey();
-    const cacheRaw = localStorage.getItem(CREDITS_CACHE_KEY);
+    const cacheRaw = store.get(CREDITS_CACHE_KEY);
     if (cacheRaw) {
       try {
         const cache = JSON.parse(cacheRaw);
@@ -593,6 +653,8 @@
 
     try {
       const response = await fetch('/credits/daily', { credentials: 'same-origin' });
+      if (!response.ok) return;
+
       const html = await response.text();
       if (html.includes('login-form')) return;
 
@@ -603,16 +665,12 @@
       let ausgabe = 0;
 
       rows.forEach(row => {
-        const cell =
-          row.querySelector('td[data-sort-value], td[sortvalue]') ||
-          row.querySelectorAll('td')[2];
+        const cells = row.querySelectorAll('td');
+        // Zelle mit Sortierwert bevorzugen, sonst Spalte 3 (bisheriges Verhalten)
+        const cell = row.querySelector('td[data-sort-value], td[sortvalue]') || cells[2];
         if (!cell) return;
 
-        const raw = (cell.getAttribute('data-sort-value') || cell.textContent || '')
-          .replace(/\./g, '')
-          .replace(/[^\d-]/g, '');
-
-        const val = parseInt(raw, 10);
+        const val = parseCreditsCell(cell);
         if (Number.isNaN(val)) return;
 
         if (val > 0) einnahme += val;
@@ -621,7 +679,7 @@
 
       const differenz = einnahme + ausgabe;
 
-      localStorage.setItem(CREDITS_CACHE_KEY, JSON.stringify({
+      store.set(CREDITS_CACHE_KEY, JSON.stringify({
         date: todayKey, einnahme, ausgabe, differenz, timestamp: Date.now()
       }));
 
@@ -636,52 +694,49 @@
     if (creditsBodyObserver || !document.body) return;
 
     creditsBodyObserver = new MutationObserver(() => {
-      if (isMainPage() && document.querySelector('#navbar-main-collapse')) removeNavbarWatermarks();
-      if (!isMainPage()) removeCreditsBox();
+      if (document.querySelector('#navbar-main-collapse')) removeNavbarWatermarks();
     });
 
     creditsBodyObserver.observe(document.body, { childList: true, subtree: true });
   }
 
-  function hookCreditsUpdate() {
-    if (window.creditsUpdate?.__bielefeldWrapped) return;
+  function hookCreditsUpdate(attempt = 0) {
+    if (typeof window.creditsUpdate !== 'function') {
+      if (attempt < 60) setTimeout(() => hookCreditsUpdate(attempt + 1), 1000); // max. 60 s
+      return;
+    }
+    if (window.creditsUpdate.__bielefeldWrapped) return;
 
-    const tryHook = () => {
-      if (typeof window.creditsUpdate !== 'function') {
-        setTimeout(tryHook, 1000);
-        return;
-      }
-      if (window.creditsUpdate.__bielefeldWrapped) return;
-
-      const original = window.creditsUpdate;
-      window.creditsUpdate = function (...args) {
-        const result = original.apply(this, args);
-        if (isMainPage()) setTimeout(updateCreditsHeader, 500);
-        return result;
-      };
-      window.creditsUpdate.__bielefeldWrapped = true;
+    const original = window.creditsUpdate;
+    const wrapped = function (...args) {
+      const result = original.apply(this, args);
+      setTimeout(updateCreditsHeader, 500);
+      return result;
     };
-
-    tryHook();
+    wrapped.__bielefeldWrapped = true;
+    window.creditsUpdate = wrapped;
   }
 
   function initCreditsModule() {
+    if (!isMainPage()) return; // andere Seiten / iFrames: nichts installieren
+
     setupCreditsBodyObserver();
     hookCreditsUpdate();
 
-    if (isMainPage()) {
-      resetCreditsDailyDataIfNeeded();
-      updateCreditsHeader();
-      removeNavbarWatermarks();
-    } else {
-      removeCreditsBox();
-    }
+    resetCreditsDailyDataIfNeeded();
+    updateCreditsHeader();
+    removeNavbarWatermarks();
 
     setInterval(() => {
-      if (!isMainPage()) return;
+      if (document.hidden) return; // im Hintergrund-Tab keine Requests
       resetCreditsDailyDataIfNeeded();
       updateCreditsHeader();
-    }, 300000);
+    }, CREDITS_CONFIG.refreshIntervalMs);
+
+    // Beim Zurückkehren in den Tab sofort aktualisieren
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) updateCreditsHeader();
+    });
   }
 
   // =========================================================
@@ -703,4 +758,3 @@
     initAll();
   }
 })();
-
