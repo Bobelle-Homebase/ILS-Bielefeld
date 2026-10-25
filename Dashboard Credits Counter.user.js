@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.18
+// @version      1.0.19
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
@@ -27,7 +27,7 @@
     return path === '/' || path === '/index.php' || path === '/map';
   };
 
-  // Sicherer localStorage-Zugriff (voller / blockierter Speicher wirft sonst Exceptions)
+  // Sicherer localStorage-Zugriff
   const store = {
     get(key) {
       try { return localStorage.getItem(key); } catch { return null; }
@@ -47,7 +47,7 @@
 
   const normalizeText = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
 
-  // LOKALES Datum (nicht UTC!) -> YYYY-MM-DD
+  // LOKALES Datum -> YYYY-MM-DD
   const getTodayString = () => {
     const d = new Date();
     const p = (n) => String(n).padStart(2, '0');
@@ -55,7 +55,7 @@
   };
   const getTodayKey = getTodayString;
 
-  // Kalendertage zwischen zwei YYYY-MM-DD-Strings (zeitumstellungssicher)
+  // Kalendertage zwischen zwei YYYY-MM-DD-Strings
   const diffInDays = (a, b) => {
     const toUtc = (s) => {
       const [y, m, d] = s.split('-').map(Number);
@@ -144,8 +144,8 @@
     return wrapper;
   }
 
-// =========================================================
-  // 1) Tageszähler (jQuery- und Event-Hook-Version)
+  // =========================================================
+  // 1) Tageszähler
   // =========================================================
   const DAILY_CONFIG = {
     storageKey: 'lss_daily_mission_counter',
@@ -166,6 +166,7 @@
     line2NumberFontSize: '12px',
     numberFontWeight: 'bold',
 
+    useClickCounter: true,
     dedupeMs: 1500
   };
 
@@ -304,14 +305,73 @@
     updateDailyDisplay();
   }
 
-  // Hook für jQuery AJAX Requests (wird vom Leitstellenspiel für Alarme genutzt)
+  function urlLooksLikeAlarm(url) {
+    try {
+      const u = new URL(url, location.origin);
+      const p = (u.pathname || '').toLowerCase();
+      return p.includes('/alarm') || p.includes('/mission') || p.includes('aao');
+    } catch {
+      return false;
+    }
+  }
+
+  function hookFetchAlarmCounter() {
+    if (!window.fetch || window.fetch.__bielefeldDailyWrapped) return;
+
+    const originalFetch = window.fetch;
+    window.fetch = async function (input, init) {
+      const res = await originalFetch.apply(this, arguments);
+      try {
+        const url = typeof input === 'string' ? input : (input && input.url) ? input.url : '';
+        const method = (init && init.method ? init.method : (input && input.method) || 'GET').toUpperCase();
+
+        if (method !== 'GET' && urlLooksLikeAlarm(url) && res && res.ok) {
+          countDailyOnce();
+        }
+      } catch { /* ignore */ }
+      return res;
+    };
+    window.fetch.__bielefeldDailyWrapped = true;
+  }
+
+  function hookXHRAlarmCounter() {
+    if (XMLHttpRequest.prototype.__bielefeldDailyWrapped) return;
+
+    const origOpen = XMLHttpRequest.prototype.open;
+    const origSend = XMLHttpRequest.prototype.send;
+
+    XMLHttpRequest.prototype.open = function (method, url) {
+      try {
+        this.__bielefeld_method = method ? String(method).toUpperCase() : 'GET';
+        this.__bielefeld_url = url ? String(url) : '';
+      } catch { /* ignore */ }
+      return origOpen.apply(this, arguments);
+    };
+
+    XMLHttpRequest.prototype.send = function () {
+      try {
+        this.addEventListener('load', () => {
+          try {
+            const method = this.__bielefeld_method || 'GET';
+            const url = this.__bielefeld_url || '';
+            if (method === 'GET') return;
+            if (urlLooksLikeAlarm(url) && this.status >= 200 && this.status < 400) {
+              countDailyOnce();
+            }
+          } catch { /* ignore */ }
+        });
+      } catch { /* ignore */ }
+      return origSend.apply(this, arguments);
+    };
+    XMLHttpRequest.prototype.__bielefeldDailyWrapped = true;
+  }
+
   function hookJQueryAjax() {
     try {
       const $ = window.jQuery || unsafeWindow.jQuery;
       if ($ && $.ajaxPrefilter && !$.ajaxPrefilter.__bielefeldWrapped) {
         $.ajaxPrefilter((options, originalOptions, jqXHR) => {
           const url = (options.url || '').toLowerCase();
-          // Wenn ein Einsatz alarmiert wird, enthält die URL meistens "alarm" oder "mission"
           if (url.includes('alarm') || (url.includes('missions/') && options.type && options.type.toUpperCase() !== 'GET')) {
             jqXHR.done(() => {
               countDailyOnce();
@@ -321,12 +381,10 @@
         $.ajaxPrefilter.__bielefeldWrapped = true;
       }
     } catch (e) {
-      // Falls jQuery noch nicht geladen ist, später nochmal versuchen
       setTimeout(hookJQueryAjax, 1000);
     }
   }
 
-  // Universeller Klick-Listener auf dem Dokument (fängt auch dynamische Buttons ab)
   function handleDailyClickFallback(e) {
     const el = e.target.closest && e.target.closest('a, button, input[type="submit"], input[type="button"], .alert_btn');
     if (!el) return;
@@ -335,14 +393,13 @@
     const idAttr = (el.id || '').toLowerCase();
     const classAttr = (el.className || '').toLowerCase();
 
-    // Prüft auf typische Alarm-Indikatoren in Texten, IDs oder Klassen
     if (
       text.includes('alarm') || 
       text.includes('einsatz starten') || 
       text.includes('mission starten') ||
       idAttr.includes('alarm') ||
       classAttr.includes('alarm') ||
-      classAttr.includes('btn-success') // Viele Alarm-Buttons sind grün (.btn-success) im Einsatzfenster
+      classAttr.includes('btn-success')
     ) {
       countDailyOnce();
     }
@@ -362,7 +419,9 @@
     hookXHRAlarmCounter();
     hookJQueryAjax();
 
-    document.addEventListener('click', handleDailyClickFallback, true);
+    if (DAILY_CONFIG.useClickCounter) {
+      document.addEventListener('click', handleDailyClickFallback, true);
+    }
 
     if (!IS_TOP) return;
 
@@ -373,7 +432,6 @@
     window.addEventListener('storage', (e) => {
       if (e.key !== DAILY_STORAGE_KEY) return;
       dailyState = loadDailyState();
-      updateDailyDialog(); // Falls vorhanden, sonst updateDailyDisplay
       updateDailyDisplay();
     });
   }
@@ -388,19 +446,15 @@
     removeAllBadges: false,
     scale: 1.0,
 
-    // Zeile 1 (Label)
     line1FontSize: '12px',
     line1Color: 'yellow',
     line1FontWeight: 'normal',
 
-    // Zeile 2 (Wert)
     line2FontSize: '12px',
     line2FontWeight: 'bold',
 
-    // Abstand Zeile1 -> Zeile2
     lineGap: '2px',
 
-    // Hilfe
     showHelp: true,
     helpText: {
       bilanz: 'Zeile 1: line1FontSize / line1Color\nZeile 2: line2FontSize + Farben unten',
@@ -412,11 +466,6 @@
     bilanzNegativeColor: '#ff3333',
     einnahmeColor: '#40ff00',
     ausgabeColor: '#ff3333',
-
-    // OPTIONAL: fixe Farben (überschreiben dynamisch)
-    // line2BilanzColor: '#ffffff',
-    // line2EinColor: '#ffffff',
-    // line2AusColor: '#ffffff',
 
     boxWidth: '210px',
     boxHeight: 'auto',
@@ -463,7 +512,6 @@
     }
   }
 
-  // Baut ein Label/Wert-Paar per DOM-API (kein innerHTML, kein Escaping-Problem)
   function buildCreditsItem(label, valueText, valueColor, helpText) {
     const item = document.createElement('div');
     Object.assign(item.style, {
@@ -559,8 +607,6 @@
     );
   }
 
-  // Zahl aus einer Tabellenzelle lesen: data-sort-value bevorzugt,
-  // sonst Text. Vorzeichen (auch Unicode-Minus) wird nur am Anfang akzeptiert.
   function parseCreditsCell(cell) {
     const sortVal = cell.getAttribute('data-sort-value') ?? cell.getAttribute('sortvalue');
     if (sortVal !== null && /^\s*-?\d+\s*$/.test(sortVal)) return parseInt(sortVal, 10);
@@ -607,7 +653,6 @@
 
       rows.forEach(row => {
         const cells = row.querySelectorAll('td');
-        // Zelle mit Sortierwert bevorzugen, sonst Spalte 3 (bisheriges Verhalten)
         const cell = row.querySelector('td[data-sort-value], td[sortvalue]') || cells[2];
         if (!cell) return;
 
@@ -643,7 +688,7 @@
 
   function hookCreditsUpdate(attempt = 0) {
     if (typeof window.creditsUpdate !== 'function') {
-      if (attempt < 60) setTimeout(() => hookCreditsUpdate(attempt + 1), 1000); // max. 60 s
+      if (attempt < 60) setTimeout(() => hookCreditsUpdate(attempt + 1), 1000);
       return;
     }
     if (window.creditsUpdate.__bielefeldWrapped) return;
@@ -659,7 +704,7 @@
   }
 
   function initCreditsModule() {
-    if (!isMainPage()) return; // andere Seiten / iFrames: nichts installieren
+    if (!isMainPage()) return;
 
     setupCreditsBodyObserver();
     hookCreditsUpdate();
@@ -669,12 +714,11 @@
     removeNavbarWatermarks();
 
     setInterval(() => {
-      if (document.hidden) return; // im Hintergrund-Tab keine Requests
+      if (document.hidden) return;
       resetCreditsDailyDataIfNeeded();
       updateCreditsHeader();
     }, CREDITS_CONFIG.refreshIntervalMs);
 
-    // Beim Zurückkehren in den Tab sofort aktualisieren
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) updateCreditsHeader();
     });
