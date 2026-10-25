@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.16
+// @version      1.0.17
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
@@ -144,8 +144,8 @@
     return wrapper;
   }
 
-  // =========================================================
-  // 1) Tageszähler
+// =========================================================
+  // 1) Tageszähler (Korrigierte Version)
   // =========================================================
   const DAILY_CONFIG = {
     storageKey: 'lss_daily_mission_counter',
@@ -166,15 +166,9 @@
     line2NumberFontSize: '12px',
     numberFontWeight: 'bold',
 
-    // Der Alarm im Spiel läuft meist als Formular-Submit im Einsatz-iFrame
-    // (kein fetch/XHR). Deshalb bleibt der Klick-Zähler aktiv, ist aber
-    // jetzt exakt (Text muss GENAU einem Eintrag entsprechen).
+    // Verbesserter Klick-Detektor für alle Alarm-Varianten im Spiel
     useClickCounter: true,
-    buttons: ['alarmieren', 'einsatz starten', 'mission starten', 'alarmieren und zurück', 'alarmieren und zum nächsten einsatz'],
-
-    // Mindestabstand zwischen zwei Zählungen (verhindert Doppelzählung
-    // durch Klick + Netzwerk-Hook für denselben Alarm)
-    dedupeMs: 4000
+    dedupeMs: 2000 // Auf 2 Sekunden verkürzt, damit schnell nacheinander alarmierte Einsätze nicht verloren gehen
   };
 
   const DAILY_STORAGE_KEY = DAILY_CONFIG.storageKey;
@@ -203,9 +197,7 @@
   }
 
   function checkDailyDayReset() {
-    // Frischen Stand holen (iFrame und Hauptfenster teilen sich localStorage)
     dailyState = loadDailyState();
-
     const today = getTodayString();
     if (dailyState.date === today) return;
 
@@ -270,7 +262,7 @@
 
     const wrapper = getBielefeldWrapper();
     if (!wrapper) {
-      if (attempt < 40) setTimeout(() => buildDailyUI(attempt + 1), 300); // max. ~12 s
+      if (attempt < 40) setTimeout(() => buildDailyUI(attempt + 1), 300);
       return;
     }
     if (document.getElementById('lss-daily-counter')) return;
@@ -308,51 +300,39 @@
     if (now - lastDailyCountAt < DAILY_CONFIG.dedupeMs) return;
     lastDailyCountAt = now;
 
-    checkDailyDayReset(); // lädt auch den aktuellen Stand
+    checkDailyDayReset();
     dailyState.count++;
     saveDailyState();
     updateDailyDisplay();
   }
 
-  const DAILY_TRIGGERS = new Set(DAILY_CONFIG.buttons.map(normalizeText));
-
   function urlLooksLikeAlarm(url) {
     try {
       const u = new URL(url, location.origin);
       const p = (u.pathname || '').toLowerCase();
-
-      if (/\/missions?\/\d+\/alarm/.test(p)) return true;
-      if (p.includes('aao') && p.includes('alarm')) return true;
-
-      return false;
+      // Greift auf alle gängigen Einsatz- und Alarmierungs-Endpunkte zu
+      return p.includes('/alarm') || p.includes('/mission') || p.includes('aao');
     } catch {
       return false;
     }
   }
 
-  // Hooks laufen bewusst auch im Einsatz-iFrame (dort passiert der Alarm).
   function hookFetchAlarmCounter() {
     if (!window.fetch || window.fetch.__bielefeldDailyWrapped) return;
 
     const originalFetch = window.fetch;
     window.fetch = async function (input, init) {
       const res = await originalFetch.apply(this, arguments);
-
       try {
-        const url =
-          typeof input === 'string' ? input :
-          (input && input.url) ? input.url : '';
-
+        const url = typeof input === 'string' ? input : (input && input.url) ? input.url : '';
         const method = (init && init.method ? init.method : (input && input.method) || 'GET').toUpperCase();
 
         if (method !== 'GET' && urlLooksLikeAlarm(url) && res && res.ok) {
           countDailyOnce();
         }
       } catch { /* ignore */ }
-
       return res;
     };
-
     window.fetch.__bielefeldDailyWrapped = true;
   }
 
@@ -376,31 +356,33 @@
           try {
             const method = this.__bielefeld_method || 'GET';
             const url = this.__bielefeld_url || '';
-
             if (method === 'GET') return;
-            if (!urlLooksLikeAlarm(url)) return;
-
-            if (this.status >= 200 && this.status < 400) countDailyOnce();
+            if (urlLooksLikeAlarm(url) && this.status >= 200 && this.status < 400) {
+              countDailyOnce();
+            }
           } catch { /* ignore */ }
         });
       } catch { /* ignore */ }
-
       return origSend.apply(this, arguments);
     };
-
     XMLHttpRequest.prototype.__bielefeldDailyWrapped = true;
   }
 
-  // Exakter Treffer statt "includes": "Alarmierungsregeln" o. ä. zählt nicht mehr.
+  // Universeller Klick-Listener: Löst bei jedem Button aus, der typischerweise zum Alarmieren genutzt wird
   function handleDailyClickFallback(e) {
     const el = e.target.closest && e.target.closest('a, button, input[type="submit"], input[type="button"]');
     if (!el) return;
 
-    const candidates = [el.textContent, el.value, el.getAttribute('aria-label')]
-      .filter(Boolean)
-      .map(normalizeText);
-
-    if (candidates.some(t => DAILY_TRIGGERS.has(t))) {
+    const text = normalizeText(el.textContent || el.value || el.getAttribute('aria-label') || '');
+    
+    // Prüfen, ob der Text gängige Alarm-Begriffe enthält (inkl. AAO-Tasten oder verkürzte Buttons)
+    if (
+      text.includes('alarm') || 
+      text.includes('einsatz starten') || 
+      text.includes('mission starten') ||
+      el.id.includes('alarm') ||
+      el.classList.contains('alarm_btn')
+    ) {
       countDailyOnce();
     }
   }
@@ -415,14 +397,13 @@
   }
 
   function initDailyCounterModule() {
-    // Zähl-Hooks überall (Hauptfenster + iFrames)
     hookFetchAlarmCounter();
     hookXHRAlarmCounter();
     if (DAILY_CONFIG.useClickCounter) {
-      document.addEventListener('click', handleDailyClickFallback, true);
+      // Nutze den Klick-Listener direkt auf dem Dokument (bubbling phase)
+      document.addEventListener('click', handleDailyClickFallback, false);
     }
 
-    // Anzeige nur im Hauptfenster
     if (!IS_TOP) return;
 
     checkDailyDayReset();
