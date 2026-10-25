@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.32
+// @version      1.0.33
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
@@ -160,7 +160,6 @@
     line2NumberFontSize: '12px',
     numberFontWeight: 'bold',
 
-    // Cooldown in Millisekunden (verhindert Mehrfachzählung bei schnellen Klicks)
     cooldownMs: 1500
   };
 
@@ -290,7 +289,7 @@
   let lastCountTime = 0;
   function triggerMissionCount() {
     const now = Date.now();
-    if (now - lastCountTime < DAILY_CONFIG.cooldownMs) return; // Cooldown schützt vor Doppelzählen
+    if (now - lastCountTime < DAILY_CONFIG.cooldownMs) return;
     lastCountTime = now;
 
     checkDailyDayReset();
@@ -299,18 +298,15 @@
     updateDailyDisplay();
   }
 
-  // Gezielter Klick-Listener für AAO-Buttons und Alarm-Buttons
   function initAaoClickListener() {
     document.addEventListener('click', (e) => {
       try {
-        // Prüfen, ob ein AAO-Button geklickt wurde (.aao_btn ist die Standardklasse im Spiel)
         const aaoBtn = e.target.closest('.aao_btn');
         if (aaoBtn) {
           triggerMissionCount();
           return;
         }
 
-        // Prüfen, ob der Haupt-Alarm-Button geklickt wurde
         const alarmBtn = e.target.closest('#alarm_btn, input[name="commit"][value*="alarm"], button[id*="alarm"]');
         if (alarmBtn) {
           triggerMissionCount();
@@ -536,7 +532,7 @@
 
     resetCreditsDailyDataIfNeeded();
 
-    The todayKey = getTodayKey();
+    const todayKey = getTodayKey();
     const cacheRaw = store.get(CREDITS_CACHE_KEY);
     if (cacheRaw) {
       try {
