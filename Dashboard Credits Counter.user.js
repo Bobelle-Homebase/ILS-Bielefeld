@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.17
+// @version      1.0.18
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
@@ -145,7 +145,7 @@
   }
 
 // =========================================================
-  // 1) Tageszähler (Korrigierte Version)
+  // 1) Tageszähler (jQuery- und Event-Hook-Version)
   // =========================================================
   const DAILY_CONFIG = {
     storageKey: 'lss_daily_mission_counter',
@@ -166,9 +166,7 @@
     line2NumberFontSize: '12px',
     numberFontWeight: 'bold',
 
-    // Verbesserter Klick-Detektor für alle Alarm-Varianten im Spiel
-    useClickCounter: true,
-    dedupeMs: 2000 // Auf 2 Sekunden verkürzt, damit schnell nacheinander alarmierte Einsätze nicht verloren gehen
+    dedupeMs: 1500
   };
 
   const DAILY_STORAGE_KEY = DAILY_CONFIG.storageKey;
@@ -271,7 +269,7 @@
 
     const container = document.createElement('div');
     container.id = 'lss-daily-counter';
-    container.title = 'Zählt alarmierte/gestartete Einsätze (inkl. AAO/AOO)';
+    container.title = 'Zählt alarmierte Einsätze';
     container.style.order = NAV_ORDER.DAILY;
 
     const label1 = document.createElement('div');
@@ -306,82 +304,45 @@
     updateDailyDisplay();
   }
 
-  function urlLooksLikeAlarm(url) {
+  // Hook für jQuery AJAX Requests (wird vom Leitstellenspiel für Alarme genutzt)
+  function hookJQueryAjax() {
     try {
-      const u = new URL(url, location.origin);
-      const p = (u.pathname || '').toLowerCase();
-      // Greift auf alle gängigen Einsatz- und Alarmierungs-Endpunkte zu
-      return p.includes('/alarm') || p.includes('/mission') || p.includes('aao');
-    } catch {
-      return false;
+      const $ = window.jQuery || unsafeWindow.jQuery;
+      if ($ && $.ajaxPrefilter && !$.ajaxPrefilter.__bielefeldWrapped) {
+        $.ajaxPrefilter((options, originalOptions, jqXHR) => {
+          const url = (options.url || '').toLowerCase();
+          // Wenn ein Einsatz alarmiert wird, enthält die URL meistens "alarm" oder "mission"
+          if (url.includes('alarm') || (url.includes('missions/') && options.type && options.type.toUpperCase() !== 'GET')) {
+            jqXHR.done(() => {
+              countDailyOnce();
+            });
+          }
+        });
+        $.ajaxPrefilter.__bielefeldWrapped = true;
+      }
+    } catch (e) {
+      // Falls jQuery noch nicht geladen ist, später nochmal versuchen
+      setTimeout(hookJQueryAjax, 1000);
     }
   }
 
-  function hookFetchAlarmCounter() {
-    if (!window.fetch || window.fetch.__bielefeldDailyWrapped) return;
-
-    const originalFetch = window.fetch;
-    window.fetch = async function (input, init) {
-      const res = await originalFetch.apply(this, arguments);
-      try {
-        const url = typeof input === 'string' ? input : (input && input.url) ? input.url : '';
-        const method = (init && init.method ? init.method : (input && input.method) || 'GET').toUpperCase();
-
-        if (method !== 'GET' && urlLooksLikeAlarm(url) && res && res.ok) {
-          countDailyOnce();
-        }
-      } catch { /* ignore */ }
-      return res;
-    };
-    window.fetch.__bielefeldDailyWrapped = true;
-  }
-
-  function hookXHRAlarmCounter() {
-    if (XMLHttpRequest.prototype.__bielefeldDailyWrapped) return;
-
-    const origOpen = XMLHttpRequest.prototype.open;
-    const origSend = XMLHttpRequest.prototype.send;
-
-    XMLHttpRequest.prototype.open = function (method, url) {
-      try {
-        this.__bielefeld_method = method ? String(method).toUpperCase() : 'GET';
-        this.__bielefeld_url = url ? String(url) : '';
-      } catch { /* ignore */ }
-      return origOpen.apply(this, arguments);
-    };
-
-    XMLHttpRequest.prototype.send = function () {
-      try {
-        this.addEventListener('load', () => {
-          try {
-            const method = this.__bielefeld_method || 'GET';
-            const url = this.__bielefeld_url || '';
-            if (method === 'GET') return;
-            if (urlLooksLikeAlarm(url) && this.status >= 200 && this.status < 400) {
-              countDailyOnce();
-            }
-          } catch { /* ignore */ }
-        });
-      } catch { /* ignore */ }
-      return origSend.apply(this, arguments);
-    };
-    XMLHttpRequest.prototype.__bielefeldDailyWrapped = true;
-  }
-
-  // Universeller Klick-Listener: Löst bei jedem Button aus, der typischerweise zum Alarmieren genutzt wird
+  // Universeller Klick-Listener auf dem Dokument (fängt auch dynamische Buttons ab)
   function handleDailyClickFallback(e) {
-    const el = e.target.closest && e.target.closest('a, button, input[type="submit"], input[type="button"]');
+    const el = e.target.closest && e.target.closest('a, button, input[type="submit"], input[type="button"], .alert_btn');
     if (!el) return;
 
-    const text = normalizeText(el.textContent || el.value || el.getAttribute('aria-label') || '');
-    
-    // Prüfen, ob der Text gängige Alarm-Begriffe enthält (inkl. AAO-Tasten oder verkürzte Buttons)
+    const text = (el.textContent || el.value || el.getAttribute('aria-label') || '').toLowerCase();
+    const idAttr = (el.id || '').toLowerCase();
+    const classAttr = (el.className || '').toLowerCase();
+
+    // Prüft auf typische Alarm-Indikatoren in Texten, IDs oder Klassen
     if (
       text.includes('alarm') || 
       text.includes('einsatz starten') || 
       text.includes('mission starten') ||
-      el.id.includes('alarm') ||
-      el.classList.contains('alarm_btn')
+      idAttr.includes('alarm') ||
+      classAttr.includes('alarm') ||
+      classAttr.includes('btn-success') // Viele Alarm-Buttons sind grün (.btn-success) im Einsatzfenster
     ) {
       countDailyOnce();
     }
@@ -399,10 +360,9 @@
   function initDailyCounterModule() {
     hookFetchAlarmCounter();
     hookXHRAlarmCounter();
-    if (DAILY_CONFIG.useClickCounter) {
-      // Nutze den Klick-Listener direkt auf dem Dokument (bubbling phase)
-      document.addEventListener('click', handleDailyClickFallback, false);
-    }
+    hookJQueryAjax();
+
+    document.addEventListener('click', handleDailyClickFallback, true);
 
     if (!IS_TOP) return;
 
@@ -413,6 +373,7 @@
     window.addEventListener('storage', (e) => {
       if (e.key !== DAILY_STORAGE_KEY) return;
       dailyState = loadDailyState();
+      updateDailyDialog(); // Falls vorhanden, sonst updateDailyDisplay
       updateDailyDisplay();
     });
   }
