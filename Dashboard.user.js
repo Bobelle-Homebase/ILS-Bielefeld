@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.16
+// @version      1.0.01
 // @author       Design by Bobelle
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.user.js
@@ -15,7 +15,7 @@
 (function() {
     'use strict';
 
-    console.log("[Bobelle Dashboard] 1.0.16 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.01 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -26,12 +26,12 @@
 
     const VEHICLE_MATCH_CACHE = {
         _map: new Map(),
-        _max: 1000,
+        _max: 2000,
         get(key) { return this._map.get(key); },
         set(key, val) {
             if (this._map.size >= this._max) {
                 const iter = this._map.keys();
-                for(let i = 0; i < 100; i++) this._map.delete(iter.next().value);
+                for(let i = 0; i < 500; i++) this._map.delete(iter.next().value);
             }
             this._map.set(key, val);
         }
@@ -279,7 +279,7 @@
         badgeSize:12, badgeAlign:"left", badgeTopMargin:2,
         tileCounterSize:17, numTodayColor:"#0000ff",
         numYdayColor:"#6c757d", resCounterColor:"#000000", resCounterSize:16,
-        tileColorInUse:"#fef9e7", tileColorEmpty:"#fce4ec",
+        tileColorInUse:"#f7f46c", tileColorEmpty:"#fc483b",
         trendColorUp:"#00cc00", trendColorDown:"#ff0000", trendColorEq:"#6c757d",
         statsMissionsColor:"#000000", statsMissionsSize:12,
         statsKtpColor:"#000000", statsKtpSize:12,
