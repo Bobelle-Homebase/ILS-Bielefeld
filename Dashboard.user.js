@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.01
+// @version      1.0.02
 // @author       Design by Bobelle
 // @description  Full All in One
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard.user.js
@@ -15,7 +15,7 @@
 (function() {
     'use strict';
 
-    console.log("[Bobelle Dashboard] 1.0.01 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.02 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -26,12 +26,12 @@
 
     const VEHICLE_MATCH_CACHE = {
         _map: new Map(),
-        _max: 2000,
+        _max: 1000,
         get(key) { return this._map.get(key); },
         set(key, val) {
             if (this._map.size >= this._max) {
                 const iter = this._map.keys();
-                for(let i = 0; i < 500; i++) this._map.delete(iter.next().value);
+                for(let i = 0; i < 100; i++) this._map.delete(iter.next().value);
             }
             this._map.set(key, val);
         }
