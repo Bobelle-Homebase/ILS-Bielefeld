@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.33
+// @version      1.0.34
 // @author       Design by Bobelle
-// @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
+// @description  Zeigt Credits-Bilanz im Navbar-Bereich
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
 // @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -41,22 +41,12 @@
   const getNavbarBrand = () =>
     document.querySelector('.navbar .navbar-brand') || document.querySelector('.navbar-brand');
 
-  const NAV_ORDER = { DAILY: 20, CREDITS: 30 };
-
   const getTodayString = () => {
     const d = new Date();
     const p = (n) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   };
   const getTodayKey = getTodayString;
-
-  const diffInDays = (a, b) => {
-    const toUtc = (s) => {
-      const [y, m, d] = s.split('-').map(Number);
-      return Date.UTC(y, m - 1, d);
-    };
-    return Math.round((toUtc(b) - toUtc(a)) / 86400000);
-  };
 
   const formatNumber = (num) => Number(num).toLocaleString('de-DE');
 
@@ -139,210 +129,7 @@
   }
 
   // =========================================================
-  // 1) Tageszähler (Über gezielte AAO- und Alarm-Button Klicks)
-  // =========================================================
-  const DAILY_CONFIG = {
-    storageKey: 'lss_daily_mission_counter',
-    labelToday: 'Einsätze heute:',
-    labelRecord: 'Gestern:',
-    align: 'left',
-    width: '130px',
-    height: 'auto',
-    columnGap: '0px',
-
-    line1FontSize: '13px',
-    line1Color: 'yellow',
-    line2FontSize: '11px',
-    line2Color: '#ffffff',
-    line1NumberColor: '#ffffff',
-    line1NumberFontSize: '14px',
-    line2NumberColor: '#ffffff',
-    line2NumberFontSize: '12px',
-    numberFontWeight: 'bold',
-
-    cooldownMs: 1500
-  };
-
-  const DAILY_STORAGE_KEY = DAILY_CONFIG.storageKey;
-
-  function loadDailyState() {
-    const today = getTodayString();
-    const empty = { date: today, count: 0, prevDate: null, prevCount: 0 };
-    try {
-      const data = JSON.parse(store.get(DAILY_STORAGE_KEY));
-      return data && data.date ? data : empty;
-    } catch {
-      return empty;
-    }
-  }
-
-  let dailyState = loadDailyState();
-  const dailyUi = { count: null, record: null };
-
-  function saveDailyState() {
-    store.set(DAILY_STORAGE_KEY, JSON.stringify(dailyState));
-  }
-
-  function updateDailyDisplay() {
-    if (dailyUi.count) dailyUi.count.textContent = String(dailyState.count);
-    if (dailyUi.record) dailyUi.record.textContent = String(dailyState.prevCount);
-  }
-
-  function checkDailyDayReset() {
-    dailyState = loadDailyState();
-    const today = getTodayString();
-    if (dailyState.date === today) return;
-
-    if (diffInDays(dailyState.date, today) === 1) {
-      dailyState.prevDate = dailyState.date;
-      dailyState.prevCount = dailyState.count;
-    } else {
-      dailyState.prevDate = null;
-      dailyState.prevCount = 0;
-    }
-
-    dailyState.date = today;
-    dailyState.count = 0;
-    saveDailyState();
-    updateDailyDisplay();
-  }
-
-  function injectDailyStyles() {
-    if (document.getElementById('lss-daily-counter-style')) return;
-
-    const textAlign =
-      DAILY_CONFIG.align === 'right' ? 'right' :
-      DAILY_CONFIG.align === 'center' ? 'center' : 'left';
-
-    const line1NumSize = DAILY_CONFIG.line1NumberFontSize || DAILY_CONFIG.line1FontSize;
-    const line2NumSize = DAILY_CONFIG.line2NumberFontSize || DAILY_CONFIG.line2FontSize;
-
-    const css = `
-      #lss-daily-counter {
-        display: inline-grid;
-        grid-template-columns: auto max-content;
-        column-gap: ${DAILY_CONFIG.columnGap};
-        row-gap: 0;
-        align-items: baseline;
-        margin: 0;
-        width: ${DAILY_CONFIG.width};
-        height: ${DAILY_CONFIG.height};
-        line-height: 1.2;
-        cursor: help;
-        text-align: ${textAlign};
-      }
-      .lss-dc-label.line1 { color: ${DAILY_CONFIG.line1Color}; font-size: ${DAILY_CONFIG.line1FontSize}; }
-      .lss-dc-label.line2 { color: ${DAILY_CONFIG.line2Color}; font-size: ${DAILY_CONFIG.line2FontSize}; }
-      .lss-dc-val {
-        font-weight: ${DAILY_CONFIG.numberFontWeight};
-        text-align: right;
-        min-width: 30px;
-      }
-      .lss-dc-val.line1-val { color: ${DAILY_CONFIG.line1NumberColor}; font-size: ${line1NumSize}; }
-      .lss-dc-val.line2-val { color: ${DAILY_CONFIG.line2NumberColor}; font-size: ${line2NumSize}; }
-      @media (max-width: 767px) { #lss-daily-counter { font-size: 0.8em; } }
-    `;
-
-    const style = document.createElement('style');
-    style.id = 'lss-daily-counter-style';
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
-
-  function buildDailyUI(attempt = 0) {
-    if (!isMainPage()) return;
-
-    const wrapper = getBielefeldWrapper();
-    if (!wrapper) {
-      if (attempt < 40) setTimeout(() => buildDailyUI(attempt + 1), 300);
-      return;
-    }
-    if (document.getElementById('lss-daily-counter')) return;
-
-    injectDailyStyles();
-
-    const container = document.createElement('div');
-    container.id = 'lss-daily-counter';
-    container.title = 'Zählt Einsätze über AAO und Alarmierung';
-    container.style.order = NAV_ORDER.DAILY;
-
-    const label1 = document.createElement('div');
-    label1.className = 'lss-dc-label line1';
-    label1.textContent = DAILY_CONFIG.labelToday;
-
-    dailyUi.count = document.createElement('div');
-    dailyUi.count.className = 'lss-dc-val line1-val';
-    dailyUi.count.textContent = String(dailyState.count);
-
-    const label2 = document.createElement('div');
-    label2.className = 'lss-dc-label line2';
-    label2.textContent = DAILY_CONFIG.labelRecord;
-
-    dailyUi.record = document.createElement('div');
-    dailyUi.record.className = 'lss-dc-val line2-val';
-    dailyUi.record.textContent = String(dailyState.prevCount);
-
-    container.append(label1, dailyUi.count, label2, dailyUi.record);
-    wrapper.appendChild(container);
-  }
-
-  let lastCountTime = 0;
-  function triggerMissionCount() {
-    const now = Date.now();
-    if (now - lastCountTime < DAILY_CONFIG.cooldownMs) return;
-    lastCountTime = now;
-
-    checkDailyDayReset();
-    dailyState.count++;
-    saveDailyState();
-    updateDailyDisplay();
-  }
-
-  function initAaoClickListener() {
-    document.addEventListener('click', (e) => {
-      try {
-        const aaoBtn = e.target.closest('.aao_btn');
-        if (aaoBtn) {
-          triggerMissionCount();
-          return;
-        }
-
-        const alarmBtn = e.target.closest('#alarm_btn, input[name="commit"][value*="alarm"], button[id*="alarm"]');
-        if (alarmBtn) {
-          triggerMissionCount();
-          return;
-        }
-      } catch { /* ignore */ }
-    }, true);
-  }
-
-  function scheduleDailyReset() {
-    const now = new Date();
-    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
-    setTimeout(() => {
-      checkDailyDayReset();
-      scheduleDailyReset();
-    }, Math.max(1000, next.getTime() - now.getTime()));
-  }
-
-  function initDailyCounterModule() {
-    initAaoClickListener();
-
-    if (!IS_TOP) return;
-
-    checkDailyDayReset();
-    buildDailyUI();
-    scheduleDailyReset();
-
-    window.addEventListener('storage', (e) => {
-      if (e.key !== DAILY_STORAGE_KEY) return;
-      dailyState = loadDailyState();
-      updateDailyDisplay();
-    });
-  }
-
-  // =========================================================
-  // 2) Credits
+  // Credits Modul
   // =========================================================
   const CREDITS_CONFIG = {
     resetHour: 0,
@@ -464,7 +251,7 @@
       box.id = 'lss-credits-draggable-box';
 
       Object.assign(box.style, {
-        order: String(NAV_ORDER.CREDITS),
+        order: '20',
         backgroundColor: 'transparent',
         border: 'none',
         padding: CREDITS_CONFIG.boxPadding,
@@ -635,7 +422,6 @@
   function initAll() {
     try {
       initTitleFix();
-      initDailyCounterModule();
       initCreditsModule();
     } catch (e) {
       console.error('Init Fehler:', e);
