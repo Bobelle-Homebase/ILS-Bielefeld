@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.19
+// @version      1.0.29
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
@@ -20,14 +20,12 @@
   // =======================================================
   const IS_TOP = window.top === window;
 
-  // Trailing Slashes ignorieren (/map/ == /map)
   const isMainPage = () => {
     if (!IS_TOP) return false;
     const path = window.location.pathname.replace(/\/+$/, '') || '/';
     return path === '/' || path === '/index.php' || path === '/map';
   };
 
-  // Sicherer localStorage-Zugriff
   const store = {
     get(key) {
       try { return localStorage.getItem(key); } catch { return null; }
@@ -45,9 +43,6 @@
 
   const NAV_ORDER = { DAILY: 20, CREDITS: 30 };
 
-  const normalizeText = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
-
-  // LOKALES Datum -> YYYY-MM-DD
   const getTodayString = () => {
     const d = new Date();
     const p = (n) => String(n).padStart(2, '0');
@@ -55,7 +50,6 @@
   };
   const getTodayKey = getTodayString;
 
-  // Kalendertage zwischen zwei YYYY-MM-DD-Strings
   const diffInDays = (a, b) => {
     const toUtc = (s) => {
       const [y, m, d] = s.split('-').map(Number);
@@ -67,7 +61,7 @@
   const formatNumber = (num) => Number(num).toLocaleString('de-DE');
 
   // =========================================================
-  // Tab-Titel fix (nur im Hauptfenster)
+  // Tab-Titel fix
   // =========================================================
   const TARGET_TITLE = 'Leitstelle Bielefeld';
 
@@ -145,7 +139,7 @@
   }
 
   // =========================================================
-  // 1) Tageszähler
+  // 1) Tageszähler (Nur echte Alarm-Requests)
   // =========================================================
   const DAILY_CONFIG = {
     storageKey: 'lss_daily_mission_counter',
@@ -166,8 +160,7 @@
     line2NumberFontSize: '12px',
     numberFontWeight: 'bold',
 
-    useClickCounter: true,
-    dedupeMs: 1500
+    dedupeMs: 2000
   };
 
   const DAILY_STORAGE_KEY = DAILY_CONFIG.storageKey;
@@ -270,7 +263,7 @@
 
     const container = document.createElement('div');
     container.id = 'lss-daily-counter';
-    container.title = 'Zählt alarmierte Einsätze';
+    container.title = 'Zählt abgeschlossene Alarmierungen';
     container.style.order = NAV_ORDER.DAILY;
 
     const label1 = document.createElement('div');
@@ -305,11 +298,16 @@
     updateDailyDisplay();
   }
 
-  function urlLooksLikeAlarm(url) {
+  // Prüft, ob eine URL exakt ein abgeschlossener Alarm-Vorgang ist (keine AAO-Klicks, keine Fahrzeug-Nachalarmierungen einzelner Einheiten)
+  function isRealAlarmRequest(url) {
     try {
       const u = new URL(url, location.origin);
       const p = (u.pathname || '').toLowerCase();
-      return p.includes('/alarm') || p.includes('/mission') || p.includes('aao');
+      
+      // Matcht typischerweise auf den finalen Alarm-Endpunkt eines Einsatzes: z.B. /missions/123456/alarm
+      if (/\/missions?\/\d+\/alarm/.test(p)) return true;
+      
+      return false;
     } catch {
       return false;
     }
@@ -325,7 +323,7 @@
         const url = typeof input === 'string' ? input : (input && input.url) ? input.url : '';
         const method = (init && init.method ? init.method : (input && input.method) || 'GET').toUpperCase();
 
-        if (method !== 'GET' && urlLooksLikeAlarm(url) && res && res.ok) {
+        if (method !== 'GET' && isRealAlarmRequest(url) && res && res.ok) {
           countDailyOnce();
         }
       } catch { /* ignore */ }
@@ -355,7 +353,7 @@
             const method = this.__bielefeld_method || 'GET';
             const url = this.__bielefeld_url || '';
             if (method === 'GET') return;
-            if (urlLooksLikeAlarm(url) && this.status >= 200 && this.status < 400) {
+            if (isRealAlarmRequest(url) && this.status >= 200 && this.status < 400) {
               countDailyOnce();
             }
           } catch { /* ignore */ }
@@ -372,7 +370,9 @@
       if ($ && $.ajaxPrefilter && !$.ajaxPrefilter.__bielefeldWrapped) {
         $.ajaxPrefilter((options, originalOptions, jqXHR) => {
           const url = (options.url || '').toLowerCase();
-          if (url.includes('alarm') || (url.includes('missions/') && options.type && options.type.toUpperCase() !== 'GET')) {
+          const type = (options.type || options.method || 'GET').toUpperCase();
+
+          if (type !== 'GET' && isRealAlarmRequest(url)) {
             jqXHR.done(() => {
               countDailyOnce();
             });
@@ -382,26 +382,6 @@
       }
     } catch (e) {
       setTimeout(hookJQueryAjax, 1000);
-    }
-  }
-
-  function handleDailyClickFallback(e) {
-    const el = e.target.closest && e.target.closest('a, button, input[type="submit"], input[type="button"], .alert_btn');
-    if (!el) return;
-
-    const text = (el.textContent || el.value || el.getAttribute('aria-label') || '').toLowerCase();
-    const idAttr = (el.id || '').toLowerCase();
-    const classAttr = (el.className || '').toLowerCase();
-
-    if (
-      text.includes('alarm') || 
-      text.includes('einsatz starten') || 
-      text.includes('mission starten') ||
-      idAttr.includes('alarm') ||
-      classAttr.includes('alarm') ||
-      classAttr.includes('btn-success')
-    ) {
-      countDailyOnce();
     }
   }
 
@@ -418,10 +398,7 @@
     hookFetchAlarmCounter();
     hookXHRAlarmCounter();
     hookJQueryAjax();
-
-    if (DAILY_CONFIG.useClickCounter) {
-      document.addEventListener('click', handleDailyClickFallback, true);
-    }
+    // Hinweis: Kein document.addEventListener('click') mehr hier, da das die AAO-Klicks auslöste!
 
     if (!IS_TOP) return;
 
