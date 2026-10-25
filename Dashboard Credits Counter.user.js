@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.30
+// @version      1.0.31
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
@@ -139,10 +139,11 @@
   }
 
   // =========================================================
-  // 1) Tageszähler
+  // 1) Tageszähler (Missions-ID basiert mit Tages-Deduplizierung)
   // =========================================================
   const DAILY_CONFIG = {
     storageKey: 'lss_daily_mission_counter',
+    countedIdsKeyPrefix: 'lss_counted_mission_ids_',
     labelToday: 'Einsätze heute:',
     labelRecord: 'Gestern:',
     align: 'left',
@@ -158,9 +159,7 @@
     line1NumberFontSize: '14px',
     line2NumberColor: '#ffffff',
     line2NumberFontSize: '12px',
-    numberFontWeight: 'bold',
-
-    dedupeMs: 2000
+    numberFontWeight: 'bold'
   };
 
   const DAILY_STORAGE_KEY = DAILY_CONFIG.storageKey;
@@ -263,7 +262,7 @@
 
     const container = document.createElement('div');
     container.id = 'lss-daily-counter';
-    container.title = 'Zählt alarmierte Einsätze';
+    container.title = 'Zählt einzigartige alarmierte Einsätze pro Tag';
     container.style.order = NAV_ORDER.DAILY;
 
     const label1 = document.createElement('div');
@@ -286,11 +285,42 @@
     wrapper.appendChild(container);
   }
 
-  let lastDailyCountAt = 0;
-  function countDailyOnce() {
+  function extractMissionId(urlOrText) {
+    if (!urlOrText) return null;
+    const match = String(urlOrText).match(/\/missions?\/(\d+)/i);
+    return match ? match[1] : null;
+  }
+
+  function addCountedMissionId(missionId) {
+    if (!missionId) return false;
+    const today = getTodayString();
+    const key = DAILY_CONFIG.countedIdsKeyPrefix + today;
+    
+    let set;
+    try {
+      const arr = JSON.parse(store.get(key));
+      set = Array.isArray(arr) ? new Set(arr) : new Set();
+    } catch {
+      set = new Set();
+    }
+
+    if (set.has(String(missionId))) return false; // Einsatz wurde heute bereits gezählt
+
+    set.add(String(missionId));
+    store.set(key, JSON.stringify(Array.from(set).slice(-3000)));
+
+    checkDailyDayReset();
+    dailyState.count++;
+    saveDailyState();
+    updateDailyDisplay();
+    return true;
+  }
+
+  let lastFallbackCountAt = 0;
+  function countDailyFallback() {
     const now = Date.now();
-    if (now - lastDailyCountAt < DAILY_CONFIG.dedupeMs) return;
-    lastDailyCountAt = now;
+    if (now - lastFallbackCountAt < 2500) return; // 2,5 Sek. Cooldown für Fallbacks ohne ID
+    lastFallbackCountAt = now;
 
     checkDailyDayReset();
     dailyState.count++;
@@ -298,29 +328,29 @@
     updateDailyDisplay();
   }
 
-  // Lauscht auf das Schließen/Alarmieren von Einsätzen im Spiel per jQuery Event-Delegation
-  function initMissionListener() {
-    try {
-      const $ = window.jQuery || unsafeWindow.jQuery;
-      if ($) {
-        // Leitstellenspiel feuert custom Events oder aktualisiert DOM-Elemente, wenn Einsätze alarmiert werden
-        $(document).ajaxComplete((event, xhr, settings) => {
-          if (!settings.url) return;
-          const url = settings.url.toLowerCase();
-          // Wenn ein Einsatz alarmiert wird, enthält der Request typischerweise "alarm"
-          if (url.includes('/alarm')) {
-            countDailyOnce();
-          }
-        });
-      } else {
-        setTimeout(initMissionListener, 1000);
-      }
-    } catch (e) {
-      setTimeout(initMissionListener, 1000);
+  function handleAlarmDetected(url) {
+    const missionId = extractMissionId(url);
+    if (missionId) {
+      addCountedMissionId(missionId);
+    } else {
+      countDailyFallback();
     }
   }
 
-  // Fallback: Prüft per Fetch-Hook universell auf jegliche Alarmierungs-Endpunkte
+  // 1. Formular-Absendungen abfangen
+  function setupFormSubmitListener() {
+    document.addEventListener('submit', (e) => {
+      try {
+        const form = e.target;
+        const action = form.action || window.location.href;
+        if (action.toLowerCase().includes('alarm') || action.toLowerCase().includes('/missions/')) {
+          handleAlarmDetected(action);
+        }
+      } catch { /* ignore */ }
+    }, true);
+  }
+
+  // 2. Fetch-Requests abfangen
   function hookFetchAlarmCounter() {
     if (!window.fetch || window.fetch.__bielefeldDailyWrapped) return;
 
@@ -331,13 +361,72 @@
         const url = typeof input === 'string' ? input : (input && input.url) ? input.url : '';
         const method = (init && init.method ? init.method : (input && input.method) || 'GET').toUpperCase();
 
-        if (method !== 'GET' && url.toLowerCase().includes('alarm') && res && res.ok) {
-          countDailyOnce();
+        if (method !== 'GET' && (url.toLowerCase().includes('alarm') || url.toLowerCase().includes('/missions/'))) {
+          if (res && res.ok) {
+            handleAlarmDetected(url);
+          }
         }
       } catch { /* ignore */ }
       return res;
     };
     window.fetch.__bielefeldDailyWrapped = true;
+  }
+
+  // 3. XHR-Requests abfangen
+  function hookXHRAlarmCounter() {
+    if (XMLHttpRequest.prototype.__bielefeldDailyWrapped) return;
+
+    const origOpen = XMLHttpRequest.prototype.open;
+    const origSend = XMLHttpRequest.prototype.send;
+
+    XMLHttpRequest.prototype.open = function (method, url) {
+      try {
+        this.__bielefeld_method = method ? String(method).toUpperCase() : 'GET';
+        this.__bielefeld_url = url ? String(url) : '';
+      } catch { /* ignore */ }
+      return origOpen.apply(this, arguments);
+    };
+
+    XMLHttpRequest.prototype.send = function () {
+      try {
+        this.addEventListener('load', () => {
+          try {
+            const method = this.__bielefeld_method || 'GET';
+            const url = this.__bielefeld_url || '';
+            if (method === 'GET') return;
+            if (url.toLowerCase().includes('alarm') || url.toLowerCase().includes('/missions/')) {
+              if (this.status >= 200 && this.status < 400) {
+                handleAlarmDetected(url);
+              }
+            }
+          } catch { /* ignore */ }
+        });
+      } catch { /* ignore */ }
+      return origSend.apply(this, arguments);
+    };
+    XMLHttpRequest.prototype.__bielefeldDailyWrapped = true;
+  }
+
+  // 4. jQuery AJAX Prefilter abfangen
+  function hookJQueryAjax() {
+    try {
+      const $ = window.jQuery || unsafeWindow.jQuery;
+      if ($ && $.ajaxPrefilter && !$.ajaxPrefilter.__bielefeldWrapped) {
+        $.ajaxPrefilter((options, originalOptions, jqXHR) => {
+          const url = (options.url || '').toLowerCase();
+          const type = (options.type || options.method || 'GET').toUpperCase();
+
+          if (type !== 'GET' && (url.includes('alarm') || url.includes('/missions/'))) {
+            jqXHR.done(() => {
+              handleAlarmDetected(url);
+            });
+          }
+        });
+        $.ajaxPrefilter.__bielefeldWrapped = true;
+      }
+    } catch (e) {
+      setTimeout(hookJQueryAjax, 1000);
+    }
   }
 
   function scheduleDailyReset() {
@@ -350,8 +439,10 @@
   }
 
   function initDailyCounterModule() {
+    setupFormSubmitListener();
     hookFetchAlarmCounter();
-    initMissionListener();
+    hookXHRAlarmCounter();
+    hookJQueryAjax();
 
     if (!IS_TOP) return;
 
