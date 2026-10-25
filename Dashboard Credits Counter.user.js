@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Credits Counter
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.29
+// @version      1.0.30
 // @author       Design by Bobelle
 // @description  Zeigt Tageszähler, Credits-Bilanz und Dienstgrad im Navbar-Bereich
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Credits%20Counter.user.js
@@ -139,7 +139,7 @@
   }
 
   // =========================================================
-  // 1) Tageszähler (Nur echte Alarm-Requests)
+  // 1) Tageszähler
   // =========================================================
   const DAILY_CONFIG = {
     storageKey: 'lss_daily_mission_counter',
@@ -263,7 +263,7 @@
 
     const container = document.createElement('div');
     container.id = 'lss-daily-counter';
-    container.title = 'Zählt abgeschlossene Alarmierungen';
+    container.title = 'Zählt alarmierte Einsätze';
     container.style.order = NAV_ORDER.DAILY;
 
     const label1 = document.createElement('div');
@@ -298,21 +298,29 @@
     updateDailyDisplay();
   }
 
-  // Prüft, ob eine URL exakt ein abgeschlossener Alarm-Vorgang ist (keine AAO-Klicks, keine Fahrzeug-Nachalarmierungen einzelner Einheiten)
-  function isRealAlarmRequest(url) {
+  // Lauscht auf das Schließen/Alarmieren von Einsätzen im Spiel per jQuery Event-Delegation
+  function initMissionListener() {
     try {
-      const u = new URL(url, location.origin);
-      const p = (u.pathname || '').toLowerCase();
-      
-      // Matcht typischerweise auf den finalen Alarm-Endpunkt eines Einsatzes: z.B. /missions/123456/alarm
-      if (/\/missions?\/\d+\/alarm/.test(p)) return true;
-      
-      return false;
-    } catch {
-      return false;
+      const $ = window.jQuery || unsafeWindow.jQuery;
+      if ($) {
+        // Leitstellenspiel feuert custom Events oder aktualisiert DOM-Elemente, wenn Einsätze alarmiert werden
+        $(document).ajaxComplete((event, xhr, settings) => {
+          if (!settings.url) return;
+          const url = settings.url.toLowerCase();
+          // Wenn ein Einsatz alarmiert wird, enthält der Request typischerweise "alarm"
+          if (url.includes('/alarm')) {
+            countDailyOnce();
+          }
+        });
+      } else {
+        setTimeout(initMissionListener, 1000);
+      }
+    } catch (e) {
+      setTimeout(initMissionListener, 1000);
     }
   }
 
+  // Fallback: Prüft per Fetch-Hook universell auf jegliche Alarmierungs-Endpunkte
   function hookFetchAlarmCounter() {
     if (!window.fetch || window.fetch.__bielefeldDailyWrapped) return;
 
@@ -323,66 +331,13 @@
         const url = typeof input === 'string' ? input : (input && input.url) ? input.url : '';
         const method = (init && init.method ? init.method : (input && input.method) || 'GET').toUpperCase();
 
-        if (method !== 'GET' && isRealAlarmRequest(url) && res && res.ok) {
+        if (method !== 'GET' && url.toLowerCase().includes('alarm') && res && res.ok) {
           countDailyOnce();
         }
       } catch { /* ignore */ }
       return res;
     };
     window.fetch.__bielefeldDailyWrapped = true;
-  }
-
-  function hookXHRAlarmCounter() {
-    if (XMLHttpRequest.prototype.__bielefeldDailyWrapped) return;
-
-    const origOpen = XMLHttpRequest.prototype.open;
-    const origSend = XMLHttpRequest.prototype.send;
-
-    XMLHttpRequest.prototype.open = function (method, url) {
-      try {
-        this.__bielefeld_method = method ? String(method).toUpperCase() : 'GET';
-        this.__bielefeld_url = url ? String(url) : '';
-      } catch { /* ignore */ }
-      return origOpen.apply(this, arguments);
-    };
-
-    XMLHttpRequest.prototype.send = function () {
-      try {
-        this.addEventListener('load', () => {
-          try {
-            const method = this.__bielefeld_method || 'GET';
-            const url = this.__bielefeld_url || '';
-            if (method === 'GET') return;
-            if (isRealAlarmRequest(url) && this.status >= 200 && this.status < 400) {
-              countDailyOnce();
-            }
-          } catch { /* ignore */ }
-        });
-      } catch { /* ignore */ }
-      return origSend.apply(this, arguments);
-    };
-    XMLHttpRequest.prototype.__bielefeldDailyWrapped = true;
-  }
-
-  function hookJQueryAjax() {
-    try {
-      const $ = window.jQuery || unsafeWindow.jQuery;
-      if ($ && $.ajaxPrefilter && !$.ajaxPrefilter.__bielefeldWrapped) {
-        $.ajaxPrefilter((options, originalOptions, jqXHR) => {
-          const url = (options.url || '').toLowerCase();
-          const type = (options.type || options.method || 'GET').toUpperCase();
-
-          if (type !== 'GET' && isRealAlarmRequest(url)) {
-            jqXHR.done(() => {
-              countDailyOnce();
-            });
-          }
-        });
-        $.ajaxPrefilter.__bielefeldWrapped = true;
-      }
-    } catch (e) {
-      setTimeout(hookJQueryAjax, 1000);
-    }
   }
 
   function scheduleDailyReset() {
@@ -396,9 +351,7 @@
 
   function initDailyCounterModule() {
     hookFetchAlarmCounter();
-    hookXHRAlarmCounter();
-    hookJQueryAjax();
-    // Hinweis: Kein document.addEventListener('click') mehr hier, da das die AAO-Klicks auslöste!
+    initMissionListener();
 
     if (!IS_TOP) return;
 
