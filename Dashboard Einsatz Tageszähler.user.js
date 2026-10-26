@@ -95,8 +95,8 @@
     el.title = titleText();
     const rowStyle = 'display:flex;align-items:center;justify-content:space-between;gap:10px;';
     el.innerHTML =
-      `<div style="${rowStyle}"><span>🚨 Einsätze</span><span id="lss-fc-val">${state.count}</span></div>` +
-      `<div style="${rowStyle}"><span>🚑 KTW</span><span id="lss-fc-ktw">${state.ktw}</span></div>`;
+      `<div style="${rowStyle}"><span>Einsätze</span><span id="lss-fc-val">${state.count}</span></div>` +
+      `<div style="${rowStyle}"><span>KTW</span><span id="lss-fc-ktw">${state.ktw}</span></div>`;
 
     document.body.appendChild(el);
 
