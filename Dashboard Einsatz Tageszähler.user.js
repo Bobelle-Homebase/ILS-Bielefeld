@@ -4,8 +4,6 @@
 // @version      2.3.0
 // @author       Design by Bobelle
 // @description  Tageszähler für eigene Einsätze und Krankentransporte
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Einsatz%20Tageszähler.user.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Einsatz%20Tageszähler.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
