@@ -20,9 +20,9 @@
   // =======================================================
   // >>>>>>>>>>>>>>>>>  EINSTELLUNGEN (HIER ÄNDERN)  <<<<<<<<<<<<<<<<<
   // =======================================================
-  const ZEILEN_ABSTAND = '2px'; // <-- Abstand zwischen den Zeilen (z. B. '0px', '4px', '10px')
+  const ZEILEN_ABSTAND = '1px'; // <-- Abstand zwischen den Zeilen (z. B. '0px', '4px', '10px')
   const TEXT_FARBE = '#ffffff'; // <-- Textfarbe (z. B. '#ffffff' weiß, '#000000' schwarz, 'yellow')
-  const SCHRIFT_GROESSE = '14px'; // <-- Schriftgröße
+  const SCHRIFT_GROESSE = '11px'; // <-- Schriftgröße
   // =======================================================
   // >>>>>>>>>>>>>>>>>  ENDE EINSTELLUNGEN  <<<<<<<<<<<<<<<<<
   // =======================================================
@@ -105,8 +105,8 @@
     el.title = titleText();
     const rowStyle = 'display:flex;align-items:center;justify-content:space-between;gap:10px;';
     el.innerHTML =
-      `<div style="${rowStyle}"><span>🚨 Einsätze</span><span id="lss-fc-val">${state.count}</span></div>` +
-      `<div style="${rowStyle}"><span>🚑 KTW</span><span id="lss-fc-ktw">${state.ktw}</span></div>`;
+      `<div style="${rowStyle}"><span>Einsätze</span><span id="lss-fc-val">${state.count}</span></div>` +
+      `<div style="${rowStyle}"><span>KTW</span><span id="lss-fc-ktw">${state.ktw}</span></div>`;
 
     document.body.appendChild(el);
 
