@@ -20,7 +20,7 @@
   // =======================================================
   // >>>>>>>>>>>>>>>>>  EINSTELLUNGEN (HIER ÄNDERN)  <<<<<<<<<<<<<<<<<
   // =======================================================
-  const ZEILEN_ABSTAND = '1px'; // <-- Abstand zwischen den Zeilen (z. B. '0px', '4px', '10px')
+  const ZEILEN_ABSTAND = '0px'; // <-- Abstand zwischen den Zeilen (z. B. '0px', '4px', '10px')
   const TEXT_FARBE = '#ffffff'; // <-- Textfarbe (z. B. '#ffffff' weiß, '#000000' schwarz, 'yellow')
   const SCHRIFT_GROESSE = '11px'; // <-- Schriftgröße
   // =======================================================
