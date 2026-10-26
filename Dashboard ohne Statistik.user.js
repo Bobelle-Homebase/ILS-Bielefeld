@@ -4,8 +4,6 @@
 // @version      1.0.01
 // @author       Design by Bobelle
 // @description  Full All in One - ohne Statistik
-// @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20ohne%20Statistik.user.js
-// @downloadURL  https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20ohne%20Statistik.user.js
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
