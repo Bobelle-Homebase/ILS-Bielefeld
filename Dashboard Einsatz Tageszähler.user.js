@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard Einsatz Tageszähler
 // @namespace    https://leitstellenspiel.de/
-// @version      1.0.01
+// @version      2.3.0
 // @author       Design by Bobelle
 // @description  Tageszähler für eigene Einsätze und Krankentransporte
 // @updateURL    https://github.com/Bobelle-Homebase/ILS-Bielefeld/raw/refs/heads/main/Dashboard%20Einsatz%20Tageszähler.user.js
@@ -74,27 +74,29 @@
       left: `${savedPos.x}px`,
       top: `${savedPos.y}px`,
       zIndex: '999999',
-      backgroundColor: '#ffffff',
-      color: '#000000',
-      border: '2px solid #ccc',
-      borderRadius: '8px',
-      padding: '6px 12px',
+      backgroundColor: 'transparent',
+      color: '#ffffff',
+      border: 'none',
+      padding: '4px 6px',
       fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-      fontSize: '13px',
+      fontSize: '12px',
       fontWeight: 'bold',
-      boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
+      // Dunkler Schatten, damit die Schrift auf jedem Hintergrund lesbar bleibt
+      textShadow: '0 0 3px #000, 0 0 3px #000, 1px 1px 2px #000',
       cursor: 'grab',
       userSelect: 'none',
       display: 'flex',
-      alignItems: 'center',
-      gap: '6px',
+      flexDirection: 'column',
+      alignItems: 'stretch',
+      gap: '2px',
       whiteSpace: 'nowrap'
     });
 
     el.title = titleText();
+    const rowStyle = 'display:flex;align-items:center;justify-content:space-between;gap:10px;';
     el.innerHTML =
-      `<span>🚨</span><span id="lss-fc-val">${state.count}</span>` +
-      `<span style="margin-left:6px">🚑</span><span id="lss-fc-ktw">${state.ktw}</span>`;
+      `<div style="${rowStyle}"><span>🚨 Einsätze</span><span id="lss-fc-val">${state.count}</span></div>` +
+      `<div style="${rowStyle}"><span>🚑 KTW</span><span id="lss-fc-ktw">${state.ktw}</span></div>`;
 
     document.body.appendChild(el);
 
