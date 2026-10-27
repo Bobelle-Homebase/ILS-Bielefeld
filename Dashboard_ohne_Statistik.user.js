@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Dashboard ohne Statistik
+// @name         Dashboard_ohne_Statistik
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.01
+// @version      1.0.00
 // @author       Design by Bobelle
 // @description  Full All in One - ohne Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
