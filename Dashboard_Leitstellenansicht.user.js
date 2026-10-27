@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Dashboard Leitstellenansicht
+// @name         Dashboard_Leitstellenansicht
 // @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.01
+// @version      1.0.00
 // @author       Design by Bobelle
 // @description  Leitstellenansicht: Übersicht aller Fahrzeuge nach Gebäuden mit Live-Status
 // @icon         https://www.leitstellenspiel.de/favicon.ico
