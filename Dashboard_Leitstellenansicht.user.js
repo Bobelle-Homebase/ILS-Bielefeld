@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Dashboard_Leitstellenansicht
-// @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.00
+// @namespace    https://leitstellenspiel.de
+// @version      1.2.04
 // @author       Design by Bobelle
-// @description  Leitstellenansicht: Übersicht aller Fahrzeuge nach Gebäuden mit Live-Status
+// @description  Übersicht aller Fahrzeuge nach Gebäuden mit Live-Status
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
@@ -25,8 +25,8 @@
     const SINCE_KEY = 'lsd_since_v1';
     const HIST_KEY = 'lsd_hist_v1';
     const ICON_KEY = 'lsd_icon_pos';
-    const ICON_SIZE = 44;
     const OPEN_HASH = '#leitstellenansicht';
+    const HOSP_TTL = 5 * 60000; // Bettendaten maximal alle 5 Minuten neu holen
 
     // Sprachcode für die LSS-Manager-Fahrzeugliste je Spielversion
     const HOST_LOCALE = {
@@ -37,11 +37,11 @@
     const LOCALE = HOST_LOCALE[window.location.hostname.replace(/^www\./, '')] || 'de_DE';
 
     const GROUPS = {
-        fw:    { name: 'Feuerwehr',      color: '#DB1111', terms: 'feuerwehr fw' },
+        fw:    { name: 'Feuerwehr', color: '#DB1111', terms: 'feuerwehr fw' },
         rd:    { name: 'Rettungsdienst', color: '#F36F22', terms: 'rettungsdienst rd' },
-        pol:   { name: 'Polizei',        color: '#2980b9', terms: 'polizei pol' },
-        thw:   { name: 'THW',            color: '#3b6ea5', terms: 'thw technisches hilfswerk' },
-        other: { name: 'Sonstige',       color: '#8a8f98', terms: 'sonstige' }
+        pol:   { name: 'Polizei', color: '#2980b9', terms: 'polizei pol' },
+        thw:   { name: 'THW', color: '#3b6ea5', terms: 'thw technisches hilfswerk' },
+        other: { name: 'Sonstige', color: '#8a8f98', terms: 'sonstige' }
     };
 
     const STATUS_LABEL = {
@@ -50,12 +50,11 @@
     };
 
     const TABS = [
-        { id: 'wachen',    label: 'Wachen' },
-        { id: 'einsaetze', label: 'Einsätze' },
-        { id: 'karte',     label: 'Karte' },
-        { id: 'verband',   label: 'Verband' },
-        { id: 'kliniken',  label: 'Krankenhäuser' },
-        { id: 'verlauf',   label: 'Verlauf' },
+        { id: 'wachen', label: 'Wachen' },
+        { id: 'bestand', label: 'Bestand' },
+        { id: 'karte', label: 'Karte' },
+        { id: 'kliniken', label: 'Krankenhäuser' },
+        { id: 'verlauf', label: 'Verlauf' },
         { id: 'protokoll', label: 'Protokoll' }
     ];
 
@@ -79,19 +78,22 @@
         poll: 60,
         sound: true,
         notify: false,
+        missionAlert: true, // Ton/Benachrichtigung bei neuem Fehlbedarf
+        iconSize: 44, // Größe des schwebenden Icons in px
         autoScroll: false,
         scrollSpeed: 30,
         groupIds: { fw: '0,1,18', rd: '2,3,5,12,20', pol: '6,8,11,13,17,19', thw: '9,10' },
         requirements: { fw: '', rd: 'RTW', pol: '', thw: '' },
         vehCats: DEFAULT_VEHCATS,
-        dwell: { 4: 45, 5: 3, 6: 120 },   // Minuten, 0 = aus
-        minStaff: 2,                       // Personal pro Fahrzeug, 0 = aus
+        dwell: { 4: 45, 5: 3, 6: 120 }, // Minuten, 0 = aus
+        minStaff: 2, // Personal pro Fahrzeug, 0 = aus
         collapsed: {},
         favs: {},
         hidden: {},
-        custom: {},                        // Gebäude-ID -> eigene Kategorie
+        custom: {}, // Gebäude-ID -> eigene Kategorie
         ui: { cat: '', sort: 'name', status: [], type: '', leit: '', vcat: '', tab: 'wachen',
-              showHidden: false, msort: 'urgency', monly: false, hrange: 6 }
+              showHidden: false, hrange: 6,
+              stsort: 'label', stdir: 'asc', hdr: false }
     };
 
     function mergeCfg(raw) {
@@ -105,6 +107,8 @@
                 d[k] = raw[k];
             }
         }
+        // Gespeicherter Tab existiert nicht mehr (z. B. der entfernte Verband-Tab)
+        if (!TABS.some(t => t.id === d.ui.tab)) d.ui.tab = 'wachen';
         return d;
     }
 
@@ -143,16 +147,16 @@
         buildings: new Map(),
         missions: [],
         missionById: new Map(),
-        alliance: null,
         typeNames: {},
         log: [],
-        flash: {},                         // Fahrzeug-ID -> Zeitpunkt des letzten Wechsels (für Aufleuchten)
-        ack: new Set(),                    // quittierte Sprechwünsche
+        flash: {}, // Fahrzeug-ID -> Zeitpunkt des letzten Wechsels (für Aufleuchten)
+        ack: new Set(), // quittierte Sprechwünsche
+        hosp: new Map(), // Krankenhaus-ID -> { ts, lines, free, total, error }
         statusFilter: new Set(cfg.ui.status || []),
         search: ''
     };
 
-    let since = loadJSON(SINCE_KEY, {});   // Fahrzeug-ID -> [Status, Zeitstempel]
+    let since = loadJSON(SINCE_KEY, {}); // Fahrzeug-ID -> [Status, Zeitstempel]
     let hist = loadJSON(HIST_KEY, []);
     if (!Array.isArray(hist)) hist = [];
 
@@ -166,6 +170,8 @@
     let scrollPauseUntil = 0, bottomSince = 0;
     let audioCtx = null;
     let pollCount = 0;
+    let hospBusy = false;
+    let missionMissing = null; // Einsatz-ID -> hatte Fehlbedarf? (null = noch kein Abgleich)
     let origTitle = document.title;
     let iconReposition = () => {};
 
@@ -303,6 +309,7 @@
         .lsd-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
         #lsd-header h3 { margin:0; font-size:1.4em; color:var(--text); }
         .lsd-sub { color:var(--muted); font-size:.93em; }
+        .lsd-sub .lsd-missing { color:#e74c3c; font-weight:600; }
         #lsd-clock { display:none; flex-direction:column; line-height:1.1; text-align:center; padding:0 8px; }
         #lsd-clock.on { display:flex; }
         #lsd-clock b { font-size:1.9em; font-variant-numeric:tabular-nums; }
@@ -337,6 +344,10 @@
             padding:8px 14px; cursor:pointer; font-size:1em; }
         .lsd-tab.on { color:var(--text); border-bottom-color:#DB1111; font-weight:600; }
 
+        #lsd-header.collapsed { padding-bottom:2px; }
+        #lsd-header.collapsed .lsd-fold { display:none !important; }
+        #lsd-header.collapsed .lsd-row { margin-bottom:6px; }
+
         #lsd-body { padding:16px 20px 40px; }
         .lsd-pane { display:none; }
         .lsd-pane.on { display:block; }
@@ -363,6 +374,8 @@
         .lsd-ico { cursor:pointer; color:var(--muted); font-size:.93em; padding:0 2px; flex:none; }
         .lsd-ico:hover { color:var(--text); }
         .lsd-ico.starred { color:#f1c40f; }
+        .lsd-bar { display:flex; gap:1px; height:5px; background:var(--line); }
+        .lsd-bar i { display:block; background:var(--sc, #6b7280); min-width:3px; }
         .lsd-meta { padding:4px 10px; font-size:.86em; color:var(--muted); border-top:1px solid var(--line);
             display:flex; gap:10px; flex-wrap:wrap; }
         .lsd-tag { color:#fff; border-radius:3px; padding:0 6px; }
@@ -416,6 +429,23 @@
         .lsd-logrow .lsd-time { width:46px; }
         .lsd-logrow .arrow { color:var(--muted); }
 
+        .lsd-table { border-collapse:collapse; width:100%; max-width:1100px; background:var(--panel);
+            border:1px solid var(--line); border-radius:6px; }
+        .lsd-table th, .lsd-table td { padding:6px 12px; border-bottom:1px solid var(--line); text-align:right;
+            font-variant-numeric:tabular-nums; }
+        .lsd-table th:first-child, .lsd-table td:first-child,
+        .lsd-table th:nth-child(2), .lsd-table td:nth-child(2) { text-align:left; }
+        .lsd-table th { background:var(--panel2); color:var(--muted); font-weight:600; cursor:pointer;
+            user-select:none; white-space:nowrap; position:sticky; top:0; }
+        .lsd-table th:hover { color:var(--text); }
+        .lsd-table th.sorted { color:var(--text); }
+        .lsd-table tbody tr:hover { background:var(--hover); }
+        .lsd-table tfoot td { font-weight:700; background:var(--panel2); border-bottom:0; }
+        .lsd-table td.zero { color:var(--muted); opacity:.55; }
+        .lsd-table td.bad { color:#e74c3c; font-weight:700; }
+        .lsd-table td.good { color:#2e9e3e; font-weight:600; }
+        .lsd-table td.sw { color:#c9a800; font-weight:700; }
+
         #lsd-map { height:calc(100vh - 260px); min-height:420px; border-radius:6px; border:1px solid var(--line); }
         #lsd-overlay:not(.light) #lsd-map .leaflet-tile-pane { filter:invert(1) hue-rotate(180deg) brightness(.9) contrast(.9); }
 
@@ -441,7 +471,7 @@
         .lsd-keys kbd { background:var(--panel2); border:1px solid var(--line); border-radius:4px; padding:1px 8px;
             font-family:monospace; text-align:center; color:var(--text); }
 
-        #lsd-floating-btn { position:fixed; z-index:9999; width:44px; height:44px; padding:0; margin:0; border:0;
+        #lsd-floating-btn { position:fixed; z-index:9999; padding:0; margin:0; border:0;
             background:transparent; cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none;
             filter:drop-shadow(0 1px 3px rgba(0,0,0,.85)); opacity:.92; }
         #lsd-floating-btn:hover { opacity:1; transform:scale(1.08); }
@@ -476,6 +506,15 @@
     function setMissions(list) {
         S.missions = list;
         S.missionById = new Map(list.map(m => [m.id, m]));
+        // Neuer Fehlbedarf (nur nach dem ersten Abgleich, sonst würde jeder Start piepen)
+        if (missionMissing && cfg.missionAlert) {
+            const hit = list.filter(m => m.missing_text && missionMissing.get(m.id) !== true);
+            if (hit.length) {
+                beep();
+                notify('Neuer Fehlbedarf', hit.slice(0, 3).map(m => m.caption).join(', '), 'lsd-miss');
+            }
+        }
+        missionMissing = new Map(list.map(m => [m.id, !!m.missing_text]));
     }
 
     function rebuildIndex() {
@@ -516,15 +555,48 @@
         setMissions(await fetchMissions());
     }
 
-    async function loadAlliance() {
-        const [info, blds] = await Promise.allSettled([
-            getJSON('/api/allianceinfo'),
-            getJSON('/api/alliance_buildings')
-        ]);
-        S.alliance = {
-            info: info.status === 'fulfilled' ? info.value : null,
-            buildings: blds.status === 'fulfilled' && Array.isArray(blds.value) ? blds.value : null
-        };
+    // ---- Bettendaten der Krankenhäuser (aus der Gebäudeseite) ----------
+    // Die Spiel-API liefert keine Betten. Daher wird /buildings/<id> geladen und
+    // alle Textzeilen mit "Bett" gesammelt. Sieht eine davon wie "3 / 10" oder
+    // "3 von 10" aus, wird sie als freie/gesamte Betten ausgewertet.
+    async function fetchHospInfo(id) {
+        const r = await fetch(`/buildings/${id}`, { credentials: 'same-origin' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const doc = new DOMParser().parseFromString(await r.text(), 'text/html');
+        doc.querySelectorAll('script,style').forEach(e => e.remove());
+
+        const seen = new Set();
+        const lines = [];
+        doc.querySelectorAll('tr,li,p,dt,dd,td,th,span,div,h4,h5').forEach(el => {
+            if (el.querySelector('tr,li,p,div,td')) return;      // nur Blatt-Elemente
+            const t = el.textContent.replace(/\s+/g, ' ').trim();
+            if (t.length < 3 || t.length > 120 || !/bett/i.test(t) || seen.has(t)) return;
+            seen.add(t);
+            lines.push(t);
+        });
+
+        let free = null, total = null;
+        for (const l of lines) {
+            const m = l.match(/(\d+)\s*(?:\/|von)\s*(\d+)/i);
+            if (m) { free = Number(m[1]); total = Number(m[2]); break; }
+        }
+        return { ts: Date.now(), lines, free, total };
+    }
+
+    async function refreshHospitals(ids) {
+        if (hospBusy) return;
+        hospBusy = true;
+        try {
+            for (const id of ids) {
+                const c = S.hosp.get(id);
+                if (c && Date.now() - c.ts < HOSP_TTL) continue;
+                try { S.hosp.set(id, await fetchHospInfo(id)); }
+                catch (e) { S.hosp.set(id, { ts: Date.now(), lines: [], error: e.message }); }
+                scheduleRender();
+                await new Promise(r => setTimeout(r, 400)); // Server schonen
+                if (!overlay || !overlay.classList.contains('open') || cfg.ui.tab !== 'kliniken') break;
+            }
+        } finally { hospBusy = false; }
     }
 
     // Statuswechsel verarbeiten (Zeit, Log, Ton, Benachrichtigung)
@@ -592,7 +664,6 @@
             const [fresh, missions] = await Promise.all([getJSON('/api/vehicles'), fetchMissions()]);
             mergeVehicles(fresh);
             setMissions(missions);
-            if (S.tab === 'verband' || cfg.ui.tab === 'verband') await loadAlliance();
             scheduleRender();
         } catch (e) {
             console.warn('[Leitstellenansicht] Abgleich fehlgeschlagen:', e);
@@ -654,12 +725,11 @@
         if (!overlay || !overlay.classList.contains('open')) return;
         updateHeader();
         switch (cfg.ui.tab) {
-            case 'wachen':    renderWachen(); break;
-            case 'einsaetze': renderMissions(); break;
-            case 'karte':     renderMap(); break;
-            case 'verband':   renderAlliance(); break;
-            case 'kliniken':  renderHospitals(); break;
-            case 'verlauf':   renderHistory(); break;
+            case 'wachen': renderWachen(); break;
+            case 'bestand': renderStock(); break;
+            case 'karte': renderMap(); break;
+            case 'kliniken': renderHospitals(); break;
+            case 'verlauf': renderHistory(); break;
             case 'protokoll': renderLog(); break;
         }
     }
@@ -674,7 +744,11 @@
         for (const v of S.vehicles) { const f = vehicleFms(v); counts[f] = (counts[f] || 0) + 1; }
         const total = S.vehicles.length;
         const avail = (counts[1] || 0) + (counts[2] || 0);
-        overlay.querySelector('#lsd-sub').textContent = `${avail}/${total} Fahrzeuge verfügbar (S1/S2)`;
+        const missing = S.missions.filter(m => m.missing_text).length;
+        overlay.querySelector('#lsd-sub').innerHTML =
+            `${avail}/${total} Fahrzeuge verfügbar (S1/S2) · ${S.missions.length} Einsätze` +
+            (missing ? ` · <span class="lsd-missing">${missing} mit Fehlbedarf</span>` : '') +
+            (unackedSprech() ? ` · <span class="lsd-missing">${unackedSprech()} Sprechwunsch</span>` : '');
 
         // Tab-Titel mit Sprechwunsch-Zähler
         const sw = unackedSprech();
@@ -899,6 +973,12 @@
         if (Array.isArray(b.extensions)) meta.push(`Ausbauten: ${b.extensions.length}`);
         warnings.forEach(w => meta.push(`<span class="lsd-warnbadge">⚠ ${esc(w)}</span>`));
 
+        // Statusbalken: Anteil der Status 1–9 aller Fahrzeuge der Wache
+        const segs = {};
+        for (const v of list) { const f = vehicleFms(v); segs[f] = (segs[f] || 0) + 1; }
+        const bar = `<div class="lsd-bar">${Object.keys(segs).sort().map(f =>
+            `<i class="lsd-s${f}" style="flex:${segs[f]}" title="S${f}: ${segs[f]}×"></i>`).join('')}</div>`;
+
         const vsorted = shown.slice().sort((x, y) => {
             const sx = vehicleFms(x) === 5 ? 0 : 1, sy = vehicleFms(y) === 5 ? 0 : 1;
             return (sx - sy) || collator(x.caption, y.caption);
@@ -932,55 +1012,65 @@
                 <span class="lsd-ico" data-tag="${b.id}" title="Eigene Kategorie zuweisen">🏷</span>
                 <span class="lsd-ico" data-hide="${b.id}" title="${isHidden ? 'Wieder einblenden' : 'Ausblenden'}">${isHidden ? '↺' : '✕'}</span>
             </div>
+            ${bar}
             ${meta.length ? `<div class="lsd-meta">${meta.join('<span>·</span>')}</div>` : ''}
             ${rows}
         </div>`;
     }
 
-    // ---- Einsätze ------------------------------------------------------
-    function renderMissions() {
-        const pane = overlay.querySelector('#lsd-pane-einsaetze');
-        const toolbar = `<div class="lsd-row">
-            <select data-ctl="msort">
-                <option value="urgency"${cfg.ui.msort === 'urgency' ? ' selected' : ''}>Sortierung: Dringlichkeit</option>
-                <option value="name"${cfg.ui.msort === 'name' ? ' selected' : ''}>Sortierung: Name</option>
-            </select>
-            <label class="lsd-check"><input type="checkbox" data-ctl="monly"${cfg.ui.monly ? ' checked' : ''}> nur Einsätze mit Fehlbedarf</label>
-            <span class="lsd-sub">${S.missions.length} Einsätze</span></div>`;
+    // ---- Bestand (Fahrzeuge je Typ) -------------------------------------
+    function renderStock() {
+        const pane = overlay.querySelector('#lsd-pane-bestand');
+        const term = S.search.trim().toLowerCase();
+        const rows = new Map();
+        for (const v of S.vehicles) {
+            if (!cfg.ui.showHidden && cfg.hidden[v.building_id]) continue;
+            const label = typeLabel(v);
+            if (term && !`${label} ${vehCatOf(v)}`.toLowerCase().includes(term)) continue;
+            let r = rows.get(label);
+            if (!r) rows.set(label, r = { label, cat: vehCatOf(v), total: 0, free: 0, busy: 0, sw: 0, off: 0 });
+            const f = vehicleFms(v);
+            r.total++;
+            if (isFreeFms(f)) r.free++;
+            else if (f === 5) r.sw++;
+            else if (f === 6) r.off++;
+            else r.busy++;
+        }
 
-        let list = S.missions.slice();
-        if (cfg.ui.monly) list = list.filter(m => m.missing_text || m.vehicle_state === 0);
-        list.sort(cfg.ui.msort === 'name'
-            ? (a, b) => collator(a.caption || '', b.caption || '')
-            : (a, b) => ((a.vehicle_state ?? 3) - (b.vehicle_state ?? 3)) ||
-                (Number(!!b.missing_text) - Number(!!a.missing_text)) || collator(a.caption || '', b.caption || ''));
+        const list = [...rows.values()];
+        const key = ['label', 'cat', 'total', 'free', 'busy', 'sw', 'off'].includes(cfg.ui.stsort) ? cfg.ui.stsort : 'label';
+        const dir = cfg.ui.stdir === 'desc' ? -1 : 1;
+        list.sort((a, b) => {
+            const c = (key === 'label' || key === 'cat') ? collator(a[key], b[key]) : (a[key] - b[key]);
+            return (c * dir) || collator(a.label, b.label);
+        });
 
         if (!list.length) {
-            pane.innerHTML = toolbar + `<div class="lsd-empty">Keine passenden Einsätze (oder Einsätze konnten nicht geladen werden).</div>`;
+            pane.innerHTML = `<div class="lsd-empty">${S.vehicles.length ? 'Keine Treffer für die aktuelle Suche.' : 'Keine Fahrzeuge gefunden.'}</div>`;
             return;
         }
-        const assigned = new Map();
-        for (const v of S.vehicles) {
-            if (!isMissionTarget(v)) continue;
-            if (!assigned.has(v.target_id)) assigned.set(v.target_id, []);
-            assigned.get(v.target_id).push(v);
-        }
-        pane.innerHTML = toolbar + `<div class="lsd-list">${list.map(m => {
-            const vs = (assigned.get(m.id) || []).sort((a, b) => collator(a.caption, b.caption));
-            const info = [];
-            if (m.address) info.push(esc(m.address));
-            if (m.patients_count) info.push(`${esc(m.patients_count)} Patient(en)`);
-            return `<div class="lsd-mission m${esc(m.vehicle_state)}">
-                <div class="lsd-mhead"><b>${esc(m.caption)}${m.missing_text ? '<span class="lsd-badge">Fehlbedarf</span>' : ''}</b>
-                    <span class="lsd-muted">${info.join(' · ')}</span></div>
-                ${m.missing_text ? `<div class="lsd-muted">Fehlt: ${esc(m.missing_text)}</div>` : ''}
-                <div class="lsd-vchips">${vs.length ? vs.map(v => {
-                    const f = vehicleFms(v);
-                    return `<a class="lsd-vchip" href="/vehicles/${v.id}" target="_blank">
-                        <span class="lsd-status lsd-s${f}">${f}</span>${esc(v.caption)}</a>`;
-                }).join('') : '<span class="lsd-muted">Keine Fahrzeuge zugewiesen</span>'}</div>
-            </div>`;
-        }).join('')}</div>`;
+
+        const tot = list.reduce((t, r) => {
+            t.total += r.total; t.free += r.free; t.busy += r.busy; t.sw += r.sw; t.off += r.off;
+            return t;
+        }, { total: 0, free: 0, busy: 0, sw: 0, off: 0 });
+
+        const th = (k, text, title) => `<th data-sort="${k}" class="${k === key ? 'sorted' : ''}" title="${esc(title || 'Sortieren')}">${esc(text)}${k === key ? (dir === 1 ? ' ▲' : ' ▼') : ''}</th>`;
+        const cell = (n, cls) => `<td class="${n === 0 ? 'zero' : cls || ''}">${n}</td>`;
+
+        pane.innerHTML = `<div class="lsd-row"><span class="lsd-sub">${list.length} Fahrzeugtypen · ${tot.total} Fahrzeuge · ${tot.free} frei · Spaltenkopf anklicken zum Sortieren</span></div>
+            <table class="lsd-table">
+                <thead><tr>
+                    ${th('label', 'Fahrzeugtyp')}${th('cat', 'Kategorie')}${th('total', 'Gesamt')}
+                    ${th('free', 'Frei', 'Status 1/2')}${th('busy', 'Im Einsatz', 'Status 3, 4, 7, 8, 9')}
+                    ${th('sw', 'Sprechwunsch', 'Status 5')}${th('off', 'Nicht einsatzbereit', 'Status 6')}
+                </tr></thead>
+                <tbody>${list.map(r => `<tr>
+                    <td>${esc(r.label)}</td><td class="lsd-muted">${esc(r.cat)}</td>${cell(r.total)}
+                    <td class="${r.free === 0 ? 'bad' : 'good'}">${r.free}</td>
+                    ${cell(r.busy)}${cell(r.sw, 'sw')}${cell(r.off)}</tr>`).join('')}</tbody>
+                <tfoot><tr><td>Summe</td><td></td><td>${tot.total}</td><td>${tot.free}</td><td>${tot.busy}</td><td>${tot.sw}</td><td>${tot.off}</td></tr></tfoot>
+            </table>`;
     }
 
     // ---- Karte ---------------------------------------------------------
@@ -1035,78 +1125,52 @@
         }
     }
 
-    // ---- Verband -------------------------------------------------------
-    function renderAlliance() {
-        const pane = overlay.querySelector('#lsd-pane-verband');
-        if (!S.alliance) {
-            pane.innerHTML = `<div class="lsd-empty">Lade Verbandsdaten …</div>`;
-            loadAlliance().then(scheduleRender);
-            return;
-        }
-        const { info, buildings } = S.alliance;
-        if (!info && !buildings) {
-            pane.innerHTML = `<div class="lsd-empty">Verbandsdaten nicht verfügbar (bist du in einem Verband?).</div>`;
-            return;
-        }
-        let html = '<div class="lsd-list">';
-        if (info) {
-            const users = Array.isArray(info.users) ? info.users : null;
-            const online = users ? users.filter(u => u.online).length : null;
-            html += `<div class="lsd-mission"><b>${esc(info.name || 'Verband')}</b>
-                <div class="lsd-muted">${users ? `${users.length} Mitglieder` : ''}${online != null ? ` · ${online} online` : ''}</div></div>`;
-        }
-        if (buildings) {
-            const term = S.search.trim().toLowerCase();
-            const counts = {};
-            for (const b of buildings) { const k = groupKeyOf(b); counts[k] = (counts[k] || 0) + 1; }
-            html += `<div class="lsd-mission"><b>Verbandsgebäude: ${buildings.length}</b>
-                <div class="lsd-vchips">${Object.keys(GROUPS).filter(k => counts[k]).map(k =>
-                    `<span class="lsd-vchip" style="padding:2px 8px"><span class="lsd-dot" style="background:${GROUPS[k].color}"></span>${esc(GROUPS[k].name)}: ${counts[k]}</span>`
-                ).join('')}</div></div>`;
-            const rows = buildings
-                .filter(b => !term || `${b.caption} ${GROUPS[groupKeyOf(b)].terms}`.toLowerCase().includes(term))
-                .sort((a, b) => collator(a.caption || '', b.caption || ''));
-            const LIMIT = 300;
-            html += rows.slice(0, LIMIT).map(b => {
-                const g = GROUPS[groupKeyOf(b)];
-                return `<div class="lsd-logrow"><span class="lsd-dot" style="background:${g.color}"></span>
-                    <b>${esc(b.caption)}</b><span class="lsd-muted">${esc(g.name)}</span></div>`;
-            }).join('');
-            if (rows.length > LIMIT) html += `<div class="lsd-muted">… und ${rows.length - LIMIT} weitere (Suche nutzen)</div>`;
-        }
-        html += '</div>';
-        pane.innerHTML = html;
-    }
-
     // ---- Krankenhäuser -------------------------------------------------
     function renderHospitals() {
         const pane = overlay.querySelector('#lsd-pane-kliniken');
-        const hospitals = [...S.buildings.values()].filter(b => Number(b.building_type) === 4)
-            .sort((a, b) => collator(a.caption, b.caption));
+        const hospitals = [...S.buildings.values()].filter(b => Number(b.building_type) === 4);
         if (!hospitals.length) {
             pane.innerHTML = `<div class="lsd-empty">Keine Krankenhäuser gefunden.</div>`;
             return;
         }
+        // Bettendaten im Hintergrund nachladen (mit Cache)
+        refreshHospitals(hospitals.map(h => h.id));
+
+        // Sortierung: wenigste freie Betten zuerst, unbekannte zuletzt
+        hospitals.sort((a, b) => {
+            const fa = S.hosp.get(a.id)?.free ?? 999, fb = S.hosp.get(b.id)?.free ?? 999;
+            return (fa - fb) || collator(a.caption, b.caption);
+        });
+
         const heading = new Map();
         for (const v of S.vehicles) {
             if (String(v.target_type || '').toLowerCase() !== 'building' || v.target_id == null) continue;
             if (!heading.has(v.target_id)) heading.set(v.target_id, []);
             heading.get(v.target_id).push(v);
         }
-        let anyBedData = false;
+
         const html = hospitals.map(h => {
+            const info = S.hosp.get(h.id);
+            const vs = (heading.get(h.id) || []).sort((a, b) => collator(a.caption, b.caption));
+            const atHosp = vs.filter(v => vehicleFms(v) === 8).length;
+
+            let beds;
+            if (!info) beds = '<span class="lsd-muted">Betten werden geladen …</span>';
+            else if (info.error) beds = `<span class="lsd-muted">Betten nicht lesbar (${esc(info.error)})</span>`;
+            else if (info.total != null) {
+                const col = info.free === 0 ? '#e74c3c' : info.free / info.total < 0.25 ? '#e0b400' : '#2e9e3e';
+                beds = `<span class="lsd-tag" style="background:${col}">${info.free}/${info.total} Betten frei</span>`;
+            } else if (info.lines.length) beds = `<span class="lsd-muted">${info.lines.map(esc).join(' · ')}</span>`;
+            else beds = '<span class="lsd-muted">Keine Bettenangabe auf der Gebäudeseite gefunden</span>';
+
             const facts = [];
             if (h.level != null) facts.push(`Stufe: ${esc(h.level)}`);
-            for (const [k, val] of Object.entries(h)) {
-                if (/bed|bett|patient/i.test(k) && (typeof val === 'number' || typeof val === 'string')) {
-                    facts.push(`${esc(k)}: ${esc(val)}`);
-                    anyBedData = true;
-                }
-            }
-            const vs = (heading.get(h.id) || []).sort((a, b) => collator(a.caption, b.caption));
+            if (atHosp) facts.push(`${atHosp} Fz. am Transportziel`);
+
             return `<div class="lsd-mission">
                 <div class="lsd-mhead"><b><a href="/buildings/${h.id}" target="_blank">${esc(h.caption)}</a></b>
                     <span class="lsd-muted">${facts.join(' · ')}</span></div>
+                <div style="margin-top:4px">${beds}</div>
                 <div class="lsd-vchips">${vs.length ? vs.map(v => {
                     const f = vehicleFms(v);
                     return `<a class="lsd-vchip" href="/vehicles/${v.id}" target="_blank">
@@ -1114,9 +1178,7 @@
                 }).join('') : '<span class="lsd-muted">Keine Fahrzeuge unterwegs oder vor Ort</span>'}</div>
             </div>`;
         }).join('');
-        pane.innerHTML = `<div class="lsd-list">
-            ${anyBedData ? '' : '<div class="lsd-muted">Hinweis: Die Spiel-API liefert für Krankenhäuser keine Bettendaten – angezeigt werden die Fahrzeuge, die ein Krankenhaus als Ziel haben.</div>'}
-            ${html}</div>`;
+        pane.innerHTML = `<div class="lsd-list">${html}</div>`;
     }
 
     // ---- Verlauf -------------------------------------------------------
@@ -1216,17 +1278,6 @@
     const toCsv = rows => rows.map(r => r.map(csvCell).join(';')).join('\r\n');
     const dateStamp = () => { const d = new Date(); return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}_${pad2(d.getHours())}${pad2(d.getMinutes())}`; };
 
-    function exportVehiclesCsv() {
-        const rows = [['ID', 'Fahrzeug', 'Typ', 'Fahrzeugkategorie', 'Wache', 'Organisation', 'Eigene Kategorie', 'Status', 'Seit (Minuten)']];
-        for (const v of S.vehicles) {
-            const b = S.buildings.get(v.building_id);
-            const ts = sinceTs(v);
-            rows.push([v.id, v.caption, typeLabel(v), vehCatOf(v), b ? b.caption : '', b ? GROUPS[groupKeyOf(b)].name : '',
-                b ? cfg.custom[b.id] || '' : '', vehicleFms(v), ts != null ? Math.floor((Date.now() - ts) / 60000) : '']);
-        }
-        downloadFile(`fahrzeuge_${dateStamp()}.csv`, toCsv(rows), 'text/csv', true);
-    }
-
     function exportLogCsv() {
         const rows = [['Uhrzeit', 'Fahrzeug', 'Wache', 'Von', 'Nach']];
         for (const l of S.log) rows.push([l.t, l.name, l.bname, l.from, l.to]);
@@ -1269,6 +1320,13 @@
         if (clock) clock.classList.toggle('on', !!cfg.clock);
         const sortSel = overlay.querySelector('#lsd-sort');
         if (sortSel) sortSel.value = cfg.ui.sort;
+        const head = overlay.querySelector('#lsd-header');
+        if (head) head.classList.toggle('collapsed', !!cfg.ui.hdr);
+        const tb = overlay.querySelector('#lsd-togglehead');
+        if (tb) {
+            tb.textContent = cfg.ui.hdr ? '▼ Menü einblenden' : '▲ Menü einklappen';
+            tb.title = 'Menü ein-/ausklappen (M)';
+        }
     }
 
     function afterSettingsChange() {
@@ -1277,6 +1335,7 @@
         typeSig = vcatSig = leitSig = '';
         S.statusFilter = new Set(cfg.ui.status || []);
         applyTheme();
+        iconReposition();
         startTimers();
         if (cfg.notify && 'Notification' in window && Notification.permission === 'default') {
             try { Notification.requestPermission(); } catch (e) { /* ignorieren */ }
@@ -1303,13 +1362,15 @@
                     <select data-s="theme"><option value="dark">Dunkel</option><option value="light">Hell</option></select></div>
                 <div class="lsd-field"><label>Schriftgröße (px)</label>${num('fontSize', 10, 24, 1)}</div>
                 <div class="lsd-field"><label>Kompakt-Modus (kleinere Zeilen)</label>${chk('compact')}</div>
+                <div class="lsd-field"><label>Größe des Icons auf der Spielseite (px, 16–128)</label>${num('iconSize', 16, 128, 2)}</div>
                 <div class="lsd-field"><label>Große Uhr mit Datum im Header</label>${chk('clock')}</div>
                 <div class="lsd-field"><label>Mindestbreite der Wachen-Karten (px)</label>${num('minCard', 220, 700, 10)}</div>
                 <div class="lsd-field"><label>Aktualisierung per API (Sekunden, min. 15)</label>${num('poll', 15, 600, 5)}</div>
             </fieldset>
             <fieldset><legend>Warnungen</legend>
                 <div class="lsd-field"><label>Ton bei Sprechwunsch</label>${chk('sound')}</div>
-                <div class="lsd-field"><label>Desktop-Benachrichtigungen (Sprechwunsch, Wache ohne freie Fahrzeuge)</label>${chk('notify')}</div>
+                <div class="lsd-field"><label>Ton/Benachrichtigung bei neuem Fehlbedarf</label>${chk('missionAlert')}</div>
+                <div class="lsd-field"><label>Desktop-Benachrichtigungen (Sprechwunsch, Fehlbedarf, Wache ohne freie Fahrzeuge)</label>${chk('notify')}</div>
                 <div class="lsd-field"><label>Verweildauer Status 4 (Am Einsatzort) – Warnung nach Minuten, 0 = aus</label>
                     <input type="number" data-d="4" min="0" step="5" value="${esc(cfg.dwell[4])}"></div>
                 <div class="lsd-field"><label>Verweildauer Status 5 (Sprechwunsch) – Warnung nach Minuten, 0 = aus</label>
@@ -1354,8 +1415,9 @@
     function openHelp() {
         if (modalEl) return;
         const keys = [
-            ['/', 'Suche fokussieren'], ['1 – 7', 'Tabs wechseln (Wachen, Einsätze, Karte, Verband, Krankenhäuser, Verlauf, Protokoll)'],
-            ['Q', 'Alle Sprechwünsche quittieren'], ['F', 'Vollbild ein/aus'], ['C', 'Kompakt-Modus ein/aus'],
+            ['/', 'Suche fokussieren'],
+            ['1 – 6', 'Tabs wechseln (Wachen, Bestand, Karte, Krankenhäuser, Verlauf, Protokoll)'],
+            ['M', 'Menü ein-/ausklappen'], ['Q', 'Alle Sprechwünsche quittieren'], ['F', 'Vollbild ein/aus'], ['C', 'Kompakt-Modus ein/aus'],
             ['S', 'Einstellungen öffnen'], ['?', 'Diese Hilfe'], ['Esc', 'Fenster/Ansicht schließen']
         ];
         modalEl = document.createElement('div');
@@ -1363,7 +1425,8 @@
         modalEl.innerHTML = `<div class="lsd-modal"><h4>Tastenkürzel &amp; Hinweise</h4>
             <div class="lsd-keys">${keys.map(([k, t]) => `<kbd>${esc(k)}</kbd><span>${esc(t)}</span>`).join('')}</div>
             <p class="lsd-muted" style="margin-top:12px">Auf einer Wachen-Karte: ☆ Favorit (steht oben), 🏷 eigene Kategorie, ✕ ausblenden.
-            Ein Klick auf die Kopfzeile klappt die Karte ein. ✓ am Fahrzeug quittiert einen Sprechwunsch.</p>
+            Ein Klick auf die Kopfzeile klappt die Karte ein. ✓ am Fahrzeug quittiert einen Sprechwunsch.
+            Der farbige Balken unter der Kopfzeile zeigt die Statusverteilung der Wache.</p>
             <div class="lsd-modal-actions"><button type="button" class="lsd-btn lsd-primary" data-act="modal-close">Schließen</button></div></div>`;
         overlay.appendChild(modalEl);
     }
@@ -1453,7 +1516,6 @@
         cfg.ui.tab = id;
         saveSettings();
         scrollPauseUntil = 0;
-        if (id === 'verband' && !S.alliance) loadAlliance().then(scheduleRender);
         if (id === 'karte') mapFitted = false;
         render();
     }
@@ -1497,6 +1559,7 @@
                 case 'cfg-import': modalEl.querySelector('#lsd-import-file').click(); break;
                 case 'newtab': window.open(window.location.origin + '/' + OPEN_HASH, '_blank'); break;
                 case 'fullscreen': toggleFullscreen(); break;
+                case 'togglehead': cfg.ui.hdr = !cfg.ui.hdr; saveSettings(); applyTheme(); break;
                 case 'collapse':
                     for (const id of S.byBuilding.keys()) cfg.collapsed[id] = true;
                     saveSettings(); scheduleRender();
@@ -1504,7 +1567,6 @@
                 case 'expand': cfg.collapsed = {}; saveSettings(); scheduleRender(); break;
                 case 'togglehidden': cfg.ui.showHidden = !cfg.ui.showHidden; saveSettings(); scheduleRender(); break;
                 case 'ackall': ackAll(); break;
-                case 'csv-veh': exportVehiclesCsv(); break;
                 case 'csv-log': exportLogCsv(); break;
             }
             return;
@@ -1528,6 +1590,16 @@
             e.preventDefault();
             const id = hide.dataset.hide;
             if (cfg.hidden[id]) delete cfg.hidden[id]; else cfg.hidden[id] = true;
+            saveSettings(); scheduleRender();
+            return;
+        }
+
+        // Spaltenkopf im Bestand-Tab: gleiche Spalte = Richtung umkehren
+        const sortTh = t.closest('[data-sort]');
+        if (sortTh) {
+            const k = sortTh.dataset.sort;
+            if (cfg.ui.stsort === k) cfg.ui.stdir = cfg.ui.stdir === 'asc' ? 'desc' : 'asc';
+            else { cfg.ui.stsort = k; cfg.ui.stdir = (k === 'label' || k === 'cat') ? 'asc' : 'desc'; }
             saveSettings(); scheduleRender();
             return;
         }
@@ -1566,8 +1638,6 @@
         const c = e.target.closest('[data-ctl]');
         if (!c) return;
         switch (c.dataset.ctl) {
-            case 'msort': cfg.ui.msort = c.value; break;
-            case 'monly': cfg.ui.monly = c.checked; break;
             case 'hrange': cfg.ui.hrange = Number(c.value); break;
         }
         saveSettings();
@@ -1584,9 +1654,10 @@
         if (['input', 'textarea', 'select'].includes(tag) || e.ctrlKey || e.metaKey || e.altKey || modalEl) return;
         const k = e.key;
         if (k === '/') { e.preventDefault(); overlay.querySelector('#lsd-search').focus(); }
-        else if (/^[1-7]$/.test(k)) switchTab(TABS[Number(k) - 1].id);
+        else if (/^[1-6]$/.test(k)) switchTab(TABS[Number(k) - 1].id);
         else if (k === 'f' || k === 'F') toggleFullscreen();
         else if (k === 'c' || k === 'C') { cfg.compact = !cfg.compact; saveSettings(); applyTheme(); }
+        else if (k === 'm' || k === 'M') { cfg.ui.hdr = !cfg.ui.hdr; saveSettings(); applyTheme(); }
         else if (k === 'q' || k === 'Q') ackAll();
         else if (k === 's' || k === 'S') openSettings();
         else if (k === '?') openHelp();
@@ -1604,16 +1675,17 @@
                     <h3>Leitstellenansicht</h3>
                     <div id="lsd-clock"></div>
                     <span class="lsd-sub" id="lsd-sub">Lade Daten …</span>
-                    <input type="text" id="lsd-search" placeholder="Suche (Gebäude, Fahrzeug, FW, RD, Pol …)  [ / ]">
-                    <button type="button" class="lsd-btn" data-act="help" title="Tastenkürzel">?</button>
-                    <button type="button" class="lsd-btn" data-act="settings" title="Einstellungen (S)">⚙ Einstellungen</button>
-                    <button type="button" class="lsd-btn" data-act="newtab" title="In neuem Tab öffnen (z. B. für zweiten Monitor)">⧉ Neuer Tab</button>
-                    <button type="button" class="lsd-btn" data-act="fullscreen" title="Vollbild (F)">⛶ Vollbild</button>
+                    <input type="text" id="lsd-search" class="lsd-fold" placeholder="Suche (Gebäude, Fahrzeug, FW, RD, Pol …)  [ / ]">
+                    <button type="button" class="lsd-btn lsd-fold" data-act="help" title="Tastenkürzel">?</button>
+                    <button type="button" class="lsd-btn lsd-fold" data-act="settings" title="Einstellungen (S)">⚙ Einstellungen</button>
+                    <button type="button" class="lsd-btn lsd-fold" data-act="newtab" title="In neuem Tab öffnen (z. B. für zweiten Monitor)">⧉ Neuer Tab</button>
+                    <button type="button" class="lsd-btn lsd-fold" data-act="fullscreen" title="Vollbild (F)">⛶ Vollbild</button>
+                    <button type="button" class="lsd-btn" data-act="togglehead" id="lsd-togglehead"></button>
                     <button type="button" class="lsd-btn lsd-danger" data-act="close">Schließen (Esc)</button>
                 </div>
-                <div class="lsd-row" id="lsd-cats"></div>
-                <div class="lsd-row" id="lsd-chips"></div>
-                <div class="lsd-row" id="lsd-filters">
+                <div class="lsd-row lsd-fold" id="lsd-cats"></div>
+                <div class="lsd-row lsd-fold" id="lsd-chips"></div>
+                <div class="lsd-row lsd-fold" id="lsd-filters">
                     <select id="lsd-leit" style="display:none"><option value="">Alle Leitstellen</option></select>
                     <select id="lsd-vcat"><option value="">Alle Fahrzeugkategorien</option></select>
                     <select id="lsd-type"><option value="">Alle Fahrzeugtypen</option></select>
@@ -1626,9 +1698,8 @@
                     <button type="button" class="lsd-btn" data-act="collapse">Alle einklappen</button>
                     <button type="button" class="lsd-btn" data-act="expand">Alle ausklappen</button>
                     <button type="button" class="lsd-btn" data-act="togglehidden" style="display:none"></button>
-                    <button type="button" class="lsd-btn" data-act="csv-veh">⬇ Fahrzeuge (CSV)</button>
                 </div>
-                <div class="lsd-tabs">${TABS.map(t => `<button type="button" class="lsd-tab" data-tab="${t.id}">${t.label}</button>`).join('')}</div>
+                <div class="lsd-tabs lsd-fold">${TABS.map(t => `<button type="button" class="lsd-tab" data-tab="${t.id}">${t.label}</button>`).join('')}</div>
             </div>
             <div id="lsd-body">
                 ${TABS.map(t => `<div class="lsd-pane" id="lsd-pane-${t.id}">${t.id === 'wachen' ? '<div class="lsd-empty">Lade Daten …</div>' : ''}</div>`).join('')}
@@ -1675,6 +1746,7 @@
         overlay.classList.remove('open');
         document.body.style.overflow = '';
         document.title = origTitle;
+        missionMissing = null; // beim nächsten Öffnen neu abgleichen, ohne Alarm
         stopTimers();
         try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { /* ignorieren */ }
     }
@@ -1682,6 +1754,8 @@
     // ==================================================================
     // Verschiebbares Icon
     // ==================================================================
+    const iconSize = () => Math.max(16, Math.min(128, Number(cfg.iconSize) || 44));
+
     function addButton() {
         const btn = document.createElement('button');
         btn.id = 'lsd-floating-btn';
@@ -1699,11 +1773,13 @@
         const loadPos = () => {
             const p = loadJSON(ICON_KEY, null);
             if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) return p;
-            return { x: window.innerWidth - ICON_SIZE - 16, y: window.innerHeight - ICON_SIZE - 16 };
+            return { x: window.innerWidth - iconSize() - 16, y: window.innerHeight - iconSize() - 16 };
         };
         const place = p => {
-            const x = Math.min(Math.max(0, p.x), Math.max(0, window.innerWidth - ICON_SIZE));
-            const y = Math.min(Math.max(0, p.y), Math.max(0, window.innerHeight - ICON_SIZE));
+            const size = iconSize();
+            btn.style.width = btn.style.height = size + 'px';
+            const x = Math.min(Math.max(0, p.x), Math.max(0, window.innerWidth - size));
+            const y = Math.min(Math.max(0, p.y), Math.max(0, window.innerHeight - size));
             btn.style.left = x + 'px';
             btn.style.top = y + 'px';
             return { x, y };
