@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_AAO_Button
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.01
+// @version      1.0.00
 // @author       Design by Bobelle
 // @description  Setzt alle AAO-Buttons auf dieselbe Breite
 // @icon         https://www.leitstellenspiel.de/favicon.ico
