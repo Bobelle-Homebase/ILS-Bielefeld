@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
-// @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.00
+// @namespace    https://leitstellenspiel.de
+// @version      1.0.09
 // @author       Design by Bobelle
-// @description  Full All in One
+// @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
@@ -13,7 +13,13 @@
 (function() {
     'use strict';
 
-    console.log("[Bobelle Dashboard] 1.0.00 gestartet");
+    // Fallback, falls GM_getValue/GM_setValue nicht verfügbar sind (@grant none)
+    if (typeof GM_getValue === 'undefined') {
+        window.GM_getValue = function(k, d){ try { const v = localStorage.getItem('fzgm_' + k); return v === null ? d : v; } catch(e){ return d; } };
+        window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
+    }
+
+    console.log("[Bobelle Dashboard] 1.0.09 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 
@@ -24,12 +30,12 @@
 
     const VEHICLE_MATCH_CACHE = {
         _map: new Map(),
-        _max: 1000,
+        _max: 2000,
         get(key) { return this._map.get(key); },
         set(key, val) {
             if (this._map.size >= this._max) {
                 const iter = this._map.keys();
-                for(let i = 0; i < 100; i++) this._map.delete(iter.next().value);
+                for(let i = 0; i < 500; i++) this._map.delete(iter.next().value);
             }
             this._map.set(key, val);
         }
@@ -75,61 +81,62 @@
         { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
-        { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
-        { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf"]},
-        { n:"TLF3000W", id:[187,188], c:C_FW, cat:"FW", s:["tlfw"]},
-        { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf","großtank"]},
-        { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w","großtank"]},
-        { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
+        { n:"Rüstwagen Kran", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
+        { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw 2000tr"]},
         { n:"Kleintankwagen", id:118, c:C_FW, cat:"FW", s:["kleintankwagen"]},
         { n:"Tankwagen", id:120, c:C_FW, cat:"FW", s:["tankwagen"]},
+        { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf"]},
+        { n:"TLF3000W", id:[187,188], c:C_FW, cat:"FW", s:["tlfw"]},
+        { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf"]},
+        { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w"]},
+        { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
+          { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"ELW 1", id:3, c:C_FW, cat:"FW", s:["elw 1"]},
         { n:"ELW 2", id:34, c:C_FW, cat:"FW", s:["elw 2"]},
-        { n:"MTW", id:36, c:C_FW, cat:"FW", s:["mtw mannschaft","mannschaftstransport","mtw fw"]},
+        { n:"MTW", id:36, c:C_FW, cat:"FW", s:["mtw"]},
+          { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-l"]},
+          { n:"MTW-V", id:140, c:C_FW, cat:"Versorgung", s:["mtw-v"]},
         { n:"SLF", id:167, c:C_FW, cat:"FW", s:["slf","sonderlöschfahrzeug"]},
         { n:"Dekon-P", id:53, c:C_FW, cat:"FW", s:["dekon-p"]},
-        { n:"WLF", id:46, c:C_FW, cat:"FW", s:["wlf","wechsellader"]},
-        { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw 2000tr"]},
         { n:"GW-Lüfter", id:114, c:C_FW, cat:"FW", s:["gw-lüfter"]},
-        { n:"GW-Tierrettung", id:185, c:C_FW, cat:"FW", s:["gw-Tier","gw-tierrettung"]},
-        { n:"GW-Atemschutz", id:5, c:C_FW, cat:"FW", s:["gw-a","gw-atemschutz"]},
+        { n:"GW-Tierrettung", id:185, c:C_FW, cat:"FW", s:["gw-Tier"]},
+        { n:"GW-Atemschutz", id:5, c:C_FW, cat:"FW", s:["gw-a"]},
         { n:"GW-Öl", id:10, c:C_FW, cat:"FW", s:["gw-öl"]},
-        { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-messtechnik"]},
-        { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahrgut"]},
+        { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-mess"]},
+        { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahr"]},
         { n:"GW-Waldbrand", id:190, c:C_FW, cat:"FW", s:["gw-wald"]},
-        { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
-        { n:"GW-L2", id:[105,11], c:C_FW, cat:"FW", s:["gw-l2"]},
-        { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhenrettung","gw-höhen fw"]},
-        { n:"GW-Logistik", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","gw-logistik"]},
-        { n:"GW-Hygiene", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","gw-hygiene"]},
-        { n:"AB-Einsatzleitung", id:78, c:C_FW, cat:"FW", s:["ab-einsatz","ab-el"]},
+          { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
+          { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
+        { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhen fw"]},
+          { n:"GW-Logistik", id:[105,108], c:C_FW, cat:"FW", s:["ab-l"]},
+          { n:"GW-Hygiene", id:[104,108], c:C_FW, cat:"FW", s:["ab-l"]},
+        { n:"GW-Verpflegung", id:138, c:C_FW, cat:"Versorgung", s:["gw-verpflegung"]},
+        { n:"GW-Küche", id:139, c:C_FW, cat:"Versorgung", s:["gw-küche"]},
+        { n:"WLF", id:46, c:C_FW, cat:"FW", s:["wlf","wechsellader"]},
+        { n:"AB-Einsatzleitung", id:78, c:C_FW, cat:"FW", s:["ab-el"]},
         { n:"AB-Atemschutz", id:48, c:C_FW, cat:"FW", s:["ab-atemschutz"]},
         { n:"AB-Öl", id:49, c:C_FW, cat:"FW", s:["ab-öl"]},
         { n:"AB-Rüst", id:47, c:C_FW, cat:"FW", s:["ab-rüst"]},
         { n:"AB-Schlauch", id:62, c:C_FW, cat:"FW", s:["ab-schlauch"]},
         { n:"AB-Wasser/Schaum", id:170, c:C_FW, cat:"FW", s:["ab-wasser"]},
         { n:"AB-Dekon-P", id:54, c:C_FW, cat:"FW", s:["ab-dekon-p"]},
-        { n:"AB-Gefahrgut", id:77, c:C_FW, cat:"FW", s:["ab-gefahrgut","ab-gefahr"]},
-        { n:"AB-Waldbrand", id:192, c:C_FW, cat:"FW", s:["ab-gefahrgut","ab-gefahr","ab-wald"]},
+        { n:"AB-Gefahrgut", id:77, c:C_FW, cat:"FW", s:["ab-gefahr"]},
+        { n:"AB-Waldbrand", id:192, c:C_FW, cat:"FW", s:["ab-wald"]},
         { n:"AB-Tank", id:117, c:C_FW, cat:"FW", s:["ab-tank"]},
         { n:"AB-Lösch", id:119, c:C_FW, cat:"FW", s:["ab-lösch"]},
         { n:"AB-Sonderlöschmittel", id:169, c:C_FW, cat:"FW", s:["ab-sonderlöschmittel"]},
         { n:"AB-MzB", id:71, c:C_FW, cat:"FW", s:["ab-mzb"]},
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
         { n:"AB-Lüfter", id:116, c:C_FW, cat:"FW", s:["ab-lüfter"]},
-        { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l","ab-logistik"]},
-        { n:"AB-Hygiene", id:[108,104], c:C_FW, cat:"FW", s:["ab-l","ab-hygiene"]},
+          { n:"AB-Logistik", id:[105,108], c:C_FW, cat:"FW", s:["ab-l"]},
+          { n:"AB-Hygiene", id:[104,108], c:C_FW, cat:"FW", s:["ab-l"]},
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
-        { n:"Anh Tierrettungl", id:186, c:C_FW, cat:"FW", s:["anh tierrettung"]},
+        { n:"Anh Tierrettungl", id:186, c:C_FW, cat:"FW", s:["anh tier"]},
         { n:"Anh Schlauch", id:143, c:C_FW, cat:"FW", s:["anh schlauch"]},
         { n:"Anh Waldbrand", id:[143,191], c:C_FW, cat:"FW", s:["anh wald"]},
-        { n:"Anh Sonderlöschmittel", id:168, c:C_FW, cat:"FW", s:["sonderlöschmittel"]},
-        { n:"Anh Lüfter", id:115, c:C_FW, cat:"FW", s:["anh lüfter","anh-lüfter"]},
-        { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-log","mtf-l"]},
-        { n:"MTW-V", id:140, c:C_FW, cat:"Versorgung", s:["mtw-v","mtw verpflegung"]},
-        { n:"GW-Verpflegung", id:138, c:C_FW, cat:"Versorgung", s:["gw-verpflegung"]},
-        { n:"GW-Küche", id:139, c:C_FW, cat:"Versorgung", s:["gw-küche"]},
+        { n:"Anh Sonderlöschmittel", id:168, c:C_FW, cat:"FW", s:["anh sonderlöschmittel"]},
+        { n:"Anh Lüfter", id:115, c:C_FW, cat:"FW", s:["anh lüfter"]},
         { n:"RTW", id:28, c:C_RD, cat:"RD", s:["rtw"]},
         { n:"NEF", id:29, c:C_RD, cat:"RD", s:["nef"]},
         { n:"KTW", id:38, c:C_RD, cat:"RD", s:["ktw"]},
@@ -162,7 +169,7 @@
         { n:"MTF Drohne", id:126, c:"#9b9b9b", cat:"UAS", s:["mtf drohne","drohne"]},
         { n:"ELW Drohne", id:128, c:"#9b9b9b", cat:"UAS", s:["elw drohne"]},
         { n:"ELW 2 Drohne", id:129, c:"#9b9b9b", cat:"UAS", s:["elw 2 drohne"]},
-        { n:"GW-UAS (Pilot Bobelle)", id:127, c:"#9b9b9b", cat:"UAS", s:["gw-uas"]},
+        { n:"GW-UAS (Pilot Bobelle)", id:127, c:"#9b9b9b", cat:"SEG", s:["gw-uas"]},
         { n:"FLF", id:75, c:"#721c24", cat:"FlugFW", s:["flf","flugfeldlöschfahrzeug"]},
         { n:"Rettungstreppe", id:76, c:"#721c24", cat:"FlugFW", s:["rt","rettungstreppe"]},
         { n:"GW-Werkfeuerwehr", id:83, c:"#5a1a1f", cat:"WerkFW", s:["gw-werk"]},
@@ -256,7 +263,7 @@
         eye:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
         building:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="2" x2="9" y2="22"></line><line x1="15" y1="2" x2="15" y2="22"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>`,
         collapse:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 11 12 6 17 11"></polyline><polyline points="7 13 12 18 17 13"></polyline></svg>`,
-        settings:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+        settings:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
         popout:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`,
         minimize:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
         maximize:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`,
@@ -267,7 +274,6 @@
         columns:4, autoHideSeconds:5, clickIncrement:1, compactMode:false,
         winMaxHeight:700, winTop:60, winBg:"#f8f9fa", winBorderC:"#e9ecef", winBorderW:1, winRadius:0,
         headBg:"#e9ecef", headColor:"#343a40", headSize:15, headAlign:"left",
-        logoSize:35, logoUrl:"https://feuerwehr-bielefeld.de/wp-content/uploads/2019/05/cropped-Feuerwehr-Bielefeld-Logo-1.png",
         catHeaderMode:"category", catHeaderBgColor:"#000000", catHeaderTextColor:"#ffffff",
         catHeaderSize:12, catHeaderPadding:5,
         catStatusTextColor:"#ffffff", catStatusTextSize:10,
@@ -374,7 +380,7 @@
     const TILE_LIST = AAO_TILES_RAW.map(t=>({...t, norm:normalize(t.n), search:(t.s||[]).map(normalize), cat:t.cat}));
     const KEYS = AAO_TILES_RAW.map(t=>t.n);
     const tileMetaByKey = Object.fromEntries(AAO_TILES_RAW.map(t=>[t.n,t]));
-    
+
     // Pre-build search index for faster lookups
     const SEARCH_INDEX = {};
     TILE_LIST.forEach(t => {
@@ -608,6 +614,31 @@
                     sub.textContent = `${label}: ${formatRestzeit(earliest.finishAt)}`;
                 }
             }
+
+            const namesEl = cached.schoolingNames;
+            if(namesEl){
+                namesEl.textContent = "";
+                const groups = {};
+                active.forEach(s => {
+                    const g = groups[s.caption] || (groups[s.caption] = { caption: s.caption, n: 0, fin: null });
+                    g.n++;
+                    if(s.finishAt && (g.fin === null || s.finishAt < g.fin)) g.fin = s.finishAt;
+                });
+                const list = Object.values(groups).sort((a,b) => (a.fin || Infinity) - (b.fin || Infinity));
+                const MAX_LINES = 3;
+                list.slice(0, MAX_LINES).forEach(g => {
+                    const line = document.createElement("div");
+                    line.textContent = `• ${g.caption}${g.n > 1 ? " ×" + g.n : ""}${g.fin ? " · " + formatRestzeit(g.fin) : ""}`;
+                    namesEl.appendChild(line);
+                });
+                if(list.length > MAX_LINES){
+                    const more = document.createElement("div");
+                    more.style.color = "#777";
+                    more.textContent = `+ ${list.length - MAX_LINES} weitere`;
+                    namesEl.appendChild(more);
+                }
+                cached.el.title = active.map(s => `${s.caption} – ${s.buildingName}${s.finishAt ? " – " + formatRestzeit(s.finishAt) : ""}`).join("\n");
+            }
         });
 
         _restzeitTimerId = setTimeout(updateSchoolingTiles, 30000);
@@ -624,7 +655,7 @@
 
         const badge = document.createElement("span");
         badge.className = "fzSchoolingBadge";
-        badge.style.cssText = `font-size:12px;font-weight:bold;color:${color};`;
+        badge.style.cssText = `font-size:12px;font-weight:normal;color:#000;`;
         badge.textContent = `${ICONS.school} Lade...`;
 
         const sub = document.createElement("div");
@@ -634,7 +665,7 @@
 
         const nameSpan = document.createElement("span");
         nameSpan.className = "fzTileName";
-        nameSpan.style.cssText = `font-weight:bold;color:${color};`;
+        nameSpan.style.cssText = `font-weight:normal;color:#000;`;
         nameSpan.textContent = key;
 
         const topRow = document.createElement("div");
@@ -654,11 +685,16 @@
         wrapper.appendChild(badge);
         wrapper.appendChild(sub);
 
+        const names = document.createElement("div");
+        names.className = "fzSchoolingNames";
+        names.style.cssText = "font-size:10px;color:#333;margin-top:3px;line-height:1.25;";
+        wrapper.appendChild(names);
+
         div.appendChild(wrapper);
         div.onclick = () => showSchoolingDetails();
 
         tileEls[key] = div;
-        tileCache[key] = { el: div, lastState: null, schoolingBadge: badge, schoolingSub: sub };
+        tileCache[key] = { el: div, lastState: null, schoolingBadge: badge, schoolingSub: sub, schoolingNames: names };
         return div;
     }
 
@@ -1396,7 +1432,7 @@
                 --fz-head-sz:${uiSettings.headerElementSize}px;--fz-pill-bg:${uiSettings.pillBgColor};--fz-pill-c:${uiSettings.pillTextColor};
                 --fz-sub-st-sz:${uiSettings.subStatusSize}px;--fz-sub-st-fw:${uiSettings.subStatusWeight};--fz-sub-up-sz:${uiSettings.subUpdateSize}px;--fz-sub-up-fw:${uiSettings.subUpdateWeight};
                 --fz-sub-up-c:${uiSettings.subUpdateColor};--fz-sub-dp-sz:${uiSettings.subDispSize}px;--fz-sub-dp-fw:${uiSettings.subDispWeight};--fz-sub-dp-c:${uiSettings.subDispColor};
-                --fz-cat-stat-c:${uiSettings.catStatusTextColor};--fz-res-bg:${uiSettings.resourceTileBgColor};--fz-logo-sz:${uiSettings.logoSize}px;--fz-bar-c:${uiSettings.barColor};
+                --fz-cat-stat-c:${uiSettings.catStatusTextColor};--fz-res-bg:${uiSettings.resourceTileBgColor};--fz-bar-c:${uiSettings.barColor};
                 --fz-funk-sz:${uiSettings.funkalarmSize}px;--fz-funk-c:${uiSettings.funkalarmColor};--fz-funk-fw:${uiSettings.funkalarmBold?'bold':'normal'};
                 --fz-funk-blink-c:${uiSettings.funkalarmBlinkColor};--fz-aus:${C_AUS};
             }
@@ -1416,7 +1452,7 @@
             .fzResPill{cursor:pointer;transition:transform 0.1s;}.fzResPill:hover{transform:scale(1.05);filter:brightness(0.95);}#fzAvailIndicator{cursor:pointer;}
             .fzTrafficLight{padding:0 5px;gap:4px;}.fzLight{width:8px;height:8px;border-radius:50%;opacity:0.2;transition:opacity 0.3s;background-color:#555;}
             .fzLight.red{background-color:#dc3545;}.fzLight.yellow{background-color:#ffc107;}.fzLight.green{background-color:#28a745;}.fzLight.active{opacity:1;box-shadow:0 0 5px currentColor;}
-            .fzCatUtilBar{height:4px;background:rgba(255,255,255,0.2);width:120px;margin-top:3px;border-radius:2px;overflow:hidden;display:flex;}
+            .fzCatUtilBar{height:4px;background:rgba(255,255,255,0.2);width:120px;margin-top:3px;border-radius:2px;overflow:hidden;display:none;}
             .fzBarFree{height:100%;background:#28a745;transition:width 0.5s;}.fzBarBusy{height:100%;background:#dc3545;transition:width 0.5s;}.fzBarS6{height:100%;background:#999;transition:width 0.5s;}
             .fzCatStatText{margin-right:10px;white-space:nowrap;font-size:9px;margin-top:1px;font-weight:normal;color:var(--fz-cat-stat-c);}
             .fzFocusBtn{margin-right:8px;cursor:pointer;opacity:0.8;font-size:14px;margin-left:5px;}.fzFocusBtn:hover{opacity:1;transform:scale(1.1);}
@@ -1440,15 +1476,22 @@
             @keyframes fzAlarmBlink{0%{opacity:1;}45%{opacity:1;}65%{opacity:0.12;}100%{opacity:1;}}
             .fzFunkalarmLabel{font-size:var(--fz-funk-sz);color:var(--fz-funk-c);font-weight:var(--fz-funk-fw);white-space:nowrap;text-align:right;line-height:1;margin-bottom:2px;overflow:hidden;max-width:100%;text-overflow:ellipsis;}
             .fzFunkalarmLabel.fzAlarming{animation:fzAlarmBlink 1.4s ease-in-out infinite;color:var(--fz-funk-blink-c)!important;font-weight:bold!important;}
-            .fzBottomBar{height:3px;background:#e0e0e0;border-radius:2px;overflow:hidden;width:100%;margin-top:2px;}.fzBottomBarFill{height:100%;background:var(--fz-bar-c);width:0%;transition:width 0.3s;}
+            .fzBottomBar{display:none!important;height:3px;background:#e0e0e0;border-radius:2px;overflow:hidden;width:100%;margin-top:2px;}.fzBottomBarFill{height:100%;background:var(--fz-bar-c);width:0%;transition:width 0.3s;}
             .fzTile.fzInUse{background:${uiSettings.tileColorInUse}!important;color:#222!important;}
             .fzTile.fzEmpty{background:${uiSettings.tileColorEmpty}!important;color:#222!important;}
             .fzTile.fzInUse .fzStatusDot,.fzTile.fzEmpty .fzStatusDot{background-color:#dc3545!important;}
             .fzTile.fzResource{background-color:var(--fz-res-bg)!important;color:#000!important;}
+            .fzTile.fzStat{background-color:var(--fz-tile-bg)!important;color:var(--fz-tile-text)!important;height:48px;}
+            .fzTile.fzStat .fzFunkalarmLabel{display:none!important;}
             .fzTrend.up{color:${uiSettings.trendColorUp};}.fzTrend.down{color:${uiSettings.trendColorDown};}.fzTrend.eq{color:${uiSettings.trendColorEq};}
             .fzCatHeader{grid-column:1/-1;background:#333;color:var(--fz-cat-c);font-weight:bold;padding:var(--fz-cat-pad) 8px;text-align:left;font-size:var(--fz-cat-s);border-bottom:1px solid #ccc;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:sans-serif;position:relative;overflow:visible;}.fzCatHeader:hover{filter:brightness(1.1);}
             .fzBtn{background:#f5f5f5;border:1px solid #ccc;border-radius:4px;cursor:pointer;padding:4px 8px;font-weight:bold;color:#333;text-align:center;font-size:13px;transition:background-color 0.2s;}.fzBtn:hover{background:#e0e0e0;}
             .fzHeadBtn{cursor:pointer;font-size:14px;margin-left:5px;opacity:0.8;}.fzHeadBtn:hover{opacity:1;transform:scale(1.1);}
+            .fzHeaderRight{display:flex;align-items:center;flex-wrap:nowrap;flex-shrink:0;}
+            #fzRelocatedButtons{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:4px;}
+            #fzRelocatedButtons .fzHeadBtn{display:inline-flex!important;align-items:center;justify-content:center;width:26px;height:26px;margin:0!important;padding:0;line-height:1;box-sizing:border-box;flex-shrink:0;font-size:14px!important;}
+            #fzRelocatedButtons .fzHeadBtn svg{width:16px;height:16px;display:block;}
+            #fzRelocatedButtons #fzGlobalTileCollapse{font-size:18px!important;}
             .fzModalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100001;display:flex;justify-content:center;align-items:center;}
             .fzModal{background:#fff;padding:20px;border-radius:8px;width:650px;max-width:90%;max-height:90vh;overflow:auto;box-shadow:0 10px 30px rgba(0,0,0,0.5);font-family:sans-serif;font-size:13px;}
             .fzModal h3{margin-top:0;color:#333;font-size:18px;border-bottom:1px solid #eee;padding-bottom:10px;margin-bottom:15px;}
@@ -1465,10 +1508,9 @@
             .fzUsageTable{width:100%;font-size:11px;margin-bottom:15px;border-collapse:collapse;}.fzUsageTable td{border-bottom:1px solid #eee;padding:3px 0;}.fzUsageTable tr:last-child td{border-bottom:none;}
             .fzSectionTitle{font-size:12px;font-weight:bold;margin-bottom:5px;color:#007bff;border-bottom:1px solid #eee;padding-bottom:3px;margin-top:15px;}
             .fzFooter{font-size:${uiSettings.footerSize}px;color:${uiSettings.footerColor};text-align:${uiSettings.footerAlign};padding:2px;width:100%;box-sizing:border-box;}
-            .fzLogo{height:var(--fz-logo-sz);width:auto;margin-right:10px;background:transparent;display:block;vertical-align:middle;object-fit:contain;}
             .fzFilterBtn{padding:3px 10px;border-radius:12px;border:1px solid #ccc;font-size:11px;cursor:pointer;background:#f5f5f5;color:#333;font-weight:normal;transition:background 0.15s,color 0.15s;}
             .fzFilterBtn.active{background:#007bff;color:#fff;font-weight:bold;}.fzFilterBtn:hover:not(.active){background:#e0e0e0;}
-            .fzSchoolingTile{background:linear-gradient(135deg,rgba(123,63,160,0.06) 0%,rgba(123,63,160,0.02) 100%)!important;border-left-color:${C_AUS}!important;min-height:70px;}
+            .fzTile.fzSchoolingTile{background:var(--fz-tile-bg)!important;color:var(--fz-tile-text)!important;border-left-color:${C_AUS}!important;height:auto;min-height:var(--fz-tile-h);}
             .fzSchoolingTile:hover{filter:brightness(0.97);}
             .fzToggleBtn{position:fixed!important;top:6px!important;left:6px!important;bottom:auto!important;right:auto!important;z-index:${CFG.zIndex+2};width:32px;height:32px;border-radius:0;background:transparent!important;color:#ffffff!important;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none!important;box-shadow:none!important;outline:none;padding:0;margin:0;opacity:0.85;transition:opacity 0.15s ease,transform 0.15s ease;user-select:none;-webkit-user-select:none;}
             .fzToggleBtn:hover{opacity:1;transform:scale(1.15);}
@@ -1490,6 +1532,7 @@
     function injectCSS(){
         if(document.getElementById("fzStyles")) return;
         cssContent = prepareCSSString();
+        lastCSSHash = cssContent;
         const style = document.createElement("style");
         style.id = "fzStyles";
         style.textContent = cssContent;
@@ -1502,10 +1545,9 @@
 
     function updateStyles(){
         const newCSS = prepareCSSString();
-        const newHash = newCSS.length + newCSS.substring(0, 100);
-        if(newHash === lastCSSHash) return;
+        if(newCSS === lastCSSHash) return;
 
-        lastCSSHash = newHash;
+        lastCSSHash = newCSS;
         cssContent = newCSS;
         let s = document.getElementById("fzStyles");
         if(s) s.textContent = cssContent;
@@ -1720,6 +1762,7 @@
         div.dataset.val = v;
 
         if(meta && (meta.cat === "Ressourcen" || meta.cat === "Ausbildung" || meta.cat === "Versorgung")) div.classList.add("fzResource");
+        if(meta && meta.cat === "Ressourcen") div.classList.add("fzStat");
         div.style.borderLeftColor = color;
 
         div.innerHTML = `
@@ -2068,7 +2111,7 @@
 
         const groups = [
             {t:"Fenster Layout",i:[["Max Höhe (px)","winMaxHeight","number"],["Pos. Oben (px)","winTop","number"],["Fenster BG","winBg","color"],["Spalten","columns","number"]]},
-            {t:"Kategorien & Logo",i:[["Logo Größe (px)","logoSize","number"],["Logo URL","logoUrl","text"],["Farb-Modus","catHeaderMode","select",["category","custom"]],["Eigene Farbe","catHeaderBgColor","color"],["Textfarbe","catHeaderTextColor","color"],["Schriftgröße (px)","catHeaderSize","number"],["Innenabstand (px)","catHeaderPadding","number"]]},
+            {t:"Kategorien",i:[["Farb-Modus","catHeaderMode","select",["category","custom"]],["Eigene Farbe","catHeaderBgColor","color"],["Textfarbe","catHeaderTextColor","color"],["Schriftgröße (px)","catHeaderSize","number"],["Innenabstand (px)","catHeaderPadding","number"]]},
             {t:"Kacheln: Design",i:[["Hintergrund","tileBgColor","color"],["Textfarbe","tileTextColor","color"],["Ressourcen-BG","resourceTileBgColor","color"],["Balken Farbe","barColor","color"],["Min-Höhe (px)","tileMinHeight","number"]]},
             {t:"Kacheln: Text & Badges",i:[["Name Größe (px)","tileNameSize","number"],["Name Fett","tileNameWeight","select",["bold","normal"]],["Badge Größe (px)","badgeSize","number"],["Zähler Größe (px)","tileCounterSize","number"],["Zähler Farbe","numTodayColor","color"]]},
             {t:"Status & Trends",i:[["Bg (Im Einsatz)","tileColorInUse","color"],["Bg (Leer/0)","tileColorEmpty","color"],["Trend Hoch","trendColorUp","color"],["Trend Runter","trendColorDown","color"]]},
@@ -2315,7 +2358,7 @@
 
         const fzHeader = document.createElement("div");
         fzHeader.className = "fzHeader";
-        fzHeader.innerHTML = `<div class="fzHeaderLeft"><img src="${uiSettings.logoUrl}" class="fzLogo" alt="Logo"><div style="display:flex;flex-direction:column;justify-content:center;gap:3px;"><div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap;"><div id="fzMissionStats" style="display:flex;gap:5px;align-items:center;">${getMissionStatsHTML()}</div><div id="fzAvailIndicator" class="fzHeaderPill" title="Verfügbarkeit">...</div><div id="fzAmpel" class="fzTrafficLight" title="Auto-Hide Timer"><div class="fzLight red"></div><div class="fzLight yellow"></div><div class="fzLight green active"></div></div><div id="fzResourcePills" style="display:flex;gap:5px;"></div></div><div class="fzSubInfoRow"><span id="fzSysStatus">Warte auf System...</span><span id="fzLastUpdate"></span><span id="fzDispatcher"></span></div></div></div><div class="fzHeaderRight"><div id="fzRelocatedButtons"><a href="https://www.leitstellenspiel.de/buildings/26017007" target="_blank" class="fzHeadBtn" title="Leitstelle Bielefeld" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/leitstellenansicht" target="_blank" class="fzHeadBtn" title="Wachenübersicht" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/buildings/26794438#tab_projected_missions" target="_blank" class="fzHeadBtn" title="SAR Leitstelle" style="text-decoration:none;color:inherit;">${SVGS.anchor}</a><span class="fzHeadBtn" id="fzToggleCompact" title="Kompakt/Normal">${SVGS.eye}</span><span class="fzHeadBtn" id="fzGlobalCollapse" title="Kategorien alle auf/zu">${SVGS.collapse}</span><span class="fzHeadBtn" id="fzGlobalTileCollapse" title="Alle Kacheln ein-/ausklappen" style="font-size:16px;opacity:0.8;">▦</span><span class="fzHeadBtn" id="fzSettingsButton" title="Einstellungen">${SVGS.settings}</span><span class="fzHeadBtn" id="fzPopoutButton" title="Fenster">${SVGS.popout}</span><span class="fzHeadBtn" id="fzFullscreenButton" title="Vollbild">${SVGS.maximize}</span><span class="fzHeadBtn" id="fzMinimizeButton" title="Minimieren">${SVGS.minimize}</span></div></div>`;
+        fzHeader.innerHTML = `<div class="fzHeaderLeft"><div style="display:flex;flex-direction:column;justify-content:center;gap:3px;"><div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap;"><div id="fzMissionStats" style="display:flex;gap:5px;align-items:center;">${getMissionStatsHTML()}</div><div id="fzAvailIndicator" class="fzHeaderPill" title="Verfügbarkeit">...</div><div id="fzAmpel" class="fzTrafficLight" title="Auto-Hide Timer"><div class="fzLight red"></div><div class="fzLight yellow"></div><div class="fzLight green active"></div></div><div id="fzResourcePills" style="display:flex;gap:5px;"></div></div><div class="fzSubInfoRow"><span id="fzSysStatus">Warte auf System...</span><span id="fzLastUpdate"></span><span id="fzDispatcher"></span></div></div></div><div class="fzHeaderRight"><div id="fzRelocatedButtons"><a href="https://www.leitstellenspiel.de/buildings/26017007" target="_blank" class="fzHeadBtn" title="Leitstelle Bielefeld" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/leitstellenansicht" target="_blank" class="fzHeadBtn" title="Wachenübersicht" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/buildings/26794438#tab_projected_missions" target="_blank" class="fzHeadBtn" title="SAR Leitstelle" style="text-decoration:none;color:inherit;">${SVGS.anchor}</a><span class="fzHeadBtn" id="fzToggleCompact" title="Kompakt/Normal">${SVGS.eye}</span><span class="fzHeadBtn" id="fzGlobalCollapse" title="Kategorien alle auf/zu">${SVGS.collapse}</span><span class="fzHeadBtn" id="fzGlobalTileCollapse" title="Alle Kacheln ein-/ausklappen" style="font-size:16px;opacity:0.8;">▦</span><span class="fzHeadBtn" id="fzSettingsButton" title="Einstellungen">${SVGS.settings}</span><span class="fzHeadBtn" id="fzPopoutButton" title="Fenster">${SVGS.popout}</span><span class="fzHeadBtn" id="fzFullscreenButton" title="Vollbild">${SVGS.maximize}</span><span class="fzHeadBtn" id="fzMinimizeButton" title="Minimieren">${SVGS.minimize}</span></div></div>`;
         fzWrapper.appendChild(fzHeader);
 
         setTimeout(() => {
@@ -2531,7 +2574,7 @@
         const now = Date.now();
         if(now - lastRefreshTime < 2000) return; // Skip if called too recently
         lastRefreshTime = now;
-        
+
         requestAnimationFrame(() => {
             KEYS.forEach(k => { if(tileEls[k]) updateTile(k, state); });
             updateCategoryHeaders();
