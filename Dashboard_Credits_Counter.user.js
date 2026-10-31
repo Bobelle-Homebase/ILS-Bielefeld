@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Dashboard_Credits_Counter
-// @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.00
-// @author       Design by Bobelle
-// @description  Zeigt Credits-Bilanz im Navbar-Bereich
+// @namespace    https://leitstellenspiel.de
+// @version      1.1.01
+// @author       Design by Bobelle (Fixed)
+// @description  Zeigt Credits-Bilanz frei verschiebbar im Navbar-Bereich
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
@@ -12,6 +12,9 @@
 
 (function () {
   'use strict';
+
+  const DEBUG = true; // Zum Testen auf true gestellt, damit man Logs in der F12-Konsole sieht
+  const log = (...a) => { if (DEBUG) console.log('[Credits]', ...a); };
 
   // =======================================================
   // Helfer
@@ -44,9 +47,12 @@
     const p = (n) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   };
-  const getTodayKey = getTodayString;
 
-  const formatNumber = (num) => Number(num).toLocaleString('de-DE');
+  const formatNumber = (num) => {
+    const n = Math.round(Number(num) || 0);
+    const sign = n < 0 ? '-' : '';
+    return sign + String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
 
   // =========================================================
   // Tab-Titel fix
@@ -73,60 +79,6 @@
   }
 
   // =========================================================
-  // Navbar-Wrapper
-  // =========================================================
-  function getBielefeldWrapper() {
-    if (!isMainPage()) return null;
-
-    const brand = getNavbarBrand();
-    if (!brand) return null;
-
-    let wrapper = document.getElementById('bielefeld-navbar-wrapper');
-    if (wrapper) return wrapper;
-
-    let origContainer = document.getElementById('bielefeld-original-brand');
-    if (!origContainer) {
-      origContainer = document.createElement('span');
-      origContainer.id = 'bielefeld-original-brand';
-      while (brand.firstChild) origContainer.appendChild(brand.firstChild);
-      brand.appendChild(origContainer);
-    }
-
-    Object.assign(origContainer.style, {
-      opacity: '1',
-      pointerEvents: 'auto',
-      position: 'static',
-      width: 'auto',
-      height: 'auto',
-      overflow: 'visible',
-      display: 'flex',
-      alignItems: 'center'
-    });
-
-    Object.assign(brand.style, {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      marginLeft: '0',
-      padding: '0 5px',
-      position: 'relative',
-      gap: '10px'
-    });
-
-    wrapper = document.createElement('div');
-    wrapper.id = 'bielefeld-navbar-wrapper';
-    Object.assign(wrapper.style, {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-      columnGap: '10px'
-    });
-
-    brand.appendChild(wrapper);
-    return wrapper;
-  }
-
-  // =========================================================
   // Credits Modul
   // =========================================================
   const CREDITS_CONFIG = {
@@ -136,20 +88,24 @@
     removeAllBadges: false,
     scale: 1.0,
 
-    line1FontSize: '12px',
-    line1Color: 'yellow',
+    offsetRight: 30,
+    fallbackLeft: 300,
+    fallbackTop: 6,
+
+    line1FontSize: '11px',
+    line1Color: '#ffeb3b',
     line1FontWeight: 'normal',
 
-    line2FontSize: '12px',
+    line2FontSize: '13px',
     line2FontWeight: 'bold',
 
     lineGap: '2px',
 
     showHelp: true,
     helpText: {
-      bilanz: 'Zeile 1: line1FontSize / line1Color\nZeile 2: line2FontSize + Farben unten',
-      einnahme: 'Zeile 1: line1FontSize / line1Color\nZeile 2: line2FontSize + Farben unten',
-      ausgabe: 'Zeile 1: line1FontSize / line1Color\nZeile 2: line2FontSize + Farben unten'
+      bilanz: 'Heutige Credits-Bilanz',
+      einnahme: 'Heutige Einnahmen',
+      ausgabe: 'Heutige Ausgaben'
     },
 
     bilanzPositiveColor: '#40ff00',
@@ -157,19 +113,17 @@
     einnahmeColor: '#40ff00',
     ausgabeColor: '#ff3333',
 
-    boxWidth: '210px',
-    boxHeight: 'auto',
-    boxPadding: '4px 8px',
-
     refreshIntervalMs: 300000
   };
 
-  const CREDITS_CACHE_KEY = 'credits_daily_cache';
-  const CREDITS_LAST_RESET_KEY = 'credits_daily_last_reset';
+  const CREDITS_CACHE_KEY = 'credits_daily_cache_v3';
+  const CREDITS_LAST_RESET_KEY = 'credits_daily_last_reset_v3';
+  const CREDITS_POS_KEY = 'credits_box_pos_v1';
+  const BOX_ID = 'lss-credits-draggable-box';
 
   function resetCreditsDailyDataIfNeeded() {
     const now = new Date();
-    const todayKey = getTodayKey();
+    const todayKey = getTodayString();
     const lastReset = store.get(CREDITS_LAST_RESET_KEY);
 
     const resetToday = new Date(
@@ -186,7 +140,7 @@
   }
 
   function removeCreditsBox() {
-    document.getElementById('lss-credits-draggable-box')?.remove();
+    document.getElementById(BOX_ID)?.remove();
   }
 
   function removeNavbarWatermarks() {
@@ -202,13 +156,124 @@
     }
   }
 
+  function loadSavedPos() {
+    try {
+      const raw = store.get(CREDITS_POS_KEY);
+      if (!raw) return null;
+      const p = JSON.parse(raw);
+      if (typeof p.left === 'number' && typeof p.top === 'number') return p;
+    } catch { /* ignore */ }
+    return null;
+  }
+
+  function clampPos(box, left, top) {
+    const r = box.getBoundingClientRect();
+    const maxLeft = Math.max(0, window.innerWidth - r.width);
+    const maxTop = Math.max(0, window.innerHeight - r.height);
+    return {
+      left: Math.min(Math.max(0, left), maxLeft),
+      top: Math.min(Math.max(0, top), maxTop)
+    };
+  }
+
+  function applyPos(box, left, top) {
+    const p = clampPos(box, left, top);
+    box.style.left = `${p.left}px`;
+    box.style.top = `${p.top}px`;
+    return p;
+  }
+
+  function getDefaultPos(box) {
+    const brand = getNavbarBrand();
+    if (brand) {
+      const br = brand.getBoundingClientRect();
+      if (br.width > 0) {
+        const bh = box.getBoundingClientRect().height;
+        return {
+          left: br.right + CREDITS_CONFIG.offsetRight,
+          top: Math.max(0, br.top + (br.height - bh) / 2)
+        };
+      }
+    }
+    return { left: CREDITS_CONFIG.fallbackLeft, top: CREDITS_CONFIG.fallbackTop };
+  }
+
+  function positionBox(box) {
+    const saved = loadSavedPos();
+    if (saved) {
+      applyPos(box, saved.left, saved.top);
+    } else {
+      const d = getDefaultPos(box);
+      applyPos(box, d.left, d.top);
+    }
+  }
+
+  function enableDragging(box) {
+    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+    let dragging = false;
+    let moved = false;
+
+    box.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      const r = box.getBoundingClientRect();
+      startX = e.clientX;
+      startY = e.clientY;
+      startLeft = r.left;
+      startTop = r.top;
+      dragging = true;
+      moved = false;
+      try { box.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+      box.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
+
+    box.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (!moved && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      moved = true;
+      applyPos(box, startLeft + dx, startTop + dy);
+    });
+
+    const endDrag = (e) => {
+      if (!dragging) return;
+      dragging = false;
+      try { box.releasePointerCapture(e.pointerId); } catch { /* ignore */ }
+      box.style.cursor = 'grab';
+
+      if (moved) {
+        const r = box.getBoundingClientRect();
+        store.set(CREDITS_POS_KEY, JSON.stringify({ left: r.left, top: r.top }));
+      } else if (CREDITS_CONFIG.clickOpensDaily) {
+        window.open('/credits/daily', '_blank');
+      }
+    };
+
+    box.addEventListener('pointerup', endDrag);
+    box.addEventListener('pointercancel', endDrag);
+
+    box.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      store.remove(CREDITS_POS_KEY);
+      const d = getDefaultPos(box);
+      applyPos(box, d.left, d.top);
+    });
+
+    window.addEventListener('resize', () => {
+      const r = box.getBoundingClientRect();
+      applyPos(box, r.left, r.top);
+    });
+  }
+
   function buildCreditsItem(label, valueText, valueColor, helpText) {
     const item = document.createElement('div');
     Object.assign(item.style, {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      lineHeight: '1.1'
+      lineHeight: '1.15',
+      whiteSpace: 'nowrap'
     });
     if (helpText) item.setAttribute('title', helpText);
 
@@ -218,6 +283,7 @@
       color: CREDITS_CONFIG.line1Color,
       fontWeight: CREDITS_CONFIG.line1FontWeight,
       textTransform: 'uppercase',
+      letterSpacing: '0.5px',
       marginBottom: CREDITS_CONFIG.lineGap
     });
     l.textContent = label;
@@ -226,7 +292,8 @@
     Object.assign(v.style, {
       fontSize: CREDITS_CONFIG.line2FontSize,
       fontWeight: CREDITS_CONFIG.line2FontWeight,
-      color: valueColor
+      color: valueColor,
+      fontVariantNumeric: 'tabular-nums'
     });
     v.textContent = valueText;
 
@@ -234,82 +301,84 @@
     return item;
   }
 
+  function createBox() {
+    const box = document.createElement('div');
+    box.id = BOX_ID;
+
+    Object.assign(box.style, {
+      position: 'fixed',
+      left: '0px',
+      top: '0px',
+      zIndex: '99999',
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: '18px',
+      padding: '4px 12px',
+      width: 'max-content',
+      color: '#ffffff',
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+      fontWeight: '600',
+      textShadow: '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 3px black',
+      background: 'transparent',
+      border: 'none',
+      boxShadow: 'none',
+      transform: `scale(${CREDITS_CONFIG.scale})`,
+      transformOrigin: 'top left',
+      cursor: 'grab',
+      userSelect: 'none',
+      touchAction: 'none'
+    });
+
+    enableDragging(box);
+    document.body.appendChild(box);
+    return box;
+  }
+
   function createOrUpdateCreditsBox(einnahme, ausgabe, differenz) {
     if (!isMainPage()) {
       removeCreditsBox();
       return;
     }
+    if (!document.body) return;
 
-    const wrapper = getBielefeldWrapper();
-    if (!wrapper) return;
-
-    let box = document.getElementById('lss-credits-draggable-box');
-    if (!box) {
-      box = document.createElement('div');
-      box.id = 'lss-credits-draggable-box';
-
-      Object.assign(box.style, {
-        order: '20',
-        backgroundColor: 'transparent',
-        border: 'none',
-        padding: CREDITS_CONFIG.boxPadding,
-        color: '#ffffff',
-        fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-        fontSize: CREDITS_CONFIG.line2FontSize,
-        fontWeight: '600',
-        textShadow: '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 3px black',
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: '16px',
-        whiteSpace: 'nowrap',
-        transform: `scale(${CREDITS_CONFIG.scale})`,
-        transformOrigin: 'left center',
-        cursor: CREDITS_CONFIG.clickOpensDaily ? 'pointer' : 'default',
-        width: CREDITS_CONFIG.boxWidth,
-        height: CREDITS_CONFIG.boxHeight,
-        transition: 'background-color 0.2s'
-      });
-
-      box.addEventListener('mouseenter', () => { box.style.backgroundColor = 'rgba(0, 0, 0, 0.3)'; });
-      box.addEventListener('mouseleave', () => { box.style.backgroundColor = 'transparent'; });
-
-      if (CREDITS_CONFIG.clickOpensDaily) {
-        box.addEventListener('click', () => window.open('/credits/daily', '_blank'));
-      }
-
-      wrapper.appendChild(box);
-    }
+    let box = document.getElementById(BOX_ID);
+    const isNew = !box;
+    if (isNew) box = createBox();
 
     const diffIcon = differenz >= 0 ? '▲' : '▼';
     const help = (key) => (CREDITS_CONFIG.showHelp && CREDITS_CONFIG.helpText?.[key]) || '';
-
-    const bilanzColor =
-      CREDITS_CONFIG.line2BilanzColor ??
-      (differenz >= 0 ? CREDITS_CONFIG.bilanzPositiveColor : CREDITS_CONFIG.bilanzNegativeColor);
-    const einColor = CREDITS_CONFIG.line2EinColor ?? CREDITS_CONFIG.einnahmeColor;
-    const ausColor = CREDITS_CONFIG.line2AusColor ?? CREDITS_CONFIG.ausgabeColor;
+    const bilanzColor = differenz >= 0 ? CREDITS_CONFIG.bilanzPositiveColor : CREDITS_CONFIG.bilanzNegativeColor;
 
     box.replaceChildren(
-      buildCreditsItem('Bilanz', `${diffIcon} ${formatNumber(differenz)}`, bilanzColor, help('bilanz')),
-      buildCreditsItem('Ein', `+${formatNumber(einnahme)}`, einColor, help('einnahme')),
-      buildCreditsItem('Aus', `-${formatNumber(Math.abs(ausgabe))}`, ausColor, help('ausgabe'))
+      buildCreditsItem('Bilanz', `${diffIcon} ${formatNumber(Math.abs(differenz))}`, bilanzColor, help('bilanz')),
+      buildCreditsItem('Ein', `+${formatNumber(einnahme)}`, CREDITS_CONFIG.einnahmeColor, help('einnahme')),
+      buildCreditsItem('Aus', `-${formatNumber(Math.abs(ausgabe))}`, CREDITS_CONFIG.ausgabeColor, help('ausgabe'))
     );
+
+    if (isNew) {
+      positionBox(box);
+    } else {
+      const r = box.getBoundingClientRect();
+      applyPos(box, r.left, r.top);
+    }
   }
 
+  // Verbesserte Parsing-Funktion für die Credits-Spalte
   function parseCreditsCell(cell) {
     const sortVal = cell.getAttribute('data-sort-value') ?? cell.getAttribute('sortvalue');
-    if (sortVal !== null && /^\s*-?\d+\s*$/.test(sortVal)) return parseInt(sortVal, 10);
+    if (sortVal !== null && !isNaN(sortVal)) {
+      return parseInt(sortVal, 10);
+    }
 
-    const text = (cell.textContent || '').replace(/\u2212|\u2013/g, '-');
-    const m = text.match(/(-?)\s*(\d{1,3}(?:\.\d{3})*|\d+)/);
-    if (!m) return NaN;
-
-    const num = parseInt(m[2].replace(/\./g, ''), 10);
-    return m[1] === '-' ? -num : num;
+    const text = (cell.textContent || '').trim().replace(/\u2212|\u2013/g, '-');
+    // Sucht nach Zahlen mit optionalem Minus- oder Pluszeichen und Tausenderpunkten
+    const cleanText = text.replace(/\./g, '').replace(/[^\d\-+]/g, '');
+    const num = parseInt(cleanText, 10);
+    return isNaN(num) ? 0 : num;
   }
 
-  async function updateCreditsHeader() {
+  async function updateCreditsHeader(forceFetch = false) {
     if (!isMainPage()) {
       removeCreditsBox();
       return;
@@ -317,23 +386,31 @@
 
     resetCreditsDailyDataIfNeeded();
 
-    const todayKey = getTodayKey();
+    const todayKey = getTodayString();
     const cacheRaw = store.get(CREDITS_CACHE_KEY);
-    if (cacheRaw) {
+
+    if (!forceFetch && cacheRaw) {
       try {
         const cache = JSON.parse(cacheRaw);
         if (cache && cache.date === todayKey) {
           createOrUpdateCreditsBox(cache.einnahme, cache.ausgabe, cache.differenz);
+          return;
         }
       } catch { /* ignore */ }
     }
 
     try {
       const response = await fetch('/credits/daily', { credentials: 'same-origin' });
-      if (!response.ok) return;
+      if (!response.ok) {
+        log('Fetch fehlgeschlagen, Status:', response.status);
+        return;
+      }
 
       const html = await response.text();
-      if (html.includes('login-form')) return;
+      if (html.includes('login-form')) {
+        log('Nicht eingeloggt');
+        return;
+      }
 
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const rows = doc.querySelectorAll('table tbody tr');
@@ -343,10 +420,21 @@
 
       rows.forEach(row => {
         const cells = row.querySelectorAll('td');
-        const cell = row.querySelector('td[data-sort-value], td[sortvalue]') || cells[2];
-        if (!cell) return;
+        if (cells.length === 0) return;
 
-        const val = parseCreditsCell(cell);
+        // Versuche die Spalte zu finden, die die Credits enthält (meistens die letzte oder vorletzte oder Index 2)
+        // Wir suchen in allen Zellen der Zeile nach einer gültigen Credit-Zahl, falls sich das Layout geändert hat
+        let val = NaN;
+        for (let i = 0; i < cells.length; i++) {
+          const candidate = parseCreditsCell(cells[i]);
+          // Wenn die Zelle plausibel eine Zahl enthält (nicht 0 oder wenn es explizit eine Transaktion ist)
+          // Normalerweise haben die Zeilen auf /credits/daily eine Spalte mit Beträgen.
+          if (!isNaN(candidate) && candidate !== 0) {
+            val = candidate;
+            break;
+          }
+        }
+
         if (Number.isNaN(val)) return;
 
         if (val > 0) einnahme += val;
@@ -354,6 +442,7 @@
       });
 
       const differenz = einnahme + ausgabe;
+      log({ rows: rows.length, einnahme, ausgabe, differenz });
 
       store.set(CREDITS_CACHE_KEY, JSON.stringify({
         date: todayKey, einnahme, ausgabe, differenz, timestamp: Date.now()
@@ -386,7 +475,7 @@
     const original = window.creditsUpdate;
     const wrapped = function (...args) {
       const result = original.apply(this, args);
-      setTimeout(updateCreditsHeader, 500);
+      setTimeout(() => updateCreditsHeader(true), 400);
       return result;
     };
     wrapped.__bielefeldWrapped = true;
@@ -400,23 +489,20 @@
     hookCreditsUpdate();
 
     resetCreditsDailyDataIfNeeded();
-    updateCreditsHeader();
+    updateCreditsHeader(false);
     removeNavbarWatermarks();
 
     setInterval(() => {
       if (document.hidden) return;
       resetCreditsDailyDataIfNeeded();
-      updateCreditsHeader();
+      updateCreditsHeader(true);
     }, CREDITS_CONFIG.refreshIntervalMs);
 
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) updateCreditsHeader();
+      if (!document.hidden) updateCreditsHeader(false);
     });
   }
 
-  // =========================================================
-  // Init
-  // =========================================================
   function initAll() {
     try {
       initTitleFix();
