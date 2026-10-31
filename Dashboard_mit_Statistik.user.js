@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.00
+// @version      1.0.01
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
+// @include      https://www.leitstellenspiel.de/*
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
 // @run-at       document-idle
@@ -19,7 +20,7 @@
         window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
     }
 
-    console.log("[Bobelle Dashboard] 1.0.09 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.01 gestartet");
 
     console.log("pathLoc:", window.location.pathname, "isMainPage:", ((window.location.pathname==="/"||window.location.pathname==="/index"||window.location.pathname.length<2)||window.location.pathname.includes("/leitstellenansicht")));
 

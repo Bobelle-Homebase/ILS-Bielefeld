@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Dashboard_Einsatz_Tageszähler
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.00
+// @version      1.0.01
 // @author       Design by Bobelle
 // @description  Tageszähler für eigene Einsätze und Krankentransporte
 // @icon         https://www.leitstellenspiel.de/favicon.ico
-// @match        https://www.leitstellenspiel.de/
+// @include      https://www.leitstellenspiel.de/*
+// @match        https://www.leitstellenspiel.de/*
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==

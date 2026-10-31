@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Dashboard_Toggle_ausblenden
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.00
+// @version      1.0.01
 // @author       Design by Bobelle
 // @description  Blendet das Original-Logo aus und bindet ein eigenes ein
 // @icon         https://www.leitstellenspiel.de/favicon.ico
+// @include      https://www.leitstellenspiel.de/*
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
 // @run-at       document-idle
