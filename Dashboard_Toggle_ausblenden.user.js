@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Dashboard_Toggle_ausblenden
-// @namespace    https://leitstellenspiel.de/dashboard
-// @version      1.0.00
+// @namespace    https://leitstellenspiel.de
+// @version      1.0.01
 // @author       Design by Bobelle
-// @description  Blendet das Original-Logo aus und legt ein eigenes darüber
+// @description  Blendet das Original-Logo aus und bindet ein eigenes ein
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
@@ -12,7 +12,22 @@
 
 (function() {
     'use strict';
+
     const style = document.createElement('style');
-    style.innerHTML = '.navbar-brand, header nav a.navbar-brand, .navbar-header a { display: none !important; }';
+    style.innerHTML = `
+        /* Originales Logo komplett ausblenden und Platz freigeben */
+        a.navbar-brand {
+            display: none !important;
+        }
+
+        /* Beispiel für dein eigenes Logo (Pfad oder URL anpassen!) */
+        /*
+        .navbar > .container-fluid {
+            background-image: url('DEINE_BILD_URL_HIER');
+            background-repeat: no-repeat;
+            background-size: contain;
+        }
+        */
+    `;
     document.head.appendChild(style);
 })();
