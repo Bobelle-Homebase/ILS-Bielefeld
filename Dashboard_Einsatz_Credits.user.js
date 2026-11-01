@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Einsatz_Credits
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.04
+// @version      1.0.05
 // @author       Design by Bobelle
 // @description  Zeigt die durchschnittlichen Credits je Einsatz in der Einsatzliste an
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -87,7 +87,7 @@
     const el = document.createElement("span");
     el.id = "mission_credits_" + missionId;
     el.className = "dec-credits label ";
-    el.innerText = credits;
+    el.textContent = credits;
 
     if (credits >= 10000) el.className += "label-primary";
     else if (credits >= 7000) el.className += "label-info";
