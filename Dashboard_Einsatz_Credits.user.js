@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Dashboard_Einsatz_Credits
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.03
+// @version      1.0.04
 // @author       Design by Bobelle
 // @description  Zeigt die durchschnittlichen Credits je Einsatz in der Einsatzliste an
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @match        https://www.leitstellenspiel.de/
 // @match        https://www.leitstellenspiel.de/?*
 // @grant        none
-// @run-at       document-idle
+// @run-at       document-end
 // ==/UserScript==
 
 (function () {
@@ -26,12 +26,19 @@
   const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 Stunden
 
   let missionMap = null; // Map: Einsatztyp-ID -> average_credits
+  let scheduled = false;
 
   // ---------- Daten laden / cachen ----------
 
+  function buildMap(list) {
+    const map = new Map();
+    list.forEach((m) => map.set(String(m.id), m.average_credits));
+    return map;
+  }
+
   function readCache() {
     try {
-      const raw = window.sessionStorage.getItem(STORAGE_KEY);
+      const raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       const data = JSON.parse(raw);
       if (!data || !Array.isArray(data.value)) return null;
@@ -42,33 +49,24 @@
     }
   }
 
-  async function loadMissions() {
-    let list = readCache();
-
-    if (!list) {
+  async function fetchMissions() {
+    try {
+      const res = await fetch("/einsaetze.json", { credentials: "same-origin" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const list = await res.json();
       try {
-        const res = await fetch("/einsaetze.json", { credentials: "same-origin" });
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        list = await res.json();
-        try {
-          window.sessionStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify({ lastUpdate: Date.now(), value: list })
-          );
-        } catch (e) {
-          /* Storage voll oder gesperrt - egal, wir arbeiten im Speicher weiter */
-        }
+        window.localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({ lastUpdate: Date.now(), value: list })
+        );
       } catch (e) {
-        console.warn("[Einsatz_Credits] einsaetze.json konnte nicht geladen werden:", e);
-        return false;
+        /* Storage voll oder gesperrt - egal */
       }
+      return list;
+    } catch (e) {
+      console.warn("[Einsatz_Credits] einsaetze.json konnte nicht geladen werden:", e);
+      return null;
     }
-
-    missionMap = new Map();
-    list.forEach((m) => {
-      missionMap.set(String(m.id), m.average_credits);
-    });
-    return true;
   }
 
   function getCredits(missionTypeId) {
@@ -88,38 +86,39 @@
   function createCreditsElement(missionId, credits) {
     const el = document.createElement("span");
     el.id = "mission_credits_" + missionId;
-
-    // Keine Credits hinterlegt (z. B. Rettungsdienst) -> nichts anzeigen
-    if (credits === null || credits === undefined) {
-      return null;
-    }
-
+    el.className = "dec-credits label ";
     el.innerText = credits;
 
-    if (credits >= 10000) el.className = "label label-primary";
-    else if (credits >= 7000) el.className = "label label-info";
-    else if (credits >= 4000) el.className = "label label-success";
-    else el.className = "label label-default";
+    if (credits >= 10000) el.className += "label-primary";
+    else if (credits >= 7000) el.className += "label-info";
+    else if (credits >= 4000) el.className += "label-success";
+    else el.className += "label-default";
 
     return el;
   }
 
   function applyToEntry(entry) {
     const missionId = entry.getAttribute("mission_id");
-    const missionTypeId = entry.getAttribute("mission_type_id");
-    if (!missionId || missionTypeId === null || missionTypeId === "") return;
+    const typeId = entry.getAttribute("mission_type_id");
+    if (!missionId || typeId === null || typeId === "" || typeId === "null") return;
 
-    const credits = getCredits(missionTypeId);
-    if (credits === undefined) return; // unbekannter Einsatztyp
+    const credits = getCredits(typeId);
+    if (credits === undefined) return; // unbekannter Einsatztyp -> später erneut versuchen
 
-    const newEl = createCreditsElement(missionId, credits);
-    const existing = document.getElementById("mission_credits_" + missionId);
+    const existing = entry.querySelector(".dec-credits");
+    const wantsLabel = credits !== null && credits !== undefined;
 
-    if (!newEl) {
-      // keine Credits: evtl. vorhandenes Label entfernen
+    // Nichts zu tun, wenn der Zustand schon stimmt
+    if (entry.dataset.decType === typeId && !!existing === wantsLabel) return;
+
+    entry.dataset.decType = typeId;
+
+    if (!wantsLabel) {
       if (existing) existing.remove();
       return;
     }
+
+    const newEl = createCreditsElement(missionId, credits);
 
     if (existing) {
       existing.replaceWith(newEl);
@@ -129,7 +128,10 @@
     const heading =
       entry.querySelector(".panel-heading") ||
       (entry.firstElementChild && entry.firstElementChild.firstElementChild);
-    if (!heading) return;
+    if (!heading) {
+      delete entry.dataset.decType; // später erneut versuchen
+      return;
+    }
 
     heading.insertBefore(
       newEl,
@@ -137,58 +139,43 @@
     );
   }
 
-  function applyToAll() {
+  function processAll() {
+    scheduled = false;
+    if (!missionMap) return;
     document.querySelectorAll(".missionSideBarEntry").forEach(applyToEntry);
   }
 
-  function applyToMission(missionId) {
-    const entry = document.querySelector(
-      '.missionSideBarEntry[mission_id="' + missionId + '"]'
-    );
-    if (entry) applyToEntry(entry);
+  function scheduleProcess() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(processAll);
   }
 
-  // ---------- Hook auf missionMarkerAdd ----------
+  // ---------- Beobachter: reagiert sofort auf neue/geänderte Einsätze ----------
 
-  function hookMissionMarkerAdd() {
-    if (typeof window.missionMarkerAdd !== "function") return false;
-    if (window.missionMarkerAdd.__creditsHooked) return true;
-
-    const original = window.missionMarkerAdd;
-
-    const wrapped = function (mission) {
-      const result = original.apply(this, arguments);
-      try {
-        if (mission && mission.id !== undefined) {
-          // kurz warten, bis das Spiel den Listeneintrag erzeugt hat
-          setTimeout(() => applyToMission(mission.id), 50);
-        }
-      } catch (e) {
-        console.warn("[Einsatz_Credits] Fehler im Hook:", e);
-      }
-      return result;
-    };
-    wrapped.__creditsHooked = true;
-
-    window.missionMarkerAdd = wrapped;
-    return true;
+  function startObserver() {
+    const observer = new MutationObserver(scheduleProcess);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["mission_type_id"],
+    });
   }
 
   // ---------- Start ----------
 
   async function init() {
-    const ok = await loadMissions();
-    if (!ok) return;
+    startObserver();
 
-    applyToAll();
+    // Aus dem Cache sofort anzeigen, sonst erst laden
+    let list = readCache();
+    if (!list) list = await fetchMissions();
+    if (!list) return;
 
-    // missionMarkerAdd ist evtl. noch nicht definiert -> kurz warten
-    let tries = 0;
-    const timer = setInterval(() => {
-      tries++;
-      if (hookMissionMarkerAdd() || tries > 40) clearInterval(timer);
-    }, 500);
+    missionMap = buildMap(list);
+    processAll();
   }
 
   init();
-})();;
+})();
