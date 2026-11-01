@@ -5,7 +5,6 @@
 // @author       Design by Bobelle
 // @description  Zeigt die durchschnittlichen Credits je Einsatz in der Einsatzliste an
 // @icon         https://www.leitstellenspiel.de/favicon.ico
-// @include      https://www.leitstellenspiel.de/*
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
 // @run-at       document-end
@@ -88,6 +87,7 @@
     el.id = "mission_credits_" + missionId;
     el.className = "dec-credits label ";
     el.textContent = credits;
+    el.style.marginRight = "2px"; // Abstand zum Alarm-Button
 
     if (credits >= 10000) el.className += "label-primary";
     else if (credits >= 7000) el.className += "label-info";
