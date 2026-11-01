@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Einsatz_Credits
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.00
+// @version      1.0.01
 // @author       Design by Bobelle
 // @description  Zeigt die durchschnittlichen Credits je Einsatz in der Einsatzliste an
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -155,7 +155,7 @@
       try {
         if (mission && mission.id !== undefined) {
           // kurz warten, bis das Spiel den Listeneintrag erzeugt hat
-          setTimeout(() => applyToMission(mission.id), 50);
+          setTimeout(() => applyToMission(mission.id), 150);
         }
       } catch (e) {
         console.warn("[Einsatz_Credits] Fehler im Hook:", e);
