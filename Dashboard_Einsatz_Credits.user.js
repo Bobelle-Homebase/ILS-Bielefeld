@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Einsatz_Credits
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.02
+// @version      1.0.03
 // @author       Design by Bobelle
 // @description  Zeigt die durchschnittlichen Credits je Einsatz in der Einsatzliste an
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -89,9 +89,9 @@
     const el = document.createElement("span");
     el.id = "mission_credits_" + missionId;
 
+    // Keine Credits hinterlegt (z. B. Rettungsdienst) -> nichts anzeigen
     if (credits === null || credits === undefined) {
-      el.innerText = "🚑";
-      return el;
+      return null;
     }
 
     el.innerText = credits;
@@ -114,6 +114,12 @@
 
     const newEl = createCreditsElement(missionId, credits);
     const existing = document.getElementById("mission_credits_" + missionId);
+
+    if (!newEl) {
+      // keine Credits: evtl. vorhandenes Label entfernen
+      if (existing) existing.remove();
+      return;
+    }
 
     if (existing) {
       existing.replaceWith(newEl);
@@ -185,4 +191,4 @@
   }
 
   init();
-})();
+})();;
