@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Dashboard_Einsatz_Credits
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.05
+// @version      1.0.06
 // @author       Design by Bobelle
 // @description  Zeigt die durchschnittlichen Credits je Einsatz in der Einsatzliste an
 // @icon         https://www.leitstellenspiel.de/favicon.ico
-// @match        https://www.leitstellenspiel.de/
-// @match        https://www.leitstellenspiel.de/?*
+// @include      https://www.leitstellenspiel.de/*
+// @match        https://www.leitstellenspiel.de/*
 // @grant        none
 // @run-at       document-end
 // ==/UserScript==
