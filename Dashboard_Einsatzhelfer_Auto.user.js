@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Einsatzhelfer_Auto
 // @namespace    https://leitstellenspiel.de
-// @version      1.5.0
+// @version      1.5.01
 // @author       Design by Bobelle
 // @description  Übernimmt fehlende Fahrzeuge aus dem Einsatzhelfer und wählt sie vor (Frei verschiebbarer Button)
 // @icon         https://www.leitstellenspiel.de/favicon.ico
