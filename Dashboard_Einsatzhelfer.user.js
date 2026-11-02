@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Dashboard_Einsatzhelfer
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.01
+// @version      1.0.2
 // @author       Design by Bobelle
-// @description  Einsatzhelfer
+// @description  Einsatzhelfer in einem frei platzierbaren Fenster
 // @icon         https://www.leitstellenspiel.de/favicon.ico
 // @include      https://www.leitstellenspiel.de/*
 // @match        https://www.leitstellenspiel.de/*
@@ -135,7 +135,7 @@
         "119": '1x Funkstreifenwagen <br><br><span class="badge">Credits: ~ 100 </span>',
         "120": '2x Löschfahrzeuge <br>1x Rüstwagen <br>1x Einsatzleitwagen 1 <br>1x Feuerwehrkran (75%)<br>1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 2200 </span>',
         "121": '2x Löschfahrzeuge <br>1x Rüstwagen <br>1x Einsatzleitwagen 1 <br>1x Feuerwehrkran (75%)<br>2x Funkstreifenwagen<br>1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 2500 </span>',
-        "122": '1x Löschfahrzeug (10%)<br>1x Funkstreifenwagen <br>1x Rettungstransportwagen<br>1x Notarzteinsatzfahrzeug (70%)<br><br>span class="badge">Credits: ~ 600 </span>',
+        "122": '1x Löschfahrzeug (10%)<br>1x Funkstreifenwagen <br>1x Rettungstransportwagen<br>1x Notarzteinsatzfahrzeug (70%)<br><br><span class="badge">Credits: ~ 600 </span>',
         "123": '1x Löschfahrzeug <br>1x Funkstreifenwagen <br>1x Rettungstransportwagen<br>1x Notarzteinsatzfahrzeug (20%)<br><br><span class="badge">Credits: ~ 1100 </span>',
         "124": '1x Löschfahrzeug <br>1x Rüstwagen (50%)<br>min. 2x Rettungstransportwagen<br>1x Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 1600 </span>',
         "125": '1x Löschfahrzeug <br>1x Rüstwagen (50%)<br>1x Funkstreifenwagen <br>min. 2x Rettungstransportwagen<br>1x Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 1700 </span>',
@@ -218,7 +218,7 @@
         "202": '1x Funkstreifenwagen <br><br><span class="badge">Credits: ~ 300 </span>',
         "203": '2x Löschfahrzeuge <br><br><span class="badge">Credits: ~ 610 </span>',
         "204": '6x Löschfahrzeuge <br>1x Drehleiter (50%)<br>1x Einsatzleitwagen 1 <br>1x GW-Atemschutz (25%)<br>1x Schlauchwagen (60%)<br><br><span class="badge">Credits: ~ 3500 </span>',
-        "205": '7x Löschfahrzeuge <br>2x Drehleiter <br>1x Einsatzleitwagen 1 <br>1x GW-Atemschutz <br>1x GW-L2-Wasser <br>' + '3x Funkstreifenwagen <br>min. 1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (33%)<br><br><span class="badge">Credits: ~ 5100 </span>',
+        "205": '7x Löschfahrzeuge <br>2x Drehleiter <br>1x Einsatzleitwagen 1 <br>1x GW-Atemschutz <br>1x GW-L2-Wasser <br>3x Funkstreifenwagen <br>min. 1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (33%)<br><br><span class="badge">Credits: ~ 5100 </span>',
         "206": '15x Löschfahrzeuge <br>2x Schlauchwagen (90%)<br>2x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 <br>2x GW-Atemschutz (70%)<br>4x Drehleiter <br>1x Feuerwehrkran (15%)<br>3x Funkstreifenwagen <br>2x GKW <br>1x MTW-TZ <br>2x BRmG R <br>2x LKW K9 <br>min. 2x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 10020 </span>',
         "207": '20x Löschfahrzeuge <br>2x Drehleiter <br>5x Rüstwagen <br>2x GW-Atemschutz <br>3x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 <br>4x GW-Messtechnik <br>4x GW-Gefahrgut <br>1x Dekon P <br>2x GKW <br>1x MTW-TZ <br>2x BRmG R <br>2x LKW K9 <br>3x Funkstreifenwagen <br><br><span class="badge">Credits: ~ 16010 </span>',
         "208": '8x Löschfahrzeuge <br>2x Rüstwagen <br>1x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 <br>1x Schlauchwagen (20%)<br>1x GW-Atemschutz <br>1x GW-Öl (50%)<br>2x GW-Messtechnik <br>1x GW-Gefahrgut <br>1x Dekon P <br>2x Funkstreifenwagen<br>min. 1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (15%)<br><br><span class="badge">Credits: ~ 4000 </span>',
@@ -330,7 +330,7 @@
         "314": '3x Löschfahrzeuge <br>1x Einsatzleitwagen 1 <br>1x Drehleiter <br>1x GW-Höhenrettung <br>1x Rettungstransportwagen <br>1x Notarzteinsatzfahrzeug <br><br><span class="badge">Credits: ~ 1900 </span>',
         "315": '8x Löschfahrzeuge <br>2x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 (80%)<br>1x Drehleiter <br>1x Dekon-P (50%)<br>1x GW-Atemschutz (50%)<br>1x GW-Messtechnik <br>2x GW-Gefahrgut <br>min. 1x Rettungstransportwagen <br>1x Notarzteinsatzfahrzeug (60%)<br><br><span class="badge">Credits: ~ 4400 </span>',
         "316": '12x Löschfahrzeuge <br>2x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 <br>1x Dekon-P <br>1x GW-Atemschutz<br>2x GW-Messtechnik <br>1x GW-Gefahrgut <br>2x Rüstwagen <br>4x Funkstreifenwagen <br>evtl. 1x Rettungstransportwagen <br>1x Notarzteinsatzfahrzeug (60%)<br><br><span class="badge">Credits: ~ 5400 </span>',
-        "317": '2x Löschfahrzeuge <br>1x Rüstwagen <br>1x Einsatzleitwagen 1 <br/>1x Rettungstransportwagen <br/>1x Notarzteinsatzfahrzeug <br><br><span class="badge">Credits: ~ 1500 </span>',
+        "317": '2x Löschfahrzeuge <br>1x Rüstwagen <br>1x Einsatzleitwagen 1 <br>1x Rettungstransportwagen <br>1x Notarzteinsatzfahrzeug <br><br><span class="badge">Credits: ~ 1500 </span>',
         "318": '1x Löschfahrzeug <br><br><span class="badge">Credits: ~ 200 </span>',
         "319": '1x Löschfahrzeug <br>1x Drehleiter (30%)<br>1x Rüstwagen (40%)<br>1x Rettungstransportwagen <br>1x Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 1000 </span>',
         "320": '20x Löschfahrzeuge <br>5x Drehleiter <br>3x GW-Atemschutz <br>3x GW-Messtechnik <br>2x GW-Gefahrgut <br>1x GW-Höhenrettung <br>6x Einsatzleitwagen 1 <br>4x Einsatzleitwagen 2 <br>2x Schlauchwagen <br>2x Rüstwagen <br>6x Funkstreifenwagen <br>1x LKW K 9 <br>1x BRmG R <br>1x MzKW <br>1x GKW <br>1x MTW-TZ <br>min. 15x Rettungstransportwagen <br>min. 1x Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 11500 </span>',
@@ -344,7 +344,7 @@
         "328": '2x Löschfahrzeuge <br>1x Flugfeldlöschfahrzeug <br>1x Rettungstreppe <br><br><span class="badge">Credits: ~ 1200 </span>',
         "329": '2x Löschfahrzeuge <br><br><span class="badge">Credits: ~ 700 </span>',
         "330": '1x Löschfahrzeug <br>1x Einsatzleitwagen 1 <br>1x Flugfeldlöschfahrzeug <br>1x Rettungstreppe <br><br><span class="badge">Credits: ~ 3500 </span>',
-        "331": '1x Löschfahrzeug <br>2x Rüstwagen <br>2x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 <br>2x Flugfeldlöschfahrzeuge <br1x Rettungstreppe <br>Rettungstransportwagen<br><br><span class="badge">Credits: ~ 3000 </span>',
+        "331": '1x Löschfahrzeug <br>2x Rüstwagen <br>2x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 <br>2x Flugfeldlöschfahrzeuge <br>1x Rettungstreppe <br>Rettungstransportwagen<br><br><span class="badge">Credits: ~ 3000 </span>',
         "332": '10x Löschfahrzeuge <br>3x Rüstwagen <br>2x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 <br>4x Flugfeldlöschfahrzeuge<br>1x Rettungstreppe <br>Rettungstransportwagen <br>Notarzteinsatzfahrzeug (20%)<br><br><span class="badge">Credits: ~ 10000 </span>',
         "333": '10x Löschfahrzeuge <br>3x Rüstwagen <br>2x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 <br>4x Flugfeldlöschfahrzeuge<br>1x Rettungstreppe <br>Rettungstransportwagen <br>Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 10000 </span>',
         "334": '8x Löschfahrzeuge <br>2x Einsatzleitwagen 1 <br>1x Einsatzleitwagen 2 <br>1x Rüstwagen <br>1x Drehleiter (50%)<br>1x Schlauchwagen (80%)<br>min. 1x Rettungstransportwagen <br>Notarzteinsatzfahrzeug (80%)<br><br><span class="badge">Credits: ~ 6000 </span>',
@@ -406,48 +406,287 @@
         "390": '1x Löschfahrzeug<br>1x Einsatzleitwagen 1<br>2x Flugfeldlöschfahrzeuge<br>1x Rettungstreppe<br>1x Rettungstransportwagen<br><br><span class="badge">Credits: ~ 1000 </span>',
         "391": '1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (60%)',
         "392": '2x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 1900 </span>',
-				"393": '2x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x Drehleiter<br>1x Feuerwehrkran (25%)<br>1x Funkstreifenwagen<br>1x Gerätekraftwagen<br><br><span class="badge">Credits: ~ 3000 </span>',
-				"394": '5x Löschfahrzeuge<br>1x Einsatzleitwagen 1<br>1x Rüstwagen<br>1x GW-Öl (25%)<br>1x GW-Gefahrgut (30%)<br>4x Funkstreifenwagen<br>min. 1x Rettungstransportwagen, max. 4x<br>Notarzteinsatzfahrzeug (80%)<br><br><span class="badge">Credits: ~ 3000 </span>',
-				"395": '3x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x GW-Atemschutz (10%)<br><br><span class="badge">Credits: ~ 3000 </span>',
-				"396": '3x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x GW-Atemschutz (10%)<br><br><span class="badge">Credits: ~ 3000 </span>',
-				"397": '1x Rettungstransportwagen',
-				"398": '4x Löschfahrzeuge<br>1x Einsatzleitwagen 1<br>1x Rüstwagen<br>1x GW-Werkfeuerwehr<br>1x Teleskopmast<br>1x GW-Atemschutz (20%)<br><br><span class="badge">Credits: ~ 3200 </span>',
-				"399": '3x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br><br><span class="badge">Credits: ~ 2700 </span>',
-				"400": '7x Löschfahrzeuge<br>2x Einsatzleitwagen 1<br>1x Einsatzleitwagen 2<br>1x Rüstwagen<br>1x GW-Werkfeuerwehr<br>1x Teleskopmast<br>1x ULF mit Löscharm<br>1x GW-Atemschutz<br><br><span class="badge">Credits: ~ 5050 </span>',
-				"401": '2x Löschfahrzeuge<br>1x GW-Werkfeuerwehr<br>1x Einsatzleitwagen 1<br>1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (80%)<br><br><span class="badge">Credits: ~ 1600 </span>',
-				"402": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 400 </span>',
-				"403": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 110 </span>',
-				"404": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 110 </span>',
-				"405": '2x Löschfahrzeuge<br><br><span class="badge">Credits: ~ 980 </span>',
-				"406": '2x Löschfahrzeuge<br><br><span class="badge">Credits: ~ 980 </span>',
-				"407": '6x Löschfahrzeuge<br>2x Einsatzleitwagen 1<br>1x Einsatzleitwagen 2<br>1x Drehleiter<br>1x Rüstwagen<br>1x GW-Werkfeuerwehr<br>1x GW-Atemschutz<br><br><span class="badge">Credits: ~ 3700 </span>',
-				"408": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 400 </span>',
-				"409": '2x Löschfahrzeuge<br><br><span class="badge">Credits: ~ 980 </span>',
-				"410": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 110 </span>',
-				"411": '6x Löschfahrzeuge<br>1x Drehleiter<br>2x Rüstwagen<br>2x Einsatzleitwagen 1<br>1x Einsatzleitwagen 2<br>1x GW-Höhenrettung<br>1x Polizeihubschrauber<br>2x Funkstreifenwagen<br>2x Gerätekraftwagen<br>min. 1x Rettungstransportwagen / max. 6x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 5900 </span>',
-				"412": '6x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x Einsatzleitwagen 2 (25%)<br>1x GW-Atemschutz (40%)<br>1x ULF mit Löscharm<br>1x Teleskopmast<br><br><span class="badge">Credits: ~ 3000 </span>',
-				"413": '6x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x Einsatzleitwagen 2 (25%)<br>1x GW-Atemschutz (40%)<br><br><span class="badge">Credits: ~ 2500 </span>',
-				"414": '6x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x Einsatzleitwagen 2 (25%)<br>1x GW-Atemschutz (40%)<br>1x ULF mit Löscharm<br>1x Teleskopmast<br><br><span class="badge">Credits: ~ 3000 </span>',
-				"415": '1x Funkstreifenwagen<br>1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (50%) / Rettungstransporthubschrauber (10%)<br><br><span class="badge">Credits: ~ 200 </span>',
-				"416": '1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (10%)',
-				"417": '1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (10%)',
+        "393": '2x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x Drehleiter<br>1x Feuerwehrkran (25%)<br>1x Funkstreifenwagen<br>1x Gerätekraftwagen<br><br><span class="badge">Credits: ~ 3000 </span>',
+        "394": '5x Löschfahrzeuge<br>1x Einsatzleitwagen 1<br>1x Rüstwagen<br>1x GW-Öl (25%)<br>1x GW-Gefahrgut (30%)<br>4x Funkstreifenwagen<br>min. 1x Rettungstransportwagen, max. 4x<br>Notarzteinsatzfahrzeug (80%)<br><br><span class="badge">Credits: ~ 3000 </span>',
+        "395": '3x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x GW-Atemschutz (10%)<br><br><span class="badge">Credits: ~ 3000 </span>',
+        "396": '3x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x GW-Atemschutz (10%)<br><br><span class="badge">Credits: ~ 3000 </span>',
+        "397": '1x Rettungstransportwagen',
+        "398": '4x Löschfahrzeuge<br>1x Einsatzleitwagen 1<br>1x Rüstwagen<br>1x GW-Werkfeuerwehr<br>1x Teleskopmast<br>1x GW-Atemschutz (20%)<br><br><span class="badge">Credits: ~ 3200 </span>',
+        "399": '3x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br><br><span class="badge">Credits: ~ 2700 </span>',
+        "400": '7x Löschfahrzeuge<br>2x Einsatzleitwagen 1<br>1x Einsatzleitwagen 2<br>1x Rüstwagen<br>1x GW-Werkfeuerwehr<br>1x Teleskopmast<br>1x ULF mit Löscharm<br>1x GW-Atemschutz<br><br><span class="badge">Credits: ~ 5050 </span>',
+        "401": '2x Löschfahrzeuge<br>1x GW-Werkfeuerwehr<br>1x Einsatzleitwagen 1<br>1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (80%)<br><br><span class="badge">Credits: ~ 1600 </span>',
+        "402": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 400 </span>',
+        "403": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 110 </span>',
+        "404": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 110 </span>',
+        "405": '2x Löschfahrzeuge<br><br><span class="badge">Credits: ~ 980 </span>',
+        "406": '2x Löschfahrzeuge<br><br><span class="badge">Credits: ~ 980 </span>',
+        "407": '6x Löschfahrzeuge<br>2x Einsatzleitwagen 1<br>1x Einsatzleitwagen 2<br>1x Drehleiter<br>1x Rüstwagen<br>1x GW-Werkfeuerwehr<br>1x GW-Atemschutz<br><br><span class="badge">Credits: ~ 3700 </span>',
+        "408": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 400 </span>',
+        "409": '2x Löschfahrzeuge<br><br><span class="badge">Credits: ~ 980 </span>',
+        "410": '1x Löschfahrzeug<br><br><span class="badge">Credits: ~ 110 </span>',
+        "411": '6x Löschfahrzeuge<br>1x Drehleiter<br>2x Rüstwagen<br>2x Einsatzleitwagen 1<br>1x Einsatzleitwagen 2<br>1x GW-Höhenrettung<br>1x Polizeihubschrauber<br>2x Funkstreifenwagen<br>2x Gerätekraftwagen<br>min. 1x Rettungstransportwagen / max. 6x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (50%)<br><br><span class="badge">Credits: ~ 5900 </span>',
+        "412": '6x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x Einsatzleitwagen 2 (25%)<br>1x GW-Atemschutz (40%)<br>1x ULF mit Löscharm<br>1x Teleskopmast<br><br><span class="badge">Credits: ~ 3000 </span>',
+        "413": '6x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x Einsatzleitwagen 2 (25%)<br>1x GW-Atemschutz (40%)<br><br><span class="badge">Credits: ~ 2500 </span>',
+        "414": '6x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>1x GW-Werkfeuerwehr<br>1x Einsatzleitwagen 2 (25%)<br>1x GW-Atemschutz (40%)<br>1x ULF mit Löscharm<br>1x Teleskopmast<br><br><span class="badge">Credits: ~ 3000 </span>',
+        "415": '1x Funkstreifenwagen<br>1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (50%) / Rettungstransporthubschrauber (10%)<br><br><span class="badge">Credits: ~ 200 </span>',
+        "416": '1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (10%)',
+        "417": '1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (10%)',
         "418": '1x Funkstreifenwagen<br><br><span class="badge">Credits: ~ 400 </span>',
         "419": '6x Löschfahrzeuge<br>3x Rüstwagen<br>2x Einsatzleitwagen 1<br>1x Einsatzleitwagen 2<br>1x Schlauchwagen<br>1x GW-Werkfeuerwehr<br>2x GW-Atemschutz<br>2x Drehleiter<br>1x GW-Messtechnik<br>2x Funkstreifenwagen<br>min. 1x Rettungstransportwagen<br>Notarzteinsatzfahrzeug (60%)<br><br><span class="badge">Credits: ~ 4500 </span>',
         "420": '1x Rettungstransportwagen',
         "421": '3x Löschfahrzeuge<br>1x Rüstwagen<br>1x Einsatzleitwagen 1<br>2x Funkstreifenwagen<br>Rettungstransportwagen<br>Notarzteinsatzfahrzeug (40%)<br><br><span class="badge">Credits: ~ 800 </span>',
         "422": '1x Funkstreifenwagen<br><br><span class="badge">Credits: ~ 400 </span>',
         "423": '6x Löschfahrzeuge<br>1x Drehleiter<br>1x Rüstwagen<br>2x Einsatzleitwagen 1<br>1x Einsatzleitwagen 2<br>1x Schlauchwagen (10%)<br>1x GW-Atemschutz (5%)<br>3x Funkstreifenwagen<br>Rettungstransportwagen<br>Notarzteinsatzfahrzeug (10%)<br><br><span class="badge">Credits: ~ 3100 </span>'
-
     };
 
-    let missionHelp = $('#mission_help');
+    const MSG_TYPE = 'lss-einsatzhelfer';
+    const POS_KEY = 'lss_einsatzhelfer_pos';
+    const isTop = window.top === window.self;
+    const clean = (s) => (s || '').replace(/\s+/g, ' ').trim();
 
-    if (missionHelp.length > 0) {
-        let missionId = missionHelp.attr('href').split("/").pop().replace(/\?.*/, '');
-        let aaoText = missions[missionId];
-        let markup = '<div class="alert alert-warning"><h3>Benötigte Fahrzeuge</h3>' + aaoText + '</div>';
+    /* ------------------------------------------------------------------
+     * TEIL 1: im Einsatzfenster (iframe) Daten aus der Tabelle lesen
+     *         und an das Hauptfenster schicken
+     * ------------------------------------------------------------------ */
+    if (!isTop) {
+        let lastJson = '';
 
-        $('#mission-form').prepend(markup);
+        const send = () => {
+            const mh = document.querySelector('#mission_help');
+            if (!mh) return;
+            const missionId = (mh.getAttribute('href') || '').split('/').pop().replace(/\?.*/, '');
+
+            // Tabelle in Zeilen zerlegen
+            const needed = [];
+            let credits = '';
+            const tmp = document.createElement('div');
+            tmp.innerHTML = missions[missionId] || '';
+            tmp.childNodes.forEach((n) => {
+                if (n.nodeType === 3) {
+                    const t = clean(n.textContent);
+                    if (!t) return;
+                    const m = t.match(/\((\d+\s*%)\)/);
+                    needed.push({ name: clean(t.replace(/\s*\(\d+\s*%\)/, '')), pct: m ? m[1] : '' });
+                } else if (n.nodeName === 'H4') {
+                    needed.push({ head: clean(n.textContent) });
+                } else if (n.classList && n.classList.contains('badge')) {
+                    credits = clean(n.textContent);
+                }
+            });
+
+            // "Fehlt noch" aus dem Spiel
+            const missingEl = document.querySelector('#missing_text');
+            const visible = missingEl && missingEl.offsetParent !== null && !missingEl.classList.contains('hidden');
+            let missingText = visible ? clean(missingEl.textContent) : '';
+            missingText = missingText.replace(/^[^:]*fehl[^:]*:/i, '').trim();
+            const missing = missingText ? missingText.split(/\s*,\s*/).filter(Boolean) : [];
+
+            const t = document.querySelector('#missionH1') || document.querySelector('h1');
+            const data = {
+                type: MSG_TYPE,
+                id: missionId,
+                title: t ? clean(t.textContent) : 'Einsatz ' + missionId,
+                needed, missing, credits
+            };
+            const json = JSON.stringify(data);
+            if (json !== lastJson) {
+                lastJson = json;
+                window.top.postMessage(data, location.origin);
+            }
+        };
+
+        send();
+        setInterval(send, 1500);
+        new MutationObserver(send).observe(document.body, { childList: true, subtree: true, characterData: true });
+        return;
     }
+
+    /* ------------------------------------------------------------------
+     * TEIL 2: im Hauptfenster das frei platzierbare Fenster anzeigen
+     * ------------------------------------------------------------------ */
+    const DEFAULT_POS = { left: 20, top: 200, width: 260, height: null };
+
+    const box = document.createElement('div');
+    box.id = 'einsatzhelfer-box';
+    box.style.cssText = [
+        'position:fixed', 'z-index:99999',
+        'min-width:160px', 'min-height:80px', 'max-width:90vw', 'max-height:90vh',
+        'background:#1f2937', 'color:#fff',
+        'border:1px solid #4b5563', 'border-radius:6px',
+        'box-shadow:0 2px 10px rgba(0,0,0,.5)', 'font:12px/1.4 Arial,sans-serif',
+        'display:none', 'flex-direction:column',
+        'resize:both', 'overflow:hidden'
+    ].join(';');
+
+    const header = document.createElement('div');
+    header.style.cssText = 'cursor:move;padding:6px 8px;background:#374151;display:flex;justify-content:space-between;align-items:center;font-weight:bold;user-select:none;touch-action:none;flex:0 0 auto;';
+    header.title = 'Ziehen zum Verschieben, Doppelklick zum Zurücksetzen';
+    const headerTitle = document.createElement('span');
+    headerTitle.textContent = 'Einsatzhelfer';
+    const closeBtn = document.createElement('span');
+    closeBtn.textContent = '✕';
+    closeBtn.title = 'Ausblenden';
+    closeBtn.style.cssText = 'cursor:pointer;padding:0 4px;';
+    header.append(headerTitle, closeBtn);
+
+    const body = document.createElement('div');
+    body.style.cssText = 'padding:8px;overflow-y:auto;flex:1 1 auto;';
+    const missionTitle = document.createElement('div');
+    missionTitle.style.cssText = 'font-weight:bold;margin-bottom:4px;color:#93c5fd;';
+    const list = document.createElement('div');
+    body.append(missionTitle, list);
+
+    box.append(header, body);
+    document.body.appendChild(box);
+
+    const clamp = (v, min, max) => Math.max(min, Math.min(v, max));
+
+    const applyPos = (p) => {
+        box.style.width = (p.width || DEFAULT_POS.width) + 'px';
+        box.style.height = p.height ? p.height + 'px' : 'auto';
+        const w = box.offsetWidth || p.width || DEFAULT_POS.width;
+        box.style.left = clamp(p.left, 0, Math.max(0, window.innerWidth - Math.min(w, 80))) + 'px';
+        box.style.top = clamp(p.top, 0, Math.max(0, window.innerHeight - 40)) + 'px';
+    };
+
+    const savePos = () => {
+        try {
+            const r = box.getBoundingClientRect();
+            localStorage.setItem(POS_KEY, JSON.stringify({
+                left: Math.round(r.left), top: Math.round(r.top),
+                width: Math.round(r.width), height: box.style.height === 'auto' ? null : Math.round(r.height)
+            }));
+        } catch (e) { /* ignorieren */ }
+    };
+
+    let stored = DEFAULT_POS;
+    try {
+        const s = JSON.parse(localStorage.getItem(POS_KEY));
+        if (s) stored = Object.assign({}, DEFAULT_POS, s);
+    } catch (e) { /* ignorieren */ }
+    applyPos(stored);
+
+    // Verschieben per Pointer-Capture (funktioniert auch über dem Einsatz-iframe)
+    let drag = null;
+    header.addEventListener('pointerdown', (e) => {
+        if (e.target === closeBtn || e.button > 0) return;
+        const r = box.getBoundingClientRect();
+        drag = { dx: e.clientX - r.left, dy: e.clientY - r.top };
+        header.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    });
+    header.addEventListener('pointermove', (e) => {
+        if (!drag) return;
+        const w = box.offsetWidth;
+        box.style.left = clamp(e.clientX - drag.dx, -w + 60, window.innerWidth - 60) + 'px';
+        box.style.top = clamp(e.clientY - drag.dy, 0, window.innerHeight - 30) + 'px';
+    });
+    const endDrag = (e) => {
+        if (!drag) return;
+        drag = null;
+        try { header.releasePointerCapture(e.pointerId); } catch (err) { /* ignorieren */ }
+        savePos();
+    };
+    header.addEventListener('pointerup', endDrag);
+    header.addEventListener('pointercancel', endDrag);
+
+    // Doppelklick auf Titelleiste: Position und Größe zurücksetzen
+    header.addEventListener('dblclick', (e) => {
+        if (e.target === closeBtn) return;
+        applyPos(DEFAULT_POS);
+        savePos();
+    });
+
+    // Größenänderung speichern
+    if (window.ResizeObserver) {
+        let rt;
+        new ResizeObserver(() => {
+            if (box.style.display === 'none') return;
+            clearTimeout(rt);
+            rt = setTimeout(savePos, 300);
+        }).observe(box);
+    }
+
+    // Bei Fenstergrößenänderung im sichtbaren Bereich halten
+    window.addEventListener('resize', () => {
+        const r = box.getBoundingClientRect();
+        applyPos({ left: r.left, top: r.top, width: r.width, height: box.style.height === 'auto' ? null : r.height });
+    });
+
+    let dismissedId = null;
+    let currentId = null;
+
+    closeBtn.addEventListener('click', () => {
+        dismissedId = currentId;
+        box.style.display = 'none';
+    });
+
+    function addLabel(text, color) {
+        const h = document.createElement('div');
+        h.style.cssText = 'font-weight:bold;margin:6px 0 2px;color:' + color + ';';
+        h.textContent = text;
+        list.appendChild(h);
+    }
+
+    function addLine(text, pct, color) {
+        const row = document.createElement('div');
+        row.style.cssText = 'padding-left:6px;color:' + color + ';';
+        row.textContent = text;
+        if (pct) {
+            const sp = document.createElement('span');
+            sp.style.cssText = 'color:#9ca3af;margin-left:4px;';
+            sp.textContent = '(' + pct + ')';
+            row.appendChild(sp);
+        }
+        list.appendChild(row);
+    }
+
+    function render(d) {
+        currentId = d.id;
+        if (dismissedId === d.id) return;
+
+        missionTitle.textContent = d.title;
+        list.textContent = '';
+
+        if (d.missing.length) {
+            addLabel('Fehlt noch', '#fca5a5');
+            d.missing.forEach((m) => addLine(m, '', '#fca5a5'));
+        }
+        if (d.needed.length) {
+            addLabel('Benötigt', '#fde68a');
+            d.needed.forEach((it) => {
+                if (it.head) addLabel(it.head, '#93c5fd');
+                else addLine(it.name, it.pct, '#fff');
+            });
+        }
+        if (!d.missing.length && !d.needed.length) addLine('Keine Daten gefunden', '', '#9ca3af');
+
+        if (d.credits) {
+            const c = document.createElement('div');
+            c.style.cssText = 'margin-top:6px;color:#9ca3af;font-size:11px;';
+            c.textContent = d.credits;
+            list.appendChild(c);
+        }
+        box.style.display = 'flex';
+    }
+
+    window.addEventListener('message', (e) => {
+        if (e.origin !== location.origin) return;
+        const d = e.data;
+        if (!d || d.type !== MSG_TYPE || !Array.isArray(d.needed) || !Array.isArray(d.missing)) return;
+        render(d);
+    });
+
+    // Fenster ausblenden, sobald kein Einsatzfenster mehr offen ist
+    setInterval(() => {
+        const open = Array.from(document.querySelectorAll('iframe')).some(
+            (f) => /\/missions\/\d+/.test(f.src || '') && f.offsetParent !== null
+        );
+        if (!open) {
+            box.style.display = 'none';
+            dismissedId = null;
+            currentId = null;
+        }
+    }, 1500);
 
 })();
