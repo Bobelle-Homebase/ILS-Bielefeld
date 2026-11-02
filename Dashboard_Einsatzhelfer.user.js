@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Einsatzhelfer
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.2
+// @version      1.0.3
 // @author       Design by Bobelle
 // @description  Einsatzhelfer in einem frei platzierbaren Fenster
 // @icon         https://www.leitstellenspiel.de/favicon.ico
