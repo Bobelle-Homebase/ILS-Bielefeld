@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Einsatzhelfer_Auto
 // @namespace    https://leitstellenspiel.de
-// @version      1.6.00
+// @version      1.6.01
 // @author       Design by Bobelle
 // @description  Übernimmt fehlende Fahrzeuge aus dem Einsatzhelfer und wählt sie vor (Frei verschiebbarer Button)
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -15,9 +15,9 @@
     'use strict';
 
     const CFG = {
-        auto: true,       // beim Öffnen automatisch vorwählen
-        tries: 40,        // Versuche auf den Einsatzhelfer zu warten
-        interval: 500,    // ms zwischen Versuchen
+        auto: true, // beim Öffnen automatisch vorwählen
+        tries: 40, // Versuche auf den Einsatzhelfer zu warten
+        interval: 500, // ms zwischen Versuchen
         settleDelay: 700, // ms Wartezeit, bis der Einsatzhelfer fertig befüllt ist
         debug: true,
         posKey: 'eh_auto_pos_v2'
@@ -27,14 +27,14 @@
     // Hier kannst du selbst ergänzen: [Regex für Anforderung, [Regexe für Fahrzeugtypen]]
     const ALIASES = [
         [/^löschfahrzeug|^löschgruppen/, [/^(h|t|s)?lf/, /^löschfahrzeug/]],
-        [/^drehleiter/,                 [/^dlk/, /^dl\d/, /^drehleiter/]],
-        [/^rettungswagen/,              [/^rtw/]],
+        [/^drehleiter/, [/^dlk/, /^dl\d/, /^drehleiter/]],
+        [/^rettungswagen/,  [/^rtw/]],
         [/^notarzt(einsatz)?fahrzeug|^notarzt/, [/^nef/]],
-        [/^krankentransport/,           [/^ktw/]],
+        [/^krankentransport/, [/^ktw/]],
         [/^funkstreifenwagen|^streifenwagen/, [/^fustw/, /^funkstreifenwagen/]],
-        [/^mannschaftstransport/,       [/^mtw/]],
-        [/^rüstwagen/,                  [/^rw/]],
-        [/^schlauchwagen/,              [/^sw/]]
+        [/^mannschaftstransport/,  [/^mtw/]],
+        [/^rüstwagen/, [/^rw/]],
+        [/^schlauchwagen/, [/^sw/]]
     ];
 
     const log = (...a) => CFG.debug && console.log('[Einsatzhelfer-Auswahl]', ...a);
