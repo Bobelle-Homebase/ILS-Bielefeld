@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Einsatzhelfer_Auto
 // @namespace    https://leitstellenspiel.de
-// @version      1.7.02
+// @version      1.7.03
 // @author       Design by Bobelle
 // @description  Übernimmt fehlende Fahrzeuge aus dem Einsatzhelfer und wählt sie vor (Frei verschiebbarer Button, nicht bei Verbandseinsätzen)
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -15,11 +15,11 @@
     'use strict';
 
     const CFG = {
-        auto: true, // beim Öffnen automatisch vorwählen
+        auto: true,           // beim Öffnen automatisch vorwählen
         hideOnAlliance: true, // bei Verbandseinsätzen nichts anzeigen und nichts wählen
-        tries: 40, // Versuche auf den Einsatzhelfer zu warten
-        interval: 500, // ms zwischen Versuchen
-        settleDelay: 700, // ms Wartezeit, bis der Einsatzhelfer fertig befüllt ist
+        tries: 40,            // Versuche auf den Einsatzhelfer zu warten
+        interval: 500,        // ms zwischen Versuchen
+        settleDelay: 700,     // ms Wartezeit, bis der Einsatzhelfer fertig befüllt ist
         debug: true,
         posKey: 'eh_auto_pos_v2'
     };
@@ -28,14 +28,14 @@
     // Hier kannst du selbst ergänzen: [Regex für Anforderung, [Regexe für Fahrzeugtypen]]
     const ALIASES = [
         [/^löschfahrzeug|^löschgruppen/, [/^(h|t|s)?lf/, /^löschfahrzeug/]],
-        [/^drehleiter/, [/^dlk/, /^dl\d/, /^drehleiter/]],
-        [/^rettungswagen/, [/^rtw/]],
+        [/^drehleiter/,                 [/^dlk/, /^dl\d/, /^drehleiter/]],
+        [/^rettungswagen/,              [/^rtw/]],
         [/^notarzt(einsatz)?fahrzeug|^notarzt/, [/^nef/]],
-        [/^krankentransport/, [/^ktw/]],
+        [/^krankentransport/,           [/^ktw/]],
         [/^funkstreifenwagen|^streifenwagen/, [/^fustw/, /^funkstreifenwagen/]],
-        [/^mannschaftstransport/,[/^mtw/]],
-        [/^rüstwagen/, [/^rw/]],
-        [/^schlauchwagen/, [/^sw/]]
+        [/^mannschaftstransport/,       [/^mtw/]],
+        [/^rüstwagen/,                  [/^rw/]],
+        [/^schlauchwagen/,              [/^sw/]]
     ];
 
     const log = (...a) => CFG.debug && console.log('[Einsatzhelfer-Auswahl]', ...a);
@@ -233,17 +233,20 @@
         if (!document.querySelector('input.vehicle_checkbox')) return;
         if (document.getElementById('eh-auto-box')) return;
 
+        // Ganz transparent: kein Hintergrund, kein Schatten, kein Rahmen
         const box = document.createElement('div');
         box.id = 'eh-auto-box';
         box.style.cssText =
             'position:fixed;right:20px;bottom:20px;z-index:99999;display:flex;align-items:center;gap:6px;' +
-            'background:#222;color:#fff;border-radius:6px;padding:6px 10px;max-width:90vw;' +
-            'font:12px sans-serif;box-shadow:0 4px 12px rgba(0,0,0,0.5);user-select:none;';
+            'background:transparent;border:none;box-shadow:none;padding:0;max-width:90vw;' +
+            'font:12px sans-serif;user-select:none;';
 
         const handle = document.createElement('span');
         handle.textContent = '⠿';
         handle.title = 'Zum Verschieben ziehen';
-        handle.style.cssText = 'cursor:move;font-size:18px;line-height:1;padding:2px 4px;touch-action:none;color:#aaa;';
+        handle.style.cssText =
+            'cursor:move;font-size:18px;line-height:1;padding:2px 4px;touch-action:none;' +
+            'color:#fff;opacity:0.85;text-shadow:0 0 3px rgba(0,0,0,0.8);';
 
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -253,7 +256,8 @@
 
         const span = document.createElement('span');
         span.id = 'eh-auto-msg';
-        span.style.cssText = 'color:#ddd;font-size:11px;margin-left:4px;';
+        span.style.cssText =
+            'color:#fff;font-size:11px;margin-left:4px;text-shadow:0 0 3px rgba(0,0,0,0.9);';
 
         box.append(handle, btn, span);
         document.body.appendChild(box);
