@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Einsatzhelfer_Auto
 // @namespace    https://leitstellenspiel.de
-// @version      1.7.03
+// @version      1.7.04
 // @author       Design by Bobelle
 // @description  Übernimmt fehlende Fahrzeuge aus dem Einsatzhelfer und wählt sie vor (Frei verschiebbarer Button, nicht bei Verbandseinsätzen)
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -28,14 +28,14 @@
     // Hier kannst du selbst ergänzen: [Regex für Anforderung, [Regexe für Fahrzeugtypen]]
     const ALIASES = [
         [/^löschfahrzeug|^löschgruppen/, [/^(h|t|s)?lf/, /^löschfahrzeug/]],
-        [/^drehleiter/,                 [/^dlk/, /^dl\d/, /^drehleiter/]],
-        [/^rettungswagen/,              [/^rtw/]],
+        [/^drehleiter/, [/^dlk/, /^dl\d/, /^drehleiter/]],
+        [/^rettungswagen/, [/^rtw/]],
         [/^notarzt(einsatz)?fahrzeug|^notarzt/, [/^nef/]],
-        [/^krankentransport/,           [/^ktw/]],
+        [/^krankentransport/, [/^ktw/]],
         [/^funkstreifenwagen|^streifenwagen/, [/^fustw/, /^funkstreifenwagen/]],
-        [/^mannschaftstransport/,       [/^mtw/]],
-        [/^rüstwagen/,                  [/^rw/]],
-        [/^schlauchwagen/,              [/^sw/]]
+        [/^mannschaftstransport/, [/^mtw/]],
+        [/^rüstwagen/, [/^rw/]],
+        [/^schlauchwagen/,[/^sw/]]
     ];
 
     const log = (...a) => CFG.debug && console.log('[Einsatzhelfer-Auswahl]', ...a);
