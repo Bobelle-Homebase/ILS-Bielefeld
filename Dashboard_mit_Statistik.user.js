@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.03
+// @version      1.0.13
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -20,7 +20,8 @@
         window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
     }
 
-    console.log("[Bobelle Dashboard] 1.0.03 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.13 gestartet");
+
 
     // =====================================================
     // KONFIGURATION & KONSTANTEN
@@ -89,12 +90,12 @@
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf"]},
         { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w"]},
         { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
-        { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
+          { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"ELW 1", id:3, c:C_FW, cat:"FW", s:["elw 1"]},
         { n:"ELW 2", id:34, c:C_FW, cat:"FW", s:["elw 2"]},
         { n:"MTW", id:36, c:C_FW, cat:"FW", s:["mtw"]},
-        { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-l"]},
-        { n:"MTW-V", id:140, c:C_FW, cat:"Versorgung", s:["mtw-v"]},
+          { n:"MTF-L", id:106, c:C_FW, cat:"Versorgung", s:["mtf-l"]},
+          { n:"MTW-V", id:140, c:C_FW, cat:"Versorgung", s:["mtw-v"]},
         { n:"SLF", id:167, c:C_FW, cat:"FW", s:["slf","sonderlöschfahrzeug"]},
         { n:"Dekon-P", id:53, c:C_FW, cat:"FW", s:["dekon-p"]},
         { n:"GW-Lüfter", id:114, c:C_FW, cat:"FW", s:["gw-lüfter"]},
@@ -104,11 +105,11 @@
         { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-mess"]},
         { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahr"]},
         { n:"GW-Waldbrand", id:190, c:C_FW, cat:"FW", s:["gw-wald"]},
-        { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
-        { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
+          { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
+          { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
         { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhen fw"]},
-        { n:"GW-Logistik", id:[105,108], c:C_FW, cat:"FW", s:["ab-l"]},
-        { n:"GW-Hygiene", id:[104,108], c:C_FW, cat:"FW", s:["ab-l"]},
+          { n:"GW-Logistik", id:[105,108], c:C_FW, cat:"FW", s:["ab-l"]},
+          { n:"GW-Hygiene", id:[104,108], c:C_FW, cat:"FW", s:["ab-l"]},
         { n:"GW-Verpflegung", id:138, c:C_FW, cat:"Versorgung", s:["gw-verpflegung"]},
         { n:"GW-Küche", id:139, c:C_FW, cat:"Versorgung", s:["gw-küche"]},
         { n:"WLF", id:46, c:C_FW, cat:"FW", s:["wlf","wechsellader"]},
@@ -127,8 +128,8 @@
         { n:"AB-MzB", id:71, c:C_FW, cat:"FW", s:["ab-mzb"]},
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
         { n:"AB-Lüfter", id:116, c:C_FW, cat:"FW", s:["ab-lüfter"]},
-        { n:"AB-Logistik", id:[105,108], c:C_FW, cat:"FW", s:["ab-l"]},
-        { n:"AB-Hygiene", id:[104,108], c:C_FW, cat:"FW", s:["ab-l"]},
+          { n:"AB-Logistik", id:[105,108], c:C_FW, cat:"FW", s:["ab-l"]},
+          { n:"AB-Hygiene", id:[104,108], c:C_FW, cat:"FW", s:["ab-l"]},
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
         { n:"Anh Tierrettungl", id:186, c:C_FW, cat:"FW", s:["anh tier"]},
@@ -258,15 +259,15 @@
     ];
 
     const SVGS = {
-        dashboard:`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>`,
-        eye:`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
-        building:`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="2" x2="9" y2="22"></line><line x1="15" y1="2" x2="15" y2="22"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>`,
-        collapse:`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 11 12 6 17 11"></polyline><polyline points="7 13 12 18 17 13"></polyline></svg>`,
-        settings:`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
-        popout:`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`,
-        minimize:`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
-        maximize:`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`,
-        anchor:`<svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>`
+        dashboard:`<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>`,
+        eye:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
+        building:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="2" x2="9" y2="22"></line><line x1="15" y1="2" x2="15" y2="22"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>`,
+        collapse:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 11 12 6 17 11"></polyline><polyline points="7 13 12 18 17 13"></polyline></svg>`,
+        settings:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+        popout:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`,
+        minimize:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
+        maximize:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>`,
+        anchor:`<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="22" x2="12" y2="8"></line><path d="M5 12H2a10 10 0 0 0 20 0h-3"></path></svg>`
     };
 
     const DEFAULTS = {
@@ -380,6 +381,7 @@
     const KEYS = AAO_TILES_RAW.map(t=>t.n);
     const tileMetaByKey = Object.fromEntries(AAO_TILES_RAW.map(t=>[t.n,t]));
 
+    // Pre-build search index for faster lookups
     const SEARCH_INDEX = {};
     TILE_LIST.forEach(t => {
         SEARCH_INDEX[t.norm] = t;
@@ -845,6 +847,7 @@
 
     function updateCategoryHeaders(){
         const now = Date.now();
+        // Refresh cache if needed (every 1 minute)
         if(now - _headerCacheExpiry > 60000) {
             _cachedHeaderElements = {};
             _headerCacheExpiry = now;
@@ -1012,6 +1015,16 @@
         }
     }
 
+    let _reqTimer = null, _updatePending = false;
+    function requestUpdate(delay){
+        if(_reqTimer) clearTimeout(_reqTimer);
+        _reqTimer = setTimeout(() => {
+            _reqTimer = null;
+            if(isUpdating) _updatePending = true;
+            else updateAvailability();
+        }, delay == null ? 250 : delay);
+    }
+
     async function updateAvailability(){
         if(isUpdating) return;
         if(!isMainPage) return;
@@ -1022,8 +1035,9 @@
         const todayStr = getTodayString();
 
         if(creditsData.date !== todayStr || (now - lastCreditsUpdate > 30000)){
-            await fetchCreditsDaily();
+            fetchCreditsDaily(); // nicht abwarten, sonst verzögert die Credits-Seite jedes Update
         }
+
 
         for(const k of KEYS){
             vehicleAvailability[k] = false;
@@ -1120,6 +1134,7 @@
                         for(const k of nameCache[cacheKey]) matchedKeys.add(k);
                     } else {
                         const found = [];
+                        // Use search index for faster lookups
                         const searchTerms = [vNameCustom, vNameType];
                         for(const term of searchTerms){
                             if(SEARCH_INDEX[term]){
@@ -1250,6 +1265,7 @@
             if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 0;
         });
 
+        // Single RAF for all DOM updates
         const doc = getTargetDoc();
         requestAnimationFrame(() => {
             const pillsContainer = doc.getElementById("fzResourcePills");
@@ -1306,6 +1322,7 @@
             isUpdating = false;
             lastUpdateStr = new Date().toLocaleTimeString("de-DE");
             updateSubHeaderInfo();
+            if(_updatePending){ _updatePending = false; requestUpdate(150); }
         });
     }
 
@@ -1399,6 +1416,9 @@
         pill.style.color = uiSettings.creditsLabelColor;
     }
 
+    // =======================================================
+    // LOOPS & STYLES
+    // =======================================================
     function startApiLoop(){
         if(apiTimer) clearInterval(apiTimer);
         const interval = Math.max(60, uiSettings.apiInterval || 120) * 1000;
@@ -1472,6 +1492,8 @@
             .fzTile.fzEmpty{background:${uiSettings.tileColorEmpty}!important;color:#222!important;}
             .fzTile.fzInUse .fzStatusDot,.fzTile.fzEmpty .fzStatusDot{background-color:#dc3545!important;}
             .fzTile.fzResource{background-color:var(--fz-res-bg)!important;color:#000!important;}
+            .fzTile.fzResource.fzInUse{background-color:${uiSettings.tileColorInUse}!important;color:#222!important;}
+            .fzTile.fzResource.fzEmpty{background-color:${uiSettings.tileColorEmpty}!important;color:#222!important;}
             .fzTile.fzStat{background-color:var(--fz-tile-bg)!important;color:var(--fz-tile-text)!important;height:48px;}
             .fzTile.fzStat .fzFunkalarmLabel{display:none!important;}
             .fzTrend.up{color:${uiSettings.trendColorUp};}.fzTrend.down{color:${uiSettings.trendColorDown};}.fzTrend.eq{color:${uiSettings.trendColorEq};}
@@ -1530,7 +1552,7 @@
         document.head.appendChild(style);
         const fa = document.createElement("link");
         fa.rel = "stylesheet";
-        fa.href = "[https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css](https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css)";
+        fa.href = "https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css";
         document.head.appendChild(fa);
     }
 
@@ -1548,6 +1570,9 @@
         }
     }
 
+    // =======================================================
+    // KACHEL RENDER LOGIK
+    // =======================================================
     function updateTile(key, state){
         if(SCHOOLING_TILE_NAMES.has(key)){ updateSchoolingTiles(); return; }
         const cached = tileCache[key];
@@ -1777,6 +1802,9 @@
         return div;
     }
 
+    // =======================================================
+    // MODALS & EVENT HANDLER
+    // =======================================================
     function toggleCategoryTileCompact(cat){
         if(!Array.isArray(uiSettings.collapsedTilesCats)) uiSettings.collapsedTilesCats = [];
         const isCompact = uiSettings.collapsedTilesCats.includes(cat);
@@ -2225,7 +2253,7 @@
         }
 
         extWin.document.open();
-        extWin.document.write(`<html><head><title>Leitstelle Dashboard</title><style id="fzStylesExt">${cssContent}</style><link rel="stylesheet" href="[https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css](https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css)"></head><body class="fzExternal"></body></html>`);
+        extWin.document.write(`<html><head><title>Leitstelle Dashboard</title><style id="fzStylesExt">${cssContent}</style><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"></head><body class="fzExternal"></body></html>`);
         extWin.document.close();
 
         if(fzWrapper){
@@ -2331,7 +2359,7 @@
 
         const fzHeader = document.createElement("div");
         fzHeader.className = "fzHeader";
-        fzHeader.innerHTML = `<div class="fzHeaderLeft"><div style="display:flex;flex-direction:column;justify-content:center;gap:3px;"><div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap;"><div id="fzMissionStats" style="display:flex;gap:5px;align-items:center;">${getMissionStatsHTML()}</div><div id="fzAvailIndicator" class="fzHeaderPill" title="Verfügbarkeit">...</div><div id="fzAmpel" class="fzTrafficLight" title="Auto-Hide Timer"><div class="fzLight red"></div><div class="fzLight yellow"></div><div class="fzLight green active"></div></div><div id="fzResourcePills" style="display:flex;gap:5px;"></div></div><div class="fzSubInfoRow"><span id="fzSysStatus">Warte auf System...</span><span id="fzLastUpdate"></span><span id="fzDispatcher"></span></div></div></div><div class="fzHeaderRight"><div id="fzRelocatedButtons"><a href="[https://www.leitstellenspiel.de/buildings/26017007](https://www.leitstellenspiel.de/buildings/26017007)" target="_blank" class="fzHeadBtn" title="Leitstelle Bielefeld" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="[https://www.leitstellenspiel.de/leitstellenansicht](https://www.leitstellenspiel.de/leitstellenansicht)" target="_blank" class="fzHeadBtn" title="Wachenübersicht" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="[https://www.leitstellenspiel.de/buildings/26794438#tab_projected_missions](https://www.leitstellenspiel.de/buildings/26794438#tab_projected_missions)" target="_blank" class="fzHeadBtn" title="SAR Leitstelle" style="text-decoration:none;color:inherit;">${SVGS.anchor}</a><span class="fzHeadBtn" id="fzToggleCompact" title="Kompakt/Normal">${SVGS.eye}</span><span class="fzHeadBtn" id="fzGlobalCollapse" title="Kategorien alle auf/zu">${SVGS.collapse}</span><span class="fzHeadBtn" id="fzGlobalTileCollapse" title="Alle Kacheln ein-/ausklappen" style="font-size:16px;opacity:0.8;">▦</span><span class="fzHeadBtn" id="fzSettingsButton" title="Einstellungen">${SVGS.settings}</span><span class="fzHeadBtn" id="fzPopoutButton" title="Fenster">${SVGS.popout}</span><span class="fzHeadBtn" id="fzFullscreenButton" title="Vollbild">${SVGS.maximize}</span><span class="fzHeadBtn" id="fzMinimizeButton" title="Minimieren">${SVGS.minimize}</span></div></div>`;
+        fzHeader.innerHTML = `<div class="fzHeaderLeft"><div style="display:flex;flex-direction:column;justify-content:center;gap:3px;"><div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap;"><div id="fzMissionStats" style="display:flex;gap:5px;align-items:center;">${getMissionStatsHTML()}</div><div id="fzAvailIndicator" class="fzHeaderPill" title="Verfügbarkeit">...</div><div id="fzAmpel" class="fzTrafficLight" title="Auto-Hide Timer"><div class="fzLight red"></div><div class="fzLight yellow"></div><div class="fzLight green active"></div></div><div id="fzResourcePills" style="display:flex;gap:5px;"></div></div><div class="fzSubInfoRow"><span id="fzSysStatus">Warte auf System...</span><span id="fzLastUpdate"></span><span id="fzDispatcher"></span></div></div></div><div class="fzHeaderRight"><div id="fzRelocatedButtons"><a href="https://www.leitstellenspiel.de/buildings/26017007" target="_blank" class="fzHeadBtn" title="Leitstelle Bielefeld" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/leitstellenansicht" target="_blank" class="fzHeadBtn" title="Wachenübersicht" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/buildings/26794438#tab_projected_missions" target="_blank" class="fzHeadBtn" title="SAR Leitstelle" style="text-decoration:none;color:inherit;">${SVGS.anchor}</a><span class="fzHeadBtn" id="fzToggleCompact" title="Kompakt/Normal">${SVGS.eye}</span><span class="fzHeadBtn" id="fzGlobalCollapse" title="Kategorien alle auf/zu">${SVGS.collapse}</span><span class="fzHeadBtn" id="fzGlobalTileCollapse" title="Alle Kacheln ein-/ausklappen" style="font-size:16px;opacity:0.8;">▦</span><span class="fzHeadBtn" id="fzSettingsButton" title="Einstellungen">${SVGS.settings}</span><span class="fzHeadBtn" id="fzPopoutButton" title="Fenster">${SVGS.popout}</span><span class="fzHeadBtn" id="fzFullscreenButton" title="Vollbild">${SVGS.maximize}</span><span class="fzHeadBtn" id="fzMinimizeButton" title="Minimieren">${SVGS.minimize}</span></div></div>`;
         fzWrapper.appendChild(fzHeader);
 
         setTimeout(() => {
@@ -2508,7 +2536,7 @@
     function registerEventListener(){
         if(typeof $ !== 'undefined'){
             $(document).on('radio_message', function(){
-                if(!isUpdating) setTimeout(updateAvailability, 100);
+                requestUpdate(250);
             });
             $(document).on('mission_marker_add', function(){
                 setTimeout(() => {
@@ -2517,13 +2545,36 @@
                 }, 500);
             });
         }
+
+        // Live-Statuswechsel direkt vom Spiel (Funk-Nachrichten)
+        if(typeof window.radioMessage === 'function' && !window.radioMessage.__fzWrapped){
+            const origRadio = window.radioMessage;
+            window.radioMessage = function(msg){
+                const res = origRadio.apply(this, arguments);
+                try { if(msg && (msg.type === 'vehicle_fms' || msg.fms_real !== undefined || msg.fms !== undefined)) requestUpdate(250); } catch(e){}
+                return res;
+            };
+            window.radioMessage.__fzWrapped = true;
+        }
+
+        if(typeof sap !== 'undefined' && sap.audio_play){
+            const originalAudioPlay = sap.audio_play;
+            let apiDebounce = null;
+            sap.audio_play = function(audio){
+                originalAudioPlay.apply(this,arguments);
+                if(audio && (String(audio).includes('fms') || String(audio).includes('radio'))){
+                    if(apiDebounce) clearTimeout(apiDebounce);
+                    requestUpdate(150);
+                }
+            };
+        }
     }
 
     let lastRefreshTime = 0;
     function refreshAllVisibleTiles(){
         if(!isMainPage) return;
         const now = Date.now();
-        if(now - lastRefreshTime < 2000) return;
+        if(now - lastRefreshTime < 2000) return; // Skip if called too recently
         lastRefreshTime = now;
 
         requestAnimationFrame(() => {
@@ -2547,6 +2598,11 @@
     document.addEventListener("click", (e) => {
         const activeEl = e.target.closest("a[href],button,.vehicle_dispatch_button,.alarm_button,form button[type='submit'],[data-mission-id],[data-method],[data-confirm]");
         if(!activeEl) return;
+
+        if(activeEl.classList.contains("alarm_button") || /alarm/i.test(activeEl.id || "")){
+            requestUpdate(1200);
+            setTimeout(() => requestUpdate(0), 4000);
+        }
 
         const text = (activeEl.textContent || activeEl.value || "").trim().toLowerCase();
         const href = (activeEl.getAttribute("href") || "").toLowerCase();
@@ -2636,6 +2692,10 @@
 
         const handleRequest = (url) => {
             const u = String(url).toLowerCase();
+            if(/\/missions\/\d+\/alarm/.test(u)){
+                setTimeout(() => requestUpdate(0), 800);
+                setTimeout(() => requestUpdate(0), 3500);
+            }
             for (const [key, { pattern, action, callback }] of Object.entries(API_HANDLERS)) {
                 if (pattern.test(u)) {
                     setTimeout(() => {
@@ -2671,6 +2731,9 @@
         const startDashboard = () => {
             initUI(state);
             registerEventListener();
+            setTimeout(() => {
+                updateBuildingCapacities(true).catch(() => {}).then(() => { updateAvailability(); fetchSchoolings(); });
+            }, 600);
             setTimeout(() => startApiLoop(), 1000);
             setTimeout(() => startSchoolingLoop(), 1500);
             setTimeout(() => updateBuildingCapacities(true), 2500);
