@@ -17,4 +17,4 @@ Viele Grüße
 Rechtlicher Hinweis: Dieses Dashboard ist geistiges Eigentum von [Ihr Name]. Alle Rechte als Autor, Entwickler und Lizenzgeber liegen vollumfänglich bei mir. Die Nutzung und Weitergabe erfolgt gemäß den vereinbarten Lizenzbestimmungen.
 
 Das sind die Gruppen des Dashboard:
-Dashboard_mit_Statistik.user.js
+Dashboard_mit_Statistik , 
