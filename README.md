@@ -15,3 +15,6 @@ Viele Grüße
 	• [Funktion 3, z. B. Automatisierte Trendprognosen]: Visuelle Dash-Komponenten zeigen zukünftige Potenziale und Risiken.
 • Ihr Mehrwert: Maximale Transparenz, erhebliche Zeitersparnis beim Reporting und eine intuitive Bedienung ohne tiefe IT-Vorkenntnisse.
 Rechtlicher Hinweis: Dieses Dashboard ist geistiges Eigentum von [Ihr Name]. Alle Rechte als Autor, Entwickler und Lizenzgeber liegen vollumfänglich bei mir. Die Nutzung und Weitergabe erfolgt gemäß den vereinbarten Lizenzbestimmungen.
+
+Das sind die Gruppen des Dashboard:
+
