@@ -17,4 +17,12 @@ Viele Grüße
 Rechtlicher Hinweis: Dieses Dashboard ist geistiges Eigentum von [Ihr Name]. Alle Rechte als Autor, Entwickler und Lizenzgeber liegen vollumfänglich bei mir. Die Nutzung und Weitergabe erfolgt gemäß den vereinbarten Lizenzbestimmungen.
 
 Das sind die Gruppen des Dashboard:
-Dashboard_mit_Statistik , 
+Dashboard_mit_Statistik, 
+Dashboard_AAO_Button,
+Dashboard_Credits_Counter,
+Dashboard_Einsatz_Credits,
+Dashboard_Einsatz_Tageszähler,
+Dashboard_Einsatzhelfer,
+Dashboard_Einsatzhelfer_Auto,
+Dashboard_Leitstellenansicht,
+Dashboard_Toggle_ausblenden,
