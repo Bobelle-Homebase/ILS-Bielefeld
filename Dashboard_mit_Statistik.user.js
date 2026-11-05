@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.18
+// @version      1.0.19
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -20,7 +20,7 @@
         window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
     }
 
-    console.log("[Bobelle Dashboard] 1.0.18 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.19 gestartet");
 
 
     // =====================================================
@@ -80,7 +80,6 @@
         { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
-          //{ n:"Rüstwagen Kran", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
         { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw 2000tr"]},
         { n:"Kleintankwagen", id:118, c:C_FW, cat:"FW", s:["kleintankwagen"]},
         { n:"Tankwagen", id:120, c:C_FW, cat:"FW", s:["tankwagen"]},
@@ -89,12 +88,12 @@
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf"]},
         { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w"]},
         { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
-          { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
+        { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"ELW 1", id:3, c:C_FW, cat:"FW", s:["elw 1"]},
         { n:"ELW 2", id:34, c:C_FW, cat:"FW", s:["elw 2"]},
         { n:"MTW", id:36, c:C_FW, cat:"FW", s:["mtw"]},
-          { n:"MTF-Logistik", id:106, c:C_FW, cat:"FW", s:["mtf-l"]},
-          { n:"MTW-Verpflegung", id:140, c:C_FW, cat:"FW", s:["mtw-v"]},
+        { n:"MTF-Logistik", id:106, c:C_FW, cat:"FW", s:["mtf-l"]},
+        { n:"MTW-Verpflegung", id:140, c:C_FW, cat:"FW", s:["mtw-v"]},
         { n:"SLF", id:167, c:C_FW, cat:"FW", s:["slf","sonderlöschfahrzeug"]},
         { n:"Dekon-P", id:53, c:C_FW, cat:"FW", s:["dekon-p"]},
         { n:"GW-Lüfter", id:114, c:C_FW, cat:"FW", s:["gw-lüfter"]},
@@ -104,8 +103,8 @@
         { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-mess"]},
         { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahr"]},
         { n:"GW-Waldbrand", id:190, c:C_FW, cat:"FW", s:["gw-wald"]},
-          { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
-          { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
+        { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
+        { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
         { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhen fw"]},
           //{ n:"GW-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l"]},
         { n:"GW-Verpflegung", id:138, c:C_FW, cat:"FW", s:["gw-verpflegung"]},
