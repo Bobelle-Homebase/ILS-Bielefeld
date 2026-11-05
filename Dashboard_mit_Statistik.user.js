@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.20
+// @version      1.0.21
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -20,7 +20,7 @@
         window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
     }
 
-    console.log("[Bobelle Dashboard] 1.0.20 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.21 gestartet");
 
 
     // =====================================================
@@ -77,7 +77,7 @@
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
         { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20","löschfahrzeug"]},
-        { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20""hilfelöschfahrzeug"]},
+        { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20","hilfelöschfahrzeug"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
         { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw1000","sw2000","sw2000tr"]},
