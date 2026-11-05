@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.19
+// @version      1.0.20
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -20,7 +20,7 @@
         window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
     }
 
-    console.log("[Bobelle Dashboard] 1.0.19 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.20 gestartet");
 
 
     // =====================================================
@@ -76,14 +76,14 @@
         { n:"RTH mit Winde", id:157, c:C_LUFT, cat:"Luft", s:["rth mit winde"]},
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
-        { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
-        { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
+        { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20","löschfahrzeug"]},
+        { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20""hilfelöschfahrzeug"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
-        { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw 2000tr"]},
+        { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw1000","sw2000","sw2000tr"]},
         { n:"Kleintankwagen", id:118, c:C_FW, cat:"FW", s:["kleintankwagen"]},
         { n:"Tankwagen", id:120, c:C_FW, cat:"FW", s:["tankwagen"]},
-        { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf"]},
+        { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf","tanklöschfahrzeug","tlf2000","tlf3000","tlf4000"]},
         { n:"TLF3000W", id:[187,188], c:C_FW, cat:"FW", s:["tlfw"]},
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf"]},
         { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w"]},
