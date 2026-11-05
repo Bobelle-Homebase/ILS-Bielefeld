@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.17
+// @version      1.0.18
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -20,7 +20,7 @@
         window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
     }
 
-    console.log("[Bobelle Dashboard] 1.0.17 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.18 gestartet");
 
 
     // =====================================================
@@ -1910,23 +1910,7 @@
         Object.values(state.today).forEach(v => totalTodayAll += v);
         let sharePct = totalTodayAll > 0 ? ((valToday / totalTodayAll) * 100).toFixed(1) : "0.0";
 
-        let history = state.history[key] || [];
-        if(history.length === 0) history = [0,0,0,0,0,0,0];
-        const maxVal = Math.max(...history,1);
-        const avg7 = history.length > 0 ? (history.reduce((a,b)=>a+b,0)/history.length).toFixed(1) : "0.0";
-        const peak7 = Math.max(...history);
-        const peakIdx = history.indexOf(peak7);
-        const peakLabel = peakIdx === 0 ? "Gestern" : `-${peakIdx+1}d`;
-
-        let graphHtml = `<div class="fzSectionTitle">Letzte 7 Tage</div><div class="fzGraphContainer">`;
-        for(let i=6; i>=0; i--){
-            const hVal = history[i] || 0;
-            const hPct = Math.round((hVal / maxVal) * 100);
-            const isPeak = (i === peakIdx && peak7 > 0);
-            const dayLabel = i === 0 ? "Gestern" : `-${i+1}d`;
-            graphHtml += `<div class="fzGraphBarWrapper"><span class="fzGraphValue">${hVal}</span><div class="fzGraphBar" style="height:${hPct}%;background:${isPeak?"#dc3545":"#007bff"};"></div><span class="fzGraphLabel" style="${isPeak?"color:#dc3545;font-weight:bold;":""}">${dayLabel}</span></div>`;
-        }
-        graphHtml += `</div><div style="display:flex;gap:16px;margin-bottom:12px;margin-top:4px;font-size:12px;color:#555;flex-wrap:wrap;"><span>⌀ Ø 7 Tage: <b style="color:#007bff;">${avg7}</b></span><span>🔺 Spitzentag: <b style="color:#dc3545;">${peak7}</b> <span style="color:#999;font-size:11px;">(${peakLabel})</span></span></div>`;
+        const graphHtml = ""; // 7-Tage-Statistik entfernt
 
         let fmsCounts = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0};
         list.forEach(v => { if(v.fms>=1 && v.fms<=8) fmsCounts[v.fms]++; });
