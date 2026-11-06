@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.21
+// @version      1.0.22
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -20,7 +20,7 @@
         window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
     }
 
-    console.log("[Bobelle Dashboard] 1.0.21 gestartet");
+    console.log("[Bobelle Dashboard] 1.0.22 gestartet");
 
 
     // =====================================================
@@ -76,24 +76,25 @@
         { n:"RTH mit Winde", id:157, c:C_LUFT, cat:"Luft", s:["rth mit winde"]},
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
-        { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20","löschfahrzeug"]},
-        { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20","hilfelöschfahrzeug"]},
+        { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
+        { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
-        { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw1000","sw2000","sw2000tr"]},
+          //{ n:"Rüstwagen Kran", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
+        { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw 2000tr"]},
         { n:"Kleintankwagen", id:118, c:C_FW, cat:"FW", s:["kleintankwagen"]},
         { n:"Tankwagen", id:120, c:C_FW, cat:"FW", s:["tankwagen"]},
-        { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf","tanklöschfahrzeug","tlf2000","tlf3000","tlf4000"]},
+        { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf"]},
         { n:"TLF3000W", id:[187,188], c:C_FW, cat:"FW", s:["tlfw"]},
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf"]},
         { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w"]},
         { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
-        { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
+          { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"ELW 1", id:3, c:C_FW, cat:"FW", s:["elw 1"]},
         { n:"ELW 2", id:34, c:C_FW, cat:"FW", s:["elw 2"]},
         { n:"MTW", id:36, c:C_FW, cat:"FW", s:["mtw"]},
-        { n:"MTF-Logistik", id:106, c:C_FW, cat:"FW", s:["mtf-l"]},
-        { n:"MTW-Verpflegung", id:140, c:C_FW, cat:"FW", s:["mtw-v"]},
+          { n:"MTF-Logistik", id:106, c:C_FW, cat:"FW", s:["mtf-l"]},
+          { n:"MTW-Verpflegung", id:140, c:C_FW, cat:"FW", s:["mtw-v"]},
         { n:"SLF", id:167, c:C_FW, cat:"FW", s:["slf","sonderlöschfahrzeug"]},
         { n:"Dekon-P", id:53, c:C_FW, cat:"FW", s:["dekon-p"]},
         { n:"GW-Lüfter", id:114, c:C_FW, cat:"FW", s:["gw-lüfter"]},
@@ -103,8 +104,8 @@
         { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-mess"]},
         { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahr"]},
         { n:"GW-Waldbrand", id:190, c:C_FW, cat:"FW", s:["gw-wald"]},
-        { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
-        { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
+          { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
+          { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
         { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhen fw"]},
           //{ n:"GW-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l"]},
         { n:"GW-Verpflegung", id:138, c:C_FW, cat:"FW", s:["gw-verpflegung"]},
@@ -172,8 +173,8 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        { n:"Schmutzwasserpumpen", id:[17,18], c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
-        { n:"Feuerlöschpumpen", id:[30], c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
+        { n:"Schmutzwasserpumpen", id:101, c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
+        { n:"Feuerlöschpumpen", id:102, c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
@@ -362,9 +363,7 @@
         18:  { del: ["TLF", "PTLF 4000"], add: ["TLF"] },
         87:  { del: ["TLF", "PTLF 4000"], add: ["TLF"] },
         149: { del: ["GW-Bergrettung", "GW-Bergrettung (NEF)"], add: ["GW-Bergrettung (NEF)"] },
-        150: { del: ["GW-Bergrettung", "GW-Bergrettung (NEF)"], add: ["GW-Bergrettung"] },
-        184: { del: [], add: ["Schmutzwasserpumpen"] },
-        188: { del: [], add: ["Feuerlöschpumpen"] }
+        150: { del: ["GW-Bergrettung", "GW-Bergrettung (NEF)"], add: ["GW-Bergrettung"] }
     };
 
     const pathLoc = window.location.pathname;
