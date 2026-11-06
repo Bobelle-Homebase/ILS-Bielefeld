@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Einsatz_Tageszähler
 // @namespace    https://leitstellenspiel.de
-// @version      1.0.01
+// @version      2.0
 // @author       Design by Bobelle
 // @description  Tageszähler für eigene Einsätze und Krankentransporte
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -17,19 +17,12 @@
   if (window.top !== window) return; // Nur im Hauptfenster ausführen
   if (window.location.pathname !== '/') return; // Nur auf der Hauptseite ausführen
 
-  // =======================================================
-  // >>>>>>>>>>>>>>>>>  EINSTELLUNGEN (HIER ÄNDERN)  <<<<<<<<<<<<<<<<<
-  // =======================================================
+  //   EINSTELLUNGEN (HIER ÄNDERN)
   const ZEILEN_ABSTAND = '0px'; // <-- Abstand zwischen den Zeilen (z. B. '0px', '4px', '10px')
   const TEXT_FARBE = '#ffffff'; // <-- Textfarbe (z. B. '#ffffff' weiß, '#000000' schwarz, 'yellow')
   const SCHRIFT_GROESSE = '12px'; // <-- Schriftgröße
-  // =======================================================
-  // >>>>>>>>>>>>>>>>>  ENDE EINSTELLUNGEN  <<<<<<<<<<<<<<<<<
-  // =======================================================
 
-  // =======================================================
-  // Speicher & Konfiguration
-  // =======================================================
+    // Speicher & Konfiguration
   const STORAGE_KEY = 'lss_eigen_ktw_counter_v2';
   const POS_KEY = 'lss_eigen_ktw_pos_v2';
 
@@ -64,9 +57,7 @@
 
   let state = store.get();
 
-  // =======================================================
   // Aktive Einsätze (Live-Zähler)
-  // =======================================================
   // Aktiv: +1, sobald bei einem Einsatz ein eigenes Fahrzeug unterwegs oder vor Ort ist.
   //        -1, sobald der Einsatz beendet ist (Eintrag aus der Einsatzliste verschwunden).
   const activeIds = new Set();
@@ -105,9 +96,7 @@
     if (a) a.textContent = String(countActiveMissions());
   }
 
-  // =======================================================
   // UI (frei verschiebbares Icon)
-  // =======================================================
   const titleText = () =>
     `Eigene Einsätze / KTW heute\nGestern: ${state.prevCount || 0} / ${state.prevKtw || 0}`;
 
@@ -245,9 +234,7 @@
     updateActiveCounter();
   }
 
-  // =======================================================
   // Zähl-Logik
-  // =======================================================
   function incrementCount(missionId, isKtw) {
     const today = getTodayString();
     if (state.date !== today) {
@@ -340,9 +327,7 @@
     }
   }
 
-  // =======================================================
   // Initialisierung
-  // =======================================================
   function init() {
     try {
       createFloatingCounter();
