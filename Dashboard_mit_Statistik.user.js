@@ -22,7 +22,10 @@
 
     console.log("[Bobelle Dashboard] 2.0 gestartet");
 
+
+    // =====================================================
     // KONFIGURATION & KONSTANTEN
+    // =====================================================
     const CFG = { zIndex: 99999 };
 
     const VEHICLE_MATCH_CACHE = {
@@ -65,7 +68,7 @@
 
     const CATEGORY_ORDER = [
         "Luft","FW","RD","POL","THW","SEG","WerkFW","FlugFW","UAS",
-        "BergRett","WasserRett","SeenotRett","BahnRett","Netz","Sonstiges","Ressourcen","Ausbildung"
+        "BergRett","WasserRett","SeenotRett","BahnRett","Netz","Sonstiges","Ausbildung"
     ];
 
     const AAO_TILES_RAW = [
@@ -73,12 +76,11 @@
         { n:"RTH mit Winde", id:157, c:C_LUFT, cat:"Luft", s:["rth mit winde"]},
         { n:"Polizeihubschrauber", id:61, c:C_POL, cat:"Luft", s:["polizeihubschrauber"]},
         { n:"Polizeihubschrauber mit Winde", id:156, c:C_POL, cat:"Luft", s:["polizeihubschrauber mit winde","polizeihubschrauber w"]},
-        { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20","lf 20/10","lf 20/16","löschfahrzeug 20","löschgruppenfahrzeug 20"]},
-        { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20","hlf 20/10","hlf 20/16","hilfeleistungslöschfahrzeug 20","hlf"]},
-          //{ n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
-          //{ n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
+        { n:"LF20", id: 0, c:C_FW, cat:"FW", s:["lf 20","lf20"]},
+        { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
+          //{ n:"Rüstwagen Kran", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
         { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw 2000tr"]},
         { n:"Kleintankwagen", id:118, c:C_FW, cat:"FW", s:["kleintankwagen"]},
         { n:"Tankwagen", id:120, c:C_FW, cat:"FW", s:["tankwagen"]},
@@ -87,12 +89,12 @@
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf"]},
         { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w"]},
         { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
-        { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
+          { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"ELW 1", id:3, c:C_FW, cat:"FW", s:["elw 1"]},
         { n:"ELW 2", id:34, c:C_FW, cat:"FW", s:["elw 2"]},
         { n:"MTW", id:36, c:C_FW, cat:"FW", s:["mtw"]},
-        { n:"MTF-Logistik", id:106, c:C_FW, cat:"FW", s:["mtf-l"]},
-        { n:"MTW-Verpflegung", id:140, c:C_FW, cat:"FW", s:["mtw-v"]},
+          { n:"MTF-Logistik", id:106, c:C_FW, cat:"FW", s:["mtf-l"]},
+          { n:"MTW-Verpflegung", id:140, c:C_FW, cat:"FW", s:["mtw-v"]},
         { n:"SLF", id:167, c:C_FW, cat:"FW", s:["slf","sonderlöschfahrzeug"]},
         { n:"Dekon-P", id:53, c:C_FW, cat:"FW", s:["dekon-p"]},
         { n:"GW-Lüfter", id:114, c:C_FW, cat:"FW", s:["gw-lüfter"]},
@@ -102,8 +104,8 @@
         { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-mess"]},
         { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahr"]},
         { n:"GW-Waldbrand", id:190, c:C_FW, cat:"FW", s:["gw-wald"]},
-        { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
-        { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
+          { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
+          { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
         { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhen fw"]},
           //{ n:"GW-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l"]},
         { n:"GW-Verpflegung", id:138, c:C_FW, cat:"FW", s:["gw-verpflegung"]},
@@ -124,7 +126,7 @@
         { n:"AB-MzB", id:71, c:C_FW, cat:"FW", s:["ab-mzb"]},
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
         { n:"AB-Lüfter", id:116, c:C_FW, cat:"FW", s:["ab-lüfter"]},
-        { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-logistik"]},
+          { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-logistik"]},
         { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
         { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
         { n:"Anh Tierrettungl", id:186, c:C_FW, cat:"FW", s:["anh tier"]},
@@ -171,8 +173,8 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        { n:"Schmutzwasserpumpen", id:[17,18,101], c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
-        { n:"Feuerlöschpumpen", id:[30,102], c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
+        { n:"Schmutzwasserpumpen", id:101, c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
+        { n:"Feuerlöschpumpen", id:102, c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
@@ -240,18 +242,6 @@
         { n:"RW-Schiene", id:162, c:"#5a5a5a", cat:"BahnRett", s:["rw schiene","rw-schiene"]},
         { n:"HLF Schiene", id:163, c:"#5a5a5a", cat:"BahnRett", s:["hlf schiene"]},
         { n:"AB-Schiene", id:164, c:"#5a5a5a", cat:"BahnRett", s:["ab-schiene"]},
-        { n:"Patienten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Krankenhausbetten", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Gefangene", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Gefängniszellen", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Wasserbedarf", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Betreuung/Versorgung", id:[130,131,133], c:"#5a5a5a", cat:"Ressourcen", s:["bt-kombi","gw-bt","bt lkw"]},
-        { n:"Krankentransporte", id:[38,58], c:"#5a5a5a", cat:"Ressourcen", s:["ktw"]},
-        { n:"Helikopter", id:[31,157,61,156,161], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-        { n:"Meine DJI Mini 4k (Pilot Bobelle)", id:[127,125], c:"#5a5a5a", cat:"Ressourcen", s:[]},
-         //{ n:"Meine Neue Statistik", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[] },
-         //{ n:"Meine Neue Statistik", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[] },
-         //{ n:"Meine Neue Statistik", id:[], c:"#5a5a5a", cat:"Ressourcen", s:[] },
         { n:"Laufende Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
         { n:"Aktive Lehrgänge", id:[], c:C_AUS, cat:"Ausbildung", s:[]},
     ];
@@ -323,7 +313,9 @@
         TOGGLE_BTN_POS:"fz_toggle_btn_pos"
     };
 
+    // =======================================================
     // VARIABLEN & STATUS
+    // =======================================================
     const TYPE_ID_MAPPING = {};
     AAO_TILES_RAW.forEach(tile => {
         if (tile.id !== undefined && tile.id !== null) {
@@ -429,7 +421,9 @@
     let _restzeitTimerId=null;
     let _buildingsFullyLoaded=false;
 
+    // =======================================================
     // HILFSFUNKTIONEN
+    // =======================================================
     function formatRestzeit(finishAtMs) {
         const diff = finishAtMs - Date.now();
         if(diff <= 0) return "✅ Fertig";
@@ -495,7 +489,9 @@
         }
     };
 
+    // =======================================================
     // INITIALISIERUNG
+    // =======================================================
     creditsData = json.load(STORAGE.CREDITS_DATA, {ein:0, aus:0, bilanz:0, date:""});
     const customStock = json.load(STORAGE.CUSTOM_STOCK, {});
 
@@ -533,7 +529,9 @@
         return false;
     }
 
+    // =======================================================
     // GEBÄUDE & LEHRGÄNGE
+    // =======================================================
     async function ensureBuildingNames(buildingIds){
         if(_buildingsFullyLoaded || buildingIds.length === 0) return;
         const missingIds = buildingIds.filter(id => !buildingNameCache[id]);
@@ -734,7 +732,9 @@
         getTargetBody().appendChild(ol);
     }
 
+    // =======================================================
     // UI UPDATES & STATUS
+    // =======================================================
     function updateSubHeaderInfo(){
         const sysEl = document.getElementById("fzSysStatus");
         const updEl = document.getElementById("fzLastUpdate");
@@ -937,7 +937,13 @@
             "Wasserbedarf","Betreuung/Versorgung","Krankentransporte","Helikopter",
             "Meine DJI Mini 4k (Pilot Bobelle)",
             "Laufende Lehrgänge","Aktive Lehrgänge",
-
+            "Feuer-und Rettungswache Herford","Feuer-und Rettungswache Gütersloh",
+            "Feuer-und Rettungswache Halle(Westf.)","Feuer-und Rettungswache Stukenbrock",
+            "Kreispolizeibehörde Herford","Kreispolizeibehörde Gütersloh",
+            "Kreispolizeibehörde Halle(Westf.)","Kreispolizeibehörde Stukenbrock",
+            "Polizeibehörde Warnemünde","Polizeibehörde Eckernförde","Polizeibehörde Bremerhafen",
+            "Rettungswache Warnemünde","Rettungswache Eckernförde","Rettungswache Bremerhafen",
+            "DLRG Herford","DLRG Gütersloh"
         ]);
 
         const relevantKeys = KEYS.filter(k => !EXCLUDE_FROM_AVAIL.has(k));
@@ -964,7 +970,9 @@
         }, durationMs);
     }
 
+    // =======================================================
     // HAUPT-API-SCHLEIFE (FAHRZEUGE & CREDITS)
+    // =======================================================
     async function fetchCreditsDaily() {
         try {
             const res = await fetch('/credits/daily');
@@ -1214,15 +1222,14 @@
                     incrementTileCount(k, null);
                     triggerAlarm(k);
 
-                    const meta = tileMetaByKey[k];
-                    if(meta && (meta.cat === "Luft" || meta.cat === "SeenotRett") && (k.includes("RTH") || k.includes("Hubschrauber") || k.includes("SAR Hubschrauber"))){
-                        const heliKey = v.id + "_" + k;
-                        if(!heliAlreadyCountedThisSession.has(heliKey) && heliAlreadyCountedThisSession.size < 5000){
-                            heliAlreadyCountedThisSession.add(heliKey);
-                            incrementTileCount("Helikopter", null);
-                        }
-                    }
                 });
+
+                // Helikopter-Zähler (Luft-Badge): einmal pro Ausrücken eines Hubschraubers
+                const isHeli = [...matchedKeys].some(k => {
+                    const m = tileMetaByKey[k];
+                    return m && (m.cat === "Luft" || m.cat === "SeenotRett") && /rth|hubschrauber/i.test(k);
+                });
+                if(isHeli) incrementTileCount("Helikopter", null);
 
                 const KTW_TYPE_IDS = new Set([38, 58, 74, 97]);
                 if(KTW_TYPE_IDS.has(typeId)){
@@ -1447,7 +1454,9 @@
         pill.style.color = uiSettings.creditsLabelColor;
     }
 
+    // =======================================================
     // LOOPS & STYLES
+    // =======================================================
     function startApiLoop(){
         if(apiTimer) clearInterval(apiTimer);
         const interval = Math.max(60, uiSettings.apiInterval || 120) * 1000;
@@ -1503,7 +1512,7 @@
             .fzTile:hover{filter:brightness(0.95);}
             .fzStatusDot{width:6px;height:6px;border-radius:50%;z-index:1;border:1px solid rgba(0,0,0,0.2);flex-shrink:0;margin-top:auto;margin-bottom:auto;}
             .fzContentWrapper{display:flex;flex-direction:column;justify-content:center;flex:1;overflow:hidden;height:100%;}
-            .fzRightWrapper{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;flex-shrink:0;min-width:max-content;padding-top:3px;padding-bottom:3px;white-space:nowrap;}
+            .fzRightWrapper{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;flex-shrink:0;min-width:max-content;padding-top:3px;padding-bottom:3px;}
             .fzBadgeSlot{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:2px;min-height:0;}
             .fzBadge{font-weight:bold;font-size:var(--fz-badge-fs);padding:0px 4px;border-radius:2px;color:#fff;white-space:nowrap;line-height:1.2;}.fzBadgeInUse{background:#dc3545;}
             .fzTileName{font-size:var(--fz-name-fs);font-weight:var(--fz-name-fw);white-space:nowrap;text-overflow:ellipsis;width:100%;overflow:hidden;line-height:1.2;}
@@ -1512,9 +1521,10 @@
             .fzNumYday{font-weight:normal;color:var(--fz-ny-c);font-size:calc(var(--fz-count-fs)*0.8);}
             .fzTileIdLabel{font-size:var(--fz-id-sz);color:var(--fz-id-c);text-align:var(--fz-id-a);width:100%;margin-top:1px;white-space:nowrap;line-height:1;}
             .fzResourceCounter{font-size:var(--fz-res-s);color:var(--fz-res-c);font-weight:bold;}
+            .fzTileShare{font-size:10px;color:var(--fz-ny-c);line-height:1;margin-top:1px;text-align:right;white-space:nowrap;}
             .fzPers{font-size:9px;color:#777;margin-top:1px;margin-bottom:2px;white-space:nowrap;}
             @keyframes fzAlarmBlink{0%{opacity:1;}45%{opacity:1;}65%{opacity:0.12;}100%{opacity:1;}}
-            .fzFunkalarmLabel{font-size:var(--fz-funk-sz);color:var(--fz-funk-c);font-weight:var(--fz-funk-fw);white-space:nowrap;text-align:right;line-height:1;margin-bottom:2px;overflow:visible;max-width:none;}
+            .fzFunkalarmLabel{font-size:var(--fz-funk-sz);color:var(--fz-funk-c);font-weight:var(--fz-funk-fw);white-space:nowrap;text-align:right;line-height:1;margin-bottom:2px;overflow:hidden;max-width:100%;text-overflow:ellipsis;}
             .fzFunkalarmLabel.fzAlarming{animation:fzAlarmBlink 1.4s ease-in-out infinite;color:var(--fz-funk-blink-c)!important;font-weight:bold!important;}
             .fzBottomBar{display:none!important;height:3px;background:#e0e0e0;border-radius:2px;overflow:hidden;width:100%;margin-top:2px;}.fzBottomBarFill{height:100%;background:var(--fz-bar-c);width:0%;transition:width 0.3s;}
             .fzTile.fzInUse{background:${uiSettings.tileColorInUse}!important;color:#222!important;}
@@ -1525,6 +1535,9 @@
             .fzTile.fzResource.fzEmpty{background-color:${uiSettings.tileColorEmpty}!important;color:#222!important;}
             .fzTile.fzStat{background-color:var(--fz-tile-bg)!important;color:var(--fz-tile-text)!important;height:48px;}
             .fzTile.fzStat .fzFunkalarmLabel{display:none!important;}
+            /* Kategorie "Einsatz-Statistik" ausgeblendet (Zähler laufen im Hintergrund weiter, Klicks aus Kopfzeile/Badges funktionieren weiter) */
+            #fzCatHead_Ressourcen{display:none!important;}
+            .fzTile.fzStat{display:none!important;}
             .fzTrend.up{color:${uiSettings.trendColorUp};}.fzTrend.down{color:${uiSettings.trendColorDown};}.fzTrend.eq{color:${uiSettings.trendColorEq};}
             .fzCatHeader{grid-column:1/-1;background:#333;color:var(--fz-cat-c);font-weight:bold;padding:var(--fz-cat-pad) 8px;text-align:left;font-size:var(--fz-cat-s);border-bottom:1px solid #ccc;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:sans-serif;position:relative;overflow:visible;}.fzCatHeader:hover{filter:brightness(1.1);}
             .fzBtn{background:#f5f5f5;border:1px solid #ccc;border-radius:4px;cursor:pointer;padding:4px 8px;font-weight:bold;color:#333;text-align:center;font-size:13px;transition:background-color 0.2s;}.fzBtn:hover{background:#e0e0e0;}
@@ -1599,7 +1612,20 @@
         }
     }
 
+    // =======================================================
     // KACHEL RENDER LOGIK
+    // =======================================================
+    // Anteil einer Kachel an allen Alarmierungen des Tages (nur Fahrzeug-Kacheln, ohne Ressourcen/Lehrgänge)
+    function getShareTotal(){
+        let sum = 0;
+        for(const k of KEYS){
+            const m = tileMetaByKey[k];
+            if(!m || m.cat === "Ressourcen" || m.cat === "Ausbildung") continue;
+            sum += (state.today[k] || 0);
+        }
+        return sum;
+    }
+
     function updateTile(key, state){
         if(SCHOOLING_TILE_NAMES.has(key)){ updateSchoolingTiles(); return; }
         const cached = tileCache[key];
@@ -1660,6 +1686,16 @@
             if(cached.trend){
                 cached.trend.style.display = "none"; // Trendpfeile komplett deaktiviert
             }
+        }
+
+        if(cached.shareEl){
+            const m = tileMetaByKey[key];
+            let shareTxt = "";
+            if(m && m.cat !== "Ressourcen" && m.cat !== "Ausbildung" && v > 0){
+                const tot = getShareTotal();
+                if(tot > 0) shareTxt = Math.round((v / tot) * 100) + " %";
+            }
+            if(cached.shareEl.textContent !== shareTxt) cached.shareEl.textContent = shareTxt;
         }
 
         if(cached.bottomBar){
@@ -1802,7 +1838,7 @@
             <div class="fzTileCompactRow"><span class="fzCompactDot"></span><span class="fzCompactLabel">${key}</span><span class="fzCompactCount"></span><span class="fzCompactBusy" style="display:none;"></span></div>
             <div class="fzStatusDot" style="background-color:#ff0000;margin-right:5px;"></div>
             <div class="fzContentWrapper"><span class="fzBadgeSlot"></span><span class="fzTileName">${key}</span><div class="fzTileIdLabel"></div><div class="fzBottomBar"><div class="fzBottomBarFill"></div></div></div>
-            <div class="fzRightWrapper"><div class="fzFunkalarmLabel">${uiSettings.funkalarmText || 'Funk-Alarm'}</div><div class="fzTileCount"><span class="fzNumToday">0</span><span class="fzNumYday">(0)</span><span class="fzTrend"></span></div><div class="fzResourceCounter"></div></div>
+            <div class="fzRightWrapper"><div class="fzFunkalarmLabel">${uiSettings.funkalarmText || 'Funk-Alarm'}</div><div class="fzTileCount"><span class="fzNumToday">0</span><span class="fzNumYday">(0)</span><span class="fzTrend"></span></div><div class="fzTileShare"></div><div class="fzResourceCounter"></div></div>
         `;
         div.onclick = () => showDetails(key, state);
 
@@ -1821,6 +1857,7 @@
             numToday: div.querySelector(".fzNumToday"),
             numYday: div.querySelector(".fzNumYday"),
             trend: div.querySelector(".fzTrend"),
+            shareEl: div.querySelector(".fzTileShare"),
             resCounter: div.querySelector(".fzResourceCounter"),
             idLabel: div.querySelector(".fzTileIdLabel"),
             funkalarmLabel: div.querySelector(".fzFunkalarmLabel"),
@@ -1829,7 +1866,9 @@
         return div;
     }
 
+    // =======================================================
     // MODALS & EVENT HANDLER
+    // =======================================================
     function toggleCategoryTileCompact(cat){
         if(!Array.isArray(uiSettings.collapsedTilesCats)) uiSettings.collapsedTilesCats = [];
         const isCompact = uiSettings.collapsedTilesCats.includes(cat);
@@ -2590,7 +2629,15 @@
         });
     }
 
+    // =======================================================
     // CLICK LISTENER & INTERCEPTS
+    // =======================================================
+    const CLICK_PATTERNS = [
+        { test: (url, text) => /\/patients?\/\d+\/hospitals?\/\d+/.test(url) || /\/missions\/\d+\/patients?\/\d+\/hospital/.test(url) || text.includes("ins krankenhaus"), action: "Patienten" },
+        { test: (url, text) => /\/patients?\/\d+\/ambulances?\/\d+/.test(url) || /\/transports?\/\d+/.test(url) || text.includes("krankentransport"), action: "Krankentransporte" },
+        { test: (url, text) => /\/prisoners?\/\d+\/cells?\/\d+/.test(url) || /\/missions\/\d+\/prisoners?\/\d+\/cell/.test(url) || text.includes("in zelle"), action: "Gefangene" }
+    ];
+
     document.addEventListener("click", (e) => {
         const activeEl = e.target.closest("a[href],button,.vehicle_dispatch_button,.alarm_button,form button[type='submit'],[data-mission-id],[data-method],[data-confirm]");
         if(!activeEl) return;
@@ -2604,6 +2651,20 @@
         const href = (activeEl.getAttribute("href") || "").toLowerCase();
         const formAction = (activeEl.closest("form")?.getAttribute("action") || "").toLowerCase();
         const urlStr = href || formAction;
+
+        for (const pattern of CLICK_PATTERNS) {
+            if (pattern.test(urlStr, text)) {
+                incrementTileCount(pattern.action, activeEl);
+                if (pattern.action === "Patienten" || pattern.action === "Gefangene") {
+                    setTimeout(() => updateBuildingCapacities(true).then(() => {
+                        syncDerivedResourceCounts();
+                        KEYS.forEach(k => tileEls[k] && updateTile(k, state));
+                        updateCategoryHeaders();
+                    }), 2000);
+                }
+                return;
+            }
+        }
 
         if(activeEl.classList.contains("aao_btn") || activeEl.hasAttribute("aao_id")){
             const literVal = getWasserbedarfLiter(activeEl);
@@ -2662,7 +2723,9 @@
         refreshAllVisibleTiles();
     }, 30000);
 
+    // =======================================================
     // API INTERCEPTS (FETCH/XHR)
+    // =======================================================
     (function(){
         const API_HANDLERS = {
             patient: { pattern: /\/patients?\/.*\/hospitals?/, action: "Patienten", callback: () => updateBuildingCapacities(true).then(() => { syncDerivedResourceCounts(); if(isMainPage) { KEYS.forEach(k => tileEls[k] && updateTile(k, state)); updateCategoryHeaders(); } }) },
@@ -2705,6 +2768,7 @@
         };
     })();
 
+    // =======================================================
     // START
     if(isMainPage){
         const startDashboard = () => {
