@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      2.0
+// @version      2.1
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -20,7 +20,7 @@
         window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
     }
 
-    console.log("[Bobelle Dashboard] 2.0 gestartet");
+    console.log("[Bobelle Dashboard] 2.1 gestartet");
 
 
     // =====================================================
