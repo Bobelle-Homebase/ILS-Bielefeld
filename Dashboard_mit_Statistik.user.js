@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      4.8.3
+// @version      4.8.13
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -175,8 +175,10 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        //{ n:"Schmutzwasserpumpen", id:[17,18], c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
-        //{ n:"Feuerlöschpumpen", id:30, c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
+        // Abgeleitete Pumpenkacheln: keine eigene primaere Fahrzeugtyp-ID.
+        // Die Zuordnung erfolgt unten nach Fahrzeugtyp-ID (17/18) bzw. HLF20.
+        { n:"Schmutzwasserpumpen", c:C_THW, cat:"THW", s:["schmutzwasserpumpen"]},
+        { n:"Feuerlöschpumpen", c:C_THW, cat:"THW", s:["feuerlöschpumpen"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
@@ -275,6 +277,8 @@
         tileCounterSize:17, numTodayColor:"#0000ff",
         numYdayColor:"#6c757d", resCounterColor:"#000000", resCounterSize:16,
         tileColorInUse:"#f7f46c", tileColorEmpty:"#fc483b",
+        availabilityColorsEnabled:true, availabilityColorAll:"#ffffff", availabilityColorMostly:"#fff3cd",
+        availabilityColorFew:"#fed7aa", availabilityColorNone:"#fee2e2", availabilityColorNoStock:"#e5e7eb",
         statsMissionsColor:"#000000", statsMissionsSize:12,
         statsKtpColor:"#000000", statsKtpSize:12,
         statsActiveColor:"#00cc00", statsActiveSize:12,
@@ -704,7 +708,7 @@
         div.className = "fzTile fzResource fzSchoolingTile";
         div.dataset.key = key;
         div.style.borderLeftColor = color;
-        div.style.cursor = "pointer";
+        div.style.cursor = "default";
 
         const badge = document.createElement("span");
         badge.className = "fzSchoolingBadge";
@@ -744,59 +748,10 @@
         wrapper.appendChild(names);
 
         div.appendChild(wrapper);
-        div.onclick = () => showSchoolingDetails();
 
         tileEls[key] = div;
         tileCache[key] = { el: div, lastState: null, schoolingBadge: badge, schoolingSub: sub, schoolingNames: names };
         return div;
-    }
-
-    function showSchoolingDetails(){
-        const now = Date.now();
-        const active = schoolingsData.filter(s => !s.finishAt || s.finishAt > now);
-        const done = schoolingsData.filter(s => s.finishAt && s.finishAt <= now);
-
-        const renderRow = (s) => {
-            const rest = s.finishAt ? formatRestzeit(s.finishAt) : "–";
-            const isUrgent = s.finishAt && (s.finishAt - now) < 3600000;
-            const isDone = s.finishAt && s.finishAt <= now;
-            const restColor = isDone ? "#28a745" : (isUrgent ? "#dc3545" : "#28a745");
-            let progressHtml = "";
-
-            if(s.startAt && s.finishAt && !isDone){
-                const total = s.finishAt - s.startAt;
-                const elapsed = now - s.startAt;
-                const pct = Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
-                progressHtml = `<div style="margin-top:4px;height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${C_AUS};border-radius:2px;"></div></div><div style="font-size:9px;color:#999;margin-top:1px;">${pct}% abgeschlossen</div>`;
-            }
-
-            const typBadge = s.description ? `<span style="font-size:9px;background:rgba(123,63,160,0.15);color:${C_AUS};padding:1px 5px;border-radius:3px;margin-left:5px;font-weight:bold;">${escapeHTML(s.description)}</span>` : "";
-            const pCount = s.participantCount > 0 ? `<span style="font-size:10px;color:#888;margin-left:6px;">${ICONS.person} ${s.participantCount}</span>` : "";
-
-            return `<div style="padding:8px 10px;border-radius:5px;margin-bottom:6px;background:rgba(123,63,160,0.07);border-left:3px solid ${C_AUS};"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:bold;">${escapeHTML(s.caption)}${typBadge}</div><div style="font-size:10px;color:#555;margin-top:2px;">📍 ${escapeHTML(s.buildingName)}${pCount}</div>${progressHtml}</div><div style="font-size:13px;font-weight:bold;color:${restColor};flex-shrink:0;">${rest}</div></div></div>`;
-        };
-
-        const ol = document.createElement("div");
-        ol.className = "fzModalOverlay";
-        ol.onclick = (e) => { if(e.target === ol) ol.remove(); };
-
-        const updStr = lastSchoolingsUpdate ? new Date(lastSchoolingsUpdate).toLocaleTimeString("de-DE") : "–";
-        const captionGroups = {};
-        active.forEach(s => { if(!captionGroups[s.caption]) captionGroups[s.caption] = 0; captionGroups[s.caption]++; });
-
-        ol.innerHTML = `<div class="fzModal" style="max-width:620px;width:92%;"><h3>${ICONS.school} Eigene Lehrgänge</h3><div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;"><div class="fzStatBox"><div class="fzStatVal" style="color:${C_AUS};">${active.length}</div><div class="fzStatLbl">Aktiv</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#6c757d;">${Object.keys(captionGroups).length}</div><div class="fzStatLbl">Verschiedene Typen</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#28a745;">${done.length}</div><div class="fzStatLbl">Heute fertig</div></div><div class="fzStatBox"><div class="fzStatVal" style="font-size:13px;color:#555;">${updStr}</div><div class="fzStatLbl">Letztes Update</div></div></div>${active.length > 0 ? `<div class="fzSectionTitle">Aktive Lehrgänge (${active.length})</div><div style="max-height:340px;overflow-y:auto;">${active.sort((a,b) => (a.finishAt || Infinity) - (b.finishAt || Infinity)).map(renderRow).join("")}</div>` : `<div style="padding:20px;text-align:center;color:#999;">Keine aktiven Lehrgänge.</div>`}${done.length > 0 ? `<div class="fzSectionTitle" style="margin-top:12px;">Heute abgeschlossen (${done.length})</div><div style="max-height:150px;overflow-y:auto;">${done.map(renderRow).join("")}</div>` : ""}<div style="margin-top:10px;display:flex;gap:8px;"><button class="fzBtn" style="flex:1;" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button><button class="fzBtn" style="flex:1;" onclick="window.open('/schoolings','_blank')">📋 Alle Lehrgänge</button><button class="fzBtn" style="background:#edf3ff;flex:0.5;" id="fzSchoolingRefreshBtn">🔄</button></div></div>`;
-
-        setTimeout(() => {
-            const rb = ol.querySelector("#fzSchoolingRefreshBtn");
-            if(rb) rb.onclick = async () => {
-                rb.textContent = "⏳";
-                await fetchSchoolings();
-                rb.textContent = "✅";
-                setTimeout(() => { rb.textContent = "🔄"; }, 2000);
-            };
-        }, 50);
-
-        getTargetBody().appendChild(ol);
     }
 
     // UI UPDATES & STATUS
@@ -1173,6 +1128,14 @@
         processVehicles(vehicles, true);
     }
 
+    // Abgeleitete Pumpen-Kacheln: Die Bestands-/FMS-Anzeige folgt den
+    // bereits eindeutig erkannten Trägerfahrzeugen. Keine Pumpen-Beladungsprüfung.
+    // Die originalen Fahrzeug- und Einsatzstatistiken werden nicht dupliziert.
+    const SCHMUTZWASSERPUMPEN_CARRIER_IDS = new Set([17, 18]);
+    const PUMP_TILE_BY_CARRIER = Object.freeze({
+        "HLF20": "Feuerlöschpumpen"
+    });
+
     function processVehicles(vehicles, fromApi){
         checkVehicleDayReset(state);
         for(const k of KEYS){
@@ -1226,6 +1189,12 @@
             const isAvail = (fms===1||fms===2);
             const resolution = resolveVehicleTile(v, typeId);
             const matchedKeys = new Set(resolution.key ? [resolution.key] : []);
+            // Zusatzkachel fuer den erkannten Pumpentraeger. Ein Fahrzeug wird
+            // pro Kachel nur einmal erfasst, auch bei manueller Typzuordnung.
+            const pumpTransportKey = SCHMUTZWASSERPUMPEN_CARRIER_IDS.has(typeId)
+                ? "Schmutzwasserpumpen"
+                : (PUMP_TILE_BY_CARRIER[resolution.key] || null);
+            if(pumpTransportKey) matchedKeys.add(pumpTransportKey);
             vehicleMatchDiagnostics.total++;
             if(resolution.key){
                 vehicleMatchDiagnostics.matched++;
@@ -1242,6 +1211,9 @@
             const oldFms = vehicleStateCache[v.id];
             if(!isInitialLoad && (oldFms === 1 || oldFms === 2) && (fms === 3 || fms === 4) && registerDispatchEvent(v.id, "dispatch")){
                 matchedKeys.forEach(k => {
+                    // Abgeleitete Pumpenkacheln zeigen nur den Fahrzeugbestand und
+                    // die Verfügbarkeit; Einsatzstatistiken bleiben beim Träger.
+                    if(k === pumpTransportKey) return;
                     if(k === "Wasserbedarf"){
                         const fakEl = { textContent: v.caption || "", title: "", getAttribute: () => "" };
                         const liter = getWasserbedarfLiter(fakEl);
@@ -1282,7 +1254,7 @@
                 if(isAvail) hasFreeCountData = true;
 
                 const meta = tileMetaByKey[k];
-                if(meta && meta.cat && catStats[meta.cat]){
+                if(k !== pumpTransportKey && meta && meta.cat && catStats[meta.cat]){
                     catStats[meta.cat].total++;
                     if(fms === 6) catStats[meta.cat].s6++;
                     else if(isInUse) catStats[meta.cat].busy++;
@@ -1541,7 +1513,7 @@
             .fzCatBadge{background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:4px;font-size:11px;margin-right:6px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;border:1px solid rgba(255,255,255,0.3);font-weight:normal;}.fzCatBadge:hover{background:rgba(255,255,255,0.4);}
             .fzScrollArea{max-height:${uiSettings.winMaxHeight}px;overflow-y:auto;background:#fff;position:relative;flex:1;}.fzWrapper.fzFullscreen .fzScrollArea{max-height:100vh;flex:1;}body.fzExternal .fzScrollArea{max-height:100vh;flex:1;}
             .fzGrid{display:grid;grid-template-columns:repeat(${Math.max(1,Math.min(12,Number(uiSettings.columns)||4))},${Number(uiSettings.tileColumnWidth)>0 ? `${Math.max(100,Math.min(800,Number(uiSettings.tileColumnWidth)))}px` : "minmax(0,1fr)"});gap:0;overflow-x:auto;background:#ccc;border-top:1px solid #ccc;border-left:1px solid #ccc;}
-            .fzTile{position:relative;display:flex;align-items:stretch;padding:var(--fz-tile-py) var(--fz-tile-px);height:var(--fz-tile-h);background-color:var(--fz-tile-bg);color:var(--fz-tile-text);border-left:5px solid transparent;border-right:var(--fz-tile-bw) solid #ccc;border-bottom:var(--fz-tile-bw) solid #ccc;gap:var(--fz-tile-gap);font-family:sans-serif;cursor:pointer;user-select:none;box-sizing:border-box;transition:height 0.18s ease;}
+            .fzTile{position:relative;display:flex;align-items:stretch;padding:var(--fz-tile-py) var(--fz-tile-px);height:var(--fz-tile-h);background-color:var(--fz-tile-bg);color:var(--fz-tile-text);border-left:5px solid transparent;border-right:var(--fz-tile-bw) solid #ccc;border-bottom:var(--fz-tile-bw) solid #ccc;gap:var(--fz-tile-gap);font-family:sans-serif;cursor:default;user-select:none;box-sizing:border-box;transition:height 0.18s ease;}
             .fzTile:hover{filter:brightness(0.95);}
             /* Zusätzliche Informationen, ohne die Alarmierung rechts zu überdecken. */
             /* Linke Kante entspricht der Textspalte nach Statuspunkt und Kachelabstand. */
@@ -1572,11 +1544,11 @@
             .fzFunkalarmLabel.fzAlarming{animation:fzAlarmBlink 1.4s ease-in-out infinite;color:var(--fz-funk-blink-c)!important;font-weight:bold!important;}
             .fzBottomBar{display:none!important;height:3px;background:#e0e0e0;border-radius:2px;overflow:hidden;width:100%;margin-top:2px;}.fzBottomBarFill{height:100%;background:var(--fz-bar-c);width:0%;transition:width 0.3s;}
             /* Verfuegbarkeit je Fahrzeugtyp: 100 %, 50-99 %, 1-49 %, 0 %, kein Bestand. */
-            .fzTile.fzAllFree{background-color:#ffffff!important;color:#222!important;}
-            .fzTile.fzMostlyFree{background-color:#fff3cd!important;color:#222!important;}
-            .fzTile.fzFewFree{background-color:#ffcc80!important;color:#222!important;}
-            .fzTile.fzNoneFree{background-color:#f8b4b4!important;color:#222!important;}
-            .fzTile.fzNoStock{background-color:#e5e7eb!important;color:#222!important;}
+            .fzTile.fzAllFree{background-color:${uiSettings.availabilityColorsEnabled ? uiSettings.availabilityColorAll : uiSettings.tileBgColor}!important;color:${uiSettings.availabilityColorsEnabled ? "#222" : uiSettings.tileTextColor}!important;}
+            .fzTile.fzMostlyFree{background-color:${uiSettings.availabilityColorsEnabled ? uiSettings.availabilityColorMostly : uiSettings.tileBgColor}!important;color:${uiSettings.availabilityColorsEnabled ? "#222" : uiSettings.tileTextColor}!important;}
+            .fzTile.fzFewFree{background-color:${uiSettings.availabilityColorsEnabled ? uiSettings.availabilityColorFew : uiSettings.tileBgColor}!important;color:${uiSettings.availabilityColorsEnabled ? "#222" : uiSettings.tileTextColor}!important;}
+            .fzTile.fzNoneFree{background-color:${uiSettings.availabilityColorsEnabled ? uiSettings.availabilityColorNone : uiSettings.tileBgColor}!important;color:${uiSettings.availabilityColorsEnabled ? "#222" : uiSettings.tileTextColor}!important;}
+            .fzTile.fzNoStock{background-color:${uiSettings.availabilityColorsEnabled ? uiSettings.availabilityColorNoStock : uiSettings.tileBgColor}!important;color:${uiSettings.availabilityColorsEnabled ? "#222" : uiSettings.tileTextColor}!important;}
             .fzTile.fzStockUnknown{background-color:var(--fz-tile-bg)!important;color:var(--fz-tile-text)!important;}
             /* Bestehende Klassen fuer Ressourcen weiterhin unterstuetzen. */
             .fzTile.fzInUse{background:${uiSettings.tileColorInUse}!important;color:#222!important;}
@@ -1755,13 +1727,12 @@
             if(cached.resCounter.textContent !== txt) cached.resCounter.textContent = txt;
         }
 
+        // Einheitliche Tages-/Vortagesstatistik fuer alle Fahrzeugkacheln.
         const showNumericCounter = showNumbers && !isEventCounter && key !== "Wasserbedarf" && key !== "Krankenhausbetten" && key !== "Gefängniszellen";
         if(cached.tileCount) cached.tileCount.style.display = showNumericCounter ? "flex" : "none";
-
         if(showNumericCounter){
             if(cached.numToday) cached.numToday.textContent = v;
             if(cached.numYday) cached.numYday.textContent = uiSettings.showTileYday ? `(${y})` : "";
-
         }
 
         if(cached.shareEl){
@@ -1937,7 +1908,6 @@
             <div class="fzRightWrapper"><div class="fzTileCount"><span class="fzNumToday">0</span><span class="fzNumYday">(0)</span></div><div class="fzTileShare"></div><div class="fzResourceCounter"></div><div class="fzFunkalarmLabel">${escapeHTML(uiSettings.funkalarmText || 'Funk-Alarm')}</div></div>
             <div class="fzTileExtras" style="display:none"><span class="fzTileUpdated"></span><div class="fzAvailabilityTrack"><span class="fzAvailabilityFill"></span></div></div>
         `;
-        div.onclick = () => showDetails(key, state);
 
         tileEls[key] = div;
         tileCache[key] = {
@@ -1988,87 +1958,6 @@
             if(nowCompact) el.classList.add("fzTileCompact");
             else el.classList.remove("fzTileCompact");
         });
-    }
-
-    function showDetails(key, state){
-        if(SCHOOLING_TILE_NAMES.has(key)){ showSchoolingDetails(); return; }
-
-        const PURE_CAPACITY_KEYS = new Set(["Krankenhausbetten","Gefängniszellen"]);
-        if(PURE_CAPACITY_KEYS.has(key)){
-            const ol = document.createElement("div");
-            ol.className = "fzModalOverlay";
-            ol.onclick = (e) => { if(e.target === ol) ol.remove(); };
-
-            if(key === "Krankenhausbetten"){
-                const frei = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
-                ol.innerHTML = `<div class="fzModal" style="max-width:420px;"><h3>🏥 Krankenhausbetten</h3><div class="fzModalStats"><div class="fzStatBox"><div class="fzStatVal" style="color:#dc3545;">${cachedCapacities.bedsUsed || 0}</div><div class="fzStatLbl">Belegt</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#28a745;">${frei}</div><div class="fzStatLbl">Frei</div></div><div class="fzStatBox"><div class="fzStatVal">${cachedCapacities.beds || 0}</div><div class="fzStatLbl">Gesamt</div></div></div><button class="fzBtn" style="margin-top:15px;width:100%" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button></div>`;
-            } else {
-                const belegteZ = state.today["Gefangene"] || 0;
-                const freiZ = Math.max(0, (cachedCapacities.cells || 0) - belegteZ);
-                ol.innerHTML = `<div class="fzModal" style="max-width:420px;"><h3>🔒 Gefängniszellen</h3><div class="fzModalStats"><div class="fzStatBox"><div class="fzStatVal" style="color:#dc3545;">${belegteZ}</div><div class="fzStatLbl">Belegt</div></div><div class="fzStatBox"><div class="fzStatVal" style="color:#28a745;">${freiZ}</div><div class="fzStatLbl">Frei</div></div><div class="fzStatBox"><div class="fzStatVal">${cachedCapacities.cells || 0}</div><div class="fzStatLbl">Gesamt</div></div></div><button class="fzBtn" style="margin-top:15px;width:100%" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button></div>`;
-            }
-
-            getTargetBody().appendChild(ol);
-            return;
-        }
-
-        const list = vehicleLists[key] || [];
-
-        const renderVehicleList = (filter) => {
-            let filtered = [...list];
-            if(filter === "free") filtered = list.filter(v => v.fms === 1 || v.fms === 2);
-            else if(filter === "busy") filtered = list.filter(v => v.fms === 3 || v.fms === 4 || v.fms === 7 || v.fms === 8);
-            else if(filter === "s6") filtered = list.filter(v => v.fms === 6);
-
-            filtered.sort((a,b) => {
-                const aInUse = (a.fms===3||a.fms===4||a.fms===7||a.fms===8);
-                const bInUse = (b.fms===3||b.fms===4||b.fms===7||b.fms===8);
-                if(aInUse && !bInUse) return -1;
-                if(!aInUse && bInUse) return 1;
-                return a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'});
-            });
-
-            if(filtered.length === 0) return `<div style='padding:10px;text-align:center;color:#999'>Keine Fahrzeuge in dieser Kategorie.</div>`;
-
-            return filtered.map(v => {
-                let color = "#6c757d";
-                if(v.fms === 1 || v.fms === 2) color = "#28a745";
-                if(v.fms === 6) color = "#000000";
-                else if(v.fms === 3 || v.fms === 4 || v.fms === 7 || v.fms === 8) color = "#dc3545";
-                else if(v.fms === 5) color = "#ffc107";
-
-                let statusDisplay = v.fms == null ? "(Unbekannt)" : `(S${v.fms})`;
-                if(v.missionId && (v.fms === 4 || v.fms === 7)){
-                    statusDisplay = `<a href="/missions/${encodeURIComponent(String(v.missionId))}" target="_blank" style="color:#007bff;text-decoration:underline;">(S${v.fms})</a>`;
-                }
-
-                let crewDisplay = v.crew > 0 ? `<span style="font-size:10px;color:#666;margin-left:5px;">${ICONS.person} ${v.crew}</span>` : "";
-                return `<div class="fzRow" style="justify-content:flex-start;gap:8px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${color};flex-shrink:0;"></span><span style="font-weight:bold;">${escapeHTML(v.name)}</span>${crewDisplay}<span style="color:#666;font-size:11px;margin-left:auto;">${statusDisplay}</span></div>`;
-            }).join("");
-        };
-
-        const countFree = list.filter(v => v.fms === 1 || v.fms === 2).length;
-        const countBusy = list.filter(v => v.fms === 3 || v.fms === 4 || v.fms === 7 || v.fms === 8).length;
-        const countS6 = list.filter(v => v.fms === 6).length;
-
-        const ol = document.createElement("div");
-        ol.className = "fzModalOverlay";
-        ol.onclick = (e) => { if(e.target === ol) ol.remove(); };
-        ol.innerHTML = `<div class="fzModal"><h3>${escapeHTML(key)} - Details</h3><div class="fzSectionTitle">Fahrzeugliste (${list.length})</div><div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;" id="fzVehicleFilterBtns"><button class="fzFilterBtn active" data-filter="all">Alle (${list.length})</button><button class="fzFilterBtn" data-filter="free" style="border-color:#28a745;">🟢 Frei (${countFree})</button><button class="fzFilterBtn" data-filter="busy" style="border-color:#dc3545;">🔴 Im Einsatz (${countBusy})</button><button class="fzFilterBtn" data-filter="s6" style="border-color:#6c757d;">⚫ S6 (${countS6})</button></div><div id="fzVehicleListContent" style="max-height:300px;overflow-y:auto;">${renderVehicleList("all")}</div><button class="fzBtn" style="margin-top:15px;width:100%" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button></div>`;
-
-        setTimeout(() => {
-            const btns = ol.querySelectorAll("#fzVehicleFilterBtns .fzFilterBtn");
-            const listEl = ol.querySelector("#fzVehicleListContent");
-            btns.forEach(btn => {
-                btn.onclick = () => {
-                    btns.forEach(b => b.classList.remove("active"));
-                    btn.classList.add("active");
-                    listEl.innerHTML = renderVehicleList(btn.dataset.filter);
-                };
-            });
-        }, 50);
-
-        getTargetBody().appendChild(ol);
     }
 
     function toggleCompactMode(){
@@ -2268,6 +2157,7 @@
                 };
             }
 
+            inp.dataset.settingKey = key;
             row.appendChild(inp);
             return row;
         };
@@ -2285,7 +2175,13 @@
             {t:"Kacheln: Design",i:[["Hintergrund","tileBgColor","color"],["Textfarbe","tileTextColor","color"],["Ressourcen-BG","resourceTileBgColor","color"],["Balken Farbe","barColor","color"]]},
             {t:"Kacheln: Größe & Abstände",i:[["Spaltenbreite (px, 0 = automatisch)","tileColumnWidth","number"],["Kachelhöhe / Zeilenhöhe (px)","tileMinHeight","number"],["Innenabstand links/rechts (px)","tilePaddingX","number"],["Innenabstand oben/unten (px)","tilePaddingY","number"],["Rahmendicke (px)","tileBorderWidth","number"],["Abstand Statuspunkt/Text (px)","tileGap","number"]]},
             {t:"Kacheln: Text & Badges",i:[["Name Größe (px)","tileNameSize","number"],["Name Fett","tileNameWeight","select",["bold","normal"]],["Badge Größe (px)","badgeSize","number"],["Zähler Größe (px)","tileCounterSize","number"],["Zähler Farbe","numTodayColor","color"]]},
-            {t:"Status",i:[["Bg (Im Einsatz)","tileColorInUse","color"],["Bg (Leer/0)","tileColorEmpty","color"]]},
+            {t:"Kachelfarben & Fahrzeugverfügbarkeit",i:[["Automatische Verfügbarkeitsfarben", "availabilityColorsEnabled", "checkbox"],
+                ["100 % frei – Weiß", "availabilityColorAll", "color"],
+                ["50–99 % frei – Hellgelb", "availabilityColorMostly", "color"],
+                ["1–49 % frei – Orange", "availabilityColorFew", "color"],
+                ["0 % frei – Rot", "availabilityColorNone", "color"],
+                ["Kein Bestand – Grau", "availabilityColorNoStock", "color"]]},
+            {t:"Ressourcenstatus",i:[["Bg (Im Einsatz)","tileColorInUse","color"],["Bg (Leer/0)","tileColorEmpty","color"]]},
             {t:"Statistik (Header)",i:[["Einsätze Farbe","statsMissionsColor","color"],["Einsätze Größe","statsMissionsSize","number"],["KTW Farbe","statsKtpColor","color"],["Aktiv Farbe","statsActiveColor","color"]]},
             {t:"Sub-Infos",i:[["Status Größe","subStatusSize","number"],["Status (Bereit)","subStatusColorOk","color"],["Status (Fehler)","subStatusColorErr","color"],["Update Farbe","subUpdateColor","color"],["Dispo Farbe","subDispColor","color"]]},
             {t:"Credits Counter",i:[["Abstand (px)","creditsGap","number"],["Schriftgröße","creditsFontSize","number"],["Label Farbe","creditsLabelColor","color"],["Zahlen Farbe","creditsValueColor","color"]]},
@@ -2296,6 +2192,39 @@
         groups.forEach((g,index) => {
             const d = group(g.t);
             g.i.forEach(item => d.appendChild(createInput(item[0],item[1],item[2],item[3])));
+            if(g.t === "Kachelfarben & Fahrzeugverfügbarkeit"){
+                const keys = ["availabilityColorAll", "availabilityColorMostly", "availabilityColorFew", "availabilityColorNone", "availabilityColorNoStock"];
+                const preview = document.createElement("div");
+                preview.style.cssText = "display:flex;gap:5px;flex-wrap:wrap;margin:10px 0";
+                const updatePreview = () => {
+                    preview.replaceChildren();
+                    ["100 %", "50–99 %", "1–49 %", "0 %", "Kein Bestand"].forEach((label,i) => {
+                        const swatch = document.createElement("span");
+                        swatch.textContent = label;
+                        swatch.style.cssText = "background:" + (uiSettings.availabilityColorsEnabled ? uiSettings[keys[i]] : uiSettings.tileBgColor) + ";color:#222;border:1px solid #999;border-radius:4px;padding:7px 5px;font-size:11px";
+                        preview.appendChild(swatch);
+                    });
+                };
+                d.addEventListener("change", updatePreview);
+                updatePreview();
+                d.appendChild(preview);
+                const reset = document.createElement("button");
+                reset.type = "button";
+                reset.className = "fzBtn";
+                reset.textContent = "Standardfarben wiederherstellen";
+                reset.onclick = () => {
+                    uiSettings.availabilityColorsEnabled = true;
+                    keys.forEach(k => uiSettings[k] = DEFAULTS[k]);
+                    d.querySelectorAll("input").forEach(inp => {
+                        const key = inp.dataset.settingKey;
+                        if(!key) return;
+                        if(inp.type === "checkbox") inp.checked = uiSettings[key];
+                        else inp.value = uiSettings[key];
+                    });
+                    saveUI(); updateStyles(); updatePreview();
+                };
+                d.appendChild(reset);
+            }
             if(index < 6) leftCol.appendChild(d);
             else rightCol.appendChild(d);
         });
