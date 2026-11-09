@@ -1,11 +1,10 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      2.1
+// @version      4.8
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
-// @include      https://www.leitstellenspiel.de/*
 // @match        https://www.leitstellenspiel.de/*
 // @grant        none
 // @run-at       document-idle
@@ -14,18 +13,24 @@
 (function() {
     'use strict';
 
-    // Fallback, falls GM_getValue/GM_setValue nicht verfügbar sind (@grant none)
-    if (typeof GM_getValue === 'undefined') {
-        window.GM_getValue = function(k, d){ try { const v = localStorage.getItem('fzgm_' + k); return v === null ? d : v; } catch(e){ return d; } };
-        window.GM_setValue = function(k, v){ try { localStorage.setItem('fzgm_' + k, v); } catch(e){} };
-    }
+    // Lokaler Speicheradapter: keine GM-Berechtigungen und keine globalen Hilfsfunktionen.
+    // Der bisherige Schluessel-Praefix bleibt fuer bestehende Einstellungen erhalten.
+    const GM_getValue = (key, fallback) => {
+        try { return localStorage.getItem(`fzgm_${key}`) ?? fallback; }
+        catch { return fallback; }
+    };
+    const GM_setValue = (key, value) => {
+        try { localStorage.setItem(`fzgm_${key}`, value); }
+        catch (error) { console.warn('[Bobelle Dashboard] Speichern fehlgeschlagen:', error); }
+    };
 
-    console.log("[Bobelle Dashboard] 2.1 gestartet");
 
+    // v4.7: Escaping fuer dynamische Inhalte in HTML-Templates.
+    const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, char => ({
+        '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[char]));
 
-    // =====================================================
     // KONFIGURATION & KONSTANTEN
-    // =====================================================
     const CFG = { zIndex: 99999 };
 
     const VEHICLE_MATCH_CACHE = {
@@ -53,8 +58,8 @@
     const CAT_COLORS = {
         "Luft": C_LUFT, "FW": C_FW, "RD": C_RD, "POL": C_POL, "THW": C_THW, "SEG": C_SEG,
         "WerkFW": "#b00000", "FlugFW": "#b00000", "UAS": "#9b9b9b", "BergRett": "#B0AC97",
-        "WasserRett": C_WR, "SeenotRett": C_SR, "BahnRett": "#5a5a5a", "Netz": "#5a5a5a", "Versorgung": "#b00000",
-        "Ressourcen": C_RES, "Ausbildung": C_AUS, "Sonstiges": "#b00000"
+        "WasserRett": C_WR, "SeenotRett": C_SR, "BahnRett": "#5a5a5a",
+        "Ressourcen": C_RES, "Ausbildung": C_AUS
     };
 
     const CAT_DISPLAY_NAMES = {
@@ -62,13 +67,12 @@
         "THW": "Technisches Hilfswerk", "SEG": "Schnelleinsatzgruppe", "WerkFW": "Werkfeuerwehr",
         "FlugFW": "Flughafenfeuerwehr", "UAS": "UAS", "WasserRett": "Wasserrettung",
         "SeenotRett": "Seenotrettung", "BergRett": "Bergrettung", "BahnRett": "Bahnrettung",
-        "Netz": "Netzversorgung", "Sonstiges": "Feuer-und Rettungswachen & Kreispolizeibehörden",
-        "Ressourcen": "Einsatz-Statistik", "Ausbildung":"Ausbildung & Lehrgänge"
+        "Ausbildung":"Ausbildung & Lehrgänge"
     };
 
     const CATEGORY_ORDER = [
         "Luft","FW","RD","POL","THW","SEG","WerkFW","FlugFW","UAS",
-        "BergRett","WasserRett","SeenotRett","BahnRett","Netz","Sonstiges","Ausbildung"
+        "BergRett","WasserRett","SeenotRett","BahnRett","Ausbildung"
     ];
 
     const AAO_TILES_RAW = [
@@ -80,7 +84,6 @@
         { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
-          //{ n:"Rüstwagen Kran", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
         { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw 2000tr"]},
         { n:"Kleintankwagen", id:118, c:C_FW, cat:"FW", s:["kleintankwagen"]},
         { n:"Tankwagen", id:120, c:C_FW, cat:"FW", s:["tankwagen"]},
@@ -89,12 +92,12 @@
         { n:"GTLF", id:121, c:C_FW, cat:"FW", s:["gtlf"]},
         { n:"GTLF1000W", id:189, c:C_FW, cat:"FW", s:["gtlf-w"]},
         { n:"PTLF 4000", id:166, c:C_FW, cat:"FW", s:["ptlf4000","ptlf"]},
-          { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
+        { n:"FwK", id:57, c:C_FW, cat:"FW", s:["fwk","kran"]},
         { n:"ELW 1", id:3, c:C_FW, cat:"FW", s:["elw 1"]},
         { n:"ELW 2", id:34, c:C_FW, cat:"FW", s:["elw 2"]},
         { n:"MTW", id:36, c:C_FW, cat:"FW", s:["mtw"]},
-          { n:"MTF-Logistik", id:106, c:C_FW, cat:"FW", s:["mtf-l"]},
-          { n:"MTW-Verpflegung", id:140, c:C_FW, cat:"FW", s:["mtw-v"]},
+        { n:"MTF-Logistik", id:106, c:C_FW, cat:"FW", s:["mtf-l"]},
+        { n:"MTW-Verpflegung", id:140, c:C_FW, cat:"FW", s:["mtw-v"]},
         { n:"SLF", id:167, c:C_FW, cat:"FW", s:["slf","sonderlöschfahrzeug"]},
         { n:"Dekon-P", id:53, c:C_FW, cat:"FW", s:["dekon-p"]},
         { n:"GW-Lüfter", id:114, c:C_FW, cat:"FW", s:["gw-lüfter"]},
@@ -104,10 +107,9 @@
         { n:"GW-Messtechnik", id:12, c:C_FW, cat:"FW", s:["gw-mess"]},
         { n:"GW-Gefahrgut", id:27, c:C_FW, cat:"FW", s:["gw-gefahr"]},
         { n:"GW-Waldbrand", id:190, c:C_FW, cat:"FW", s:["gw-wald"]},
-          { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
-          { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
-        { n:"GW-Höhenrettung", id:158, c:C_FW, cat:"FW", s:["gw-höhen fw"]},
-          //{ n:"GW-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-l"]},
+        { n:"GW-L1", id:104, c:C_FW, cat:"FW", s:["gw-l1"]},
+        { n:"GW-L2", id:105, c:C_FW, cat:"FW", s:["gw-l2"]},
+        { n:"GW-Höhenrettung", id:33, c:C_FW, cat:"FW", s:["gw-höhen fw"]},
         { n:"GW-Verpflegung", id:138, c:C_FW, cat:"FW", s:["gw-verpflegung"]},
         { n:"GW-Küche", id:139, c:C_FW, cat:"FW", s:["gw-küche"]},
         { n:"WLF", id:46, c:C_FW, cat:"FW", s:["wlf","wechsellader"]},
@@ -126,12 +128,12 @@
         { n:"AB-MzB", id:71, c:C_FW, cat:"FW", s:["ab-mzb"]},
         { n:"AB-Küche", id:142, c:C_FW, cat:"FW", s:["ab-küche"]},
         { n:"AB-Lüfter", id:116, c:C_FW, cat:"FW", s:["ab-lüfter"]},
-          { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-logistik"]},
-        { n:"AB-NEA50 (FW)", id:[179], c:"#5a5a5a", cat:"Netz", s:["ab-nea50"]},
-        { n:"AB-NEA200 (FW)", id:[180], c:"#5a5a5a", cat:"Netz", s:["ab-nea200"]},
+        { n:"AB-Logistik", id:108, c:C_FW, cat:"FW", s:["ab-logistik"]},
+        { n:"AB-NEA50 (FW)", id:179, c:C_FW, cat:"FW", s:["ab-nea50"]},
+        { n:"AB-NEA200 (FW)", id:180, c:C_FW, cat:"FW", s:["ab-nea200"]},
         { n:"Anh Tierrettungl", id:186, c:C_FW, cat:"FW", s:["anh tier"]},
         { n:"Anh Schlauch", id:143, c:C_FW, cat:"FW", s:["anh schlauch"]},
-        { n:"Anh Waldbrand", id:[143,191], c:C_FW, cat:"FW", s:["anh wald"]},
+        { n:"Anh Waldbrand", id:191, c:C_FW, cat:"FW", s:["anh wald"]},
         { n:"Anh Sonderlöschmittel", id:168, c:C_FW, cat:"FW", s:["anh sonderlöschmittel"]},
         { n:"Anh Lüfter", id:115, c:C_FW, cat:"FW", s:["anh lüfter"]},
         { n:"RTW", id:28, c:C_RD, cat:"RD", s:["rtw"]},
@@ -162,7 +164,7 @@
         { n:"Pferdetransporter groß", id:135, c:C_POL, cat:"POL", s:["pferdetransporter groß","pferdetr. groß"]},
         { n:"Anh Pferdetransport", id:136, c:C_POL, cat:"POL", s:["anh pferde","anh pferdetransport"]},
         { n:"Zugfahrzeug Pferdetransport", id:137, c:C_POL, cat:"POL", s:["zugfahrzeug pferd"]},
-        { n:"Außenlastbehälter", id:96, c:C_POL, cat:"POL", s:["außenlast"]},
+        { n:"Außenlastbehälter", id:96, c:C_LUFT, cat:"Luft", s:["außenlast"]},
         { n:"MTF Drohne", id:126, c:"#9b9b9b", cat:"UAS", s:["mtf drohne","drohne"]},
         { n:"ELW Drohne", id:128, c:"#9b9b9b", cat:"UAS", s:["elw drohne"]},
         { n:"ELW 2 Drohne", id:129, c:"#9b9b9b", cat:"UAS", s:["elw 2 drohne"]},
@@ -173,8 +175,8 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        { n:"Schmutzwasserpumpen", id:101, c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
-        { n:"Feuerlöschpumpen", id:102, c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
+        //{ n:"Schmutzwasserpumpen", id:[17,18], c:C_THW, cat:"THW", s:["schmutzwasserpumpen","schmutzwasserpumpe","swpu","swpufzg","swpu-fzg","wasserpumpen","wasserpumpe","wasser pumpen","schmutz wasser","pumpen fahrzeug"]},
+        //{ n:"Feuerlöschpumpen", id:30, c:C_THW, cat:"THW", s:["feuerlöschpumpen","feuerlöschpumpe","fpfzg","fp-fzg","löschpumpen","löschpumpe","lösch pumpen","feuer lösch","feuerlösch pumpe"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
         { n:"Mobilkran", id:182, c:C_THW, cat:"THW", s:["mobilkran"]},
         { n:"MzGW (FGr N)", id:41, c:C_THW, cat:"THW", s:["mzgw fgr n"]},
@@ -220,14 +222,14 @@
         { n:"MTW-TeSi", id:173, c:C_SEG, cat:"SEG", s:["mtw-tesi"]},
         { n:"Anh TeSi", id:174, c:C_SEG, cat:"SEG", s:["anh tesi"]},
         { n:"Anh FKH", id:132, c:C_SEG, cat:"SEG", s:["anh fkh"]},
-        { n:"Anh NEA50 (SEG)", id:[175], c:"#5a5a5a", cat:"Netz", s:["anh nea50 seg"]},
-        { n:"Anh NEA50 (THW)", id:[110], c:"#5a5a5a", cat:"Netz", s:["anh nea50 thw"]},
-        { n:"Anh NEA200 (THW)", id:[112], c:"#5a5a5a", cat:"Netz", s:["anh nea200 thw"]},
-        { n:"Anh NEA50 (FW)", id:[111], c:"#5a5a5a", cat:"Netz", s:["anh nea50 fw"]},
-        { n:"Anh NEA200 (FW)", id:[113], c:"#5a5a5a", cat:"Netz", s:["anh nea200 fw"]},
+        { n:"Anh NEA50 (SEG)", id:175, c:C_SEG, cat:"SEG", s:["anh nea50 seg"]},
+        { n:"Anh NEA50 (THW)", id:110, c:C_THW, cat:"THW", s:["anh nea50 thw"]},
+        { n:"Anh NEA200 (THW)", id:112, c:C_THW, cat:"THW", s:["anh nea200 thw"]},
+        { n:"Anh NEA50 (FW)", id:111, c:C_FW, cat:"FW", s:["anh nea50 fw"]},
+        { n:"Anh NEA200 (FW)", id:113, c:C_FW, cat:"FW", s:["anh nea200 fw"]},
         { n:"ELW Bergrettung", id:151, c:"#B0AC97", cat:"BergRett", s:["elw berg"]},
         { n:"GW-Bergrettung", id:150, c:"#B0AC97", cat:"BergRett", s:["gw-bergrettung","gw-berg"]},
-        { n:"GW-Höhenrettung (Bergrettung)", id:33, c:"#B0AC97", cat:"BergRett", s:["gw-höhen"]},
+        { n:"GW-Höhenrettung (Bergrettung)", id:158, c:"#B0AC97", cat:"BergRett", s:["gw-höhen"]},
         { n:"GW-Bergrettung (NEF)", id:149, c:"#B0AC97", cat:"BergRett", s:["gw-bergnef","gw-berg nef","gw-bergrettung nef"]},
         { n:"ATV", id:152, c:"#B0AC97", cat:"BergRett", s:["atv"]},
         { n:"Schneefahrzeug", id:154, c:"#B0AC97", cat:"BergRett", s:["schnee"]},
@@ -238,7 +240,7 @@
         { n:"MZB", id:70, c:C_WR, cat:"WasserRett", s:["mzb","boot"]},
         { n:"SAR Boot", id:160, c:C_SR, cat:"SeenotRett", s:["seenotrettungsboot","sar boot"]},
         { n:"SAR Kreuzer", id:159, c:C_SR, cat:"SeenotRett", s:["seenotrettungskreuzer","sar kreuzer"]},
-        { n:"SAR Hubschrauber", id:161, c:C_SR, cat:"SeenotRett", s:["sar hubschrauber"]},
+        { n:"SAR Hubschrauber", id:161, c:C_LUFT, cat:"Luft", s:["sar hubschrauber"]},
         { n:"RW-Schiene", id:162, c:"#5a5a5a", cat:"BahnRett", s:["rw schiene","rw-schiene"]},
         { n:"HLF Schiene", id:163, c:"#5a5a5a", cat:"BahnRett", s:["hlf schiene"]},
         { n:"AB-Schiene", id:164, c:"#5a5a5a", cat:"BahnRett", s:["ab-schiene"]},
@@ -267,17 +269,17 @@
         catStatusTextColor:"#ffffff", catStatusTextSize:10,
         tileBgColor:"#ffffff", tileTextColor:"#000000", resourceTileBgColor:"#c8c8c8",
         barColor:"#0000ff", tileMinHeight:65, tileGap:0,
+        tileColumnWidth:0, tilePaddingX:4, tilePaddingY:2, tileBorderWidth:1,
         tileNameSize:13, tileNameWeight:"normal",
         badgeSize:12, badgeAlign:"left", badgeTopMargin:2,
         tileCounterSize:17, numTodayColor:"#0000ff",
         numYdayColor:"#6c757d", resCounterColor:"#000000", resCounterSize:16,
         tileColorInUse:"#f7f46c", tileColorEmpty:"#fc483b",
-        trendColorUp:"#00cc00", trendColorDown:"#ff0000", trendColorEq:"#6c757d",
         statsMissionsColor:"#000000", statsMissionsSize:12,
         statsKtpColor:"#000000", statsKtpSize:12,
         statsActiveColor:"#00cc00", statsActiveSize:12,
         subStatusSize:10, subStatusWeight:"normal", subStatusColorOk:"#00cc00", subStatusColorErr:"#ff0000",
-        subUpdateSize:10, subUpdateWeight:"normal", subUpdateColor:"#555555",
+        subUpdateSize:10, subUpdateWeight:"normal", subUpdateColor:"#b57900",
         subDispSize:10, subDispWeight:"normal", subDispColor:"#555555",
         headerElementSize:12, pillBgColor:"#ffffff", pillTextColor:"#000000",
         creditsGap:6, creditsFontSize:13, creditsLabelColor:"#333333", creditsValueColor:"#00cc00",
@@ -286,7 +288,7 @@
         toggleBtnSize:44, toggleBtnBg:"#f01606", toggleBtnBorderC:"#f3f035", toggleBtnBorderW:2,
         fmsFontSize:11, fmsHeight:1, fmsGap:4, debugMode:false, apiInterval:60,
         tileIdPrefix:"ID: ", tileIdSize:10, tileIdColor:"#999999", tileIdAlign:"right",
-        tileStatsMode:"both", showTileTrend:true, showTileYday:true,
+        tileStatsMode:"both", showTileYday:true,
         resourceCounterMode:"all", numAlign:"right", tileSortOrder:"category",
         activeCategoryFilter:"all", searchFilter:"", collapsedCats:[], collapsedTilesCats:[],
         footerText:"Design & Optimized by Bobelle", footerColor:"#1e90ff", footerSize:12, footerAlign:"center",
@@ -313,9 +315,7 @@
         TOGGLE_BTN_POS:"fz_toggle_btn_pos"
     };
 
-    // =======================================================
     // VARIABLEN & STATUS
-    // =======================================================
     const TYPE_ID_MAPPING = {};
     AAO_TILES_RAW.forEach(tile => {
         if (tile.id !== undefined && tile.id !== null) {
@@ -327,6 +327,49 @@
             });
         }
     });
+
+    // V4.5: Eindeutige Fahrzeugzuordnung und nachvollziehbare Diagnose.
+    // Manuelle Korrekturen gelten fuer eine offizielle Typ-ID, nicht fuer einzelne Fahrzeugnamen.
+    const MATCH_OVERRIDE_KEY = "fz_v45_vehicle_type_overrides";
+    let manualTypeMappings = jsonLoadTypeOverrides();
+    let vehicleMatchDiagnostics = {total:0, matched:0, ambiguous:[], unknown:[], manual:0};
+    function jsonLoadTypeOverrides(){
+        try {
+            const data = JSON.parse(localStorage.getItem("fzgm_" + MATCH_OVERRIDE_KEY) || "{}");
+            return data && typeof data === "object" && !Array.isArray(data) ? data : {};
+        } catch { return {}; }
+    }
+    function saveTypeOverrides(){
+        try { localStorage.setItem("fzgm_" + MATCH_OVERRIDE_KEY, JSON.stringify(manualTypeMappings)); }
+        catch(e){ console.warn("[Bobelle] Typzuordnungen nicht gespeichert",e); }
+    }
+    function resolveVehicleTile(v, typeId){
+        const id = typeId === null || !Number.isFinite(typeId) ? null : typeId;
+        const typeName = normalize(v.vehicle_type_caption || v.vehicle_type_name || "");
+        const idKey = id === null ? null : String(id);
+        if(idKey !== null && Object.prototype.hasOwnProperty.call(manualTypeMappings,idKey)){
+            const key = manualTypeMappings[idKey];
+            // Manuelle Korrekturen nur auf echte Fahrzeugkacheln zulassen.
+            if(tileMetaByKey[key] && !RESOURCE_TILE_NAMES.has(key)) return {key, source:"manual"};
+        }
+        const override = id === null ? null : VEHICLE_TYPE_OVERRIDES[id];
+        if(override && Array.isArray(override.add) && override.add.length === 1 && tileMetaByKey[override.add[0]] && !RESOURCE_TILE_NAMES.has(override.add[0])){
+            return {key:override.add[0],source:"official-override"};
+        }
+        const candidates = id === null ? [] : [...new Set(TYPE_ID_MAPPING[id] || [])];
+        // Eindeutige offizielle ID ist verlaesslicher als frei gewaehlte Fahrzeugnamen.
+        if(candidates.length === 1) return {key:candidates[0],source:"id"};
+        // Mehrdeutige IDs nur durch eindeutige offizielle Typbezeichnung aufloesen.
+        const pool = candidates.length ? candidates : TILE_LIST.filter(t => !RESOURCE_TILE_NAMES.has(t.n)).map(t=>t.n);
+        const exact = pool.filter(k => {
+            const tile = tileMetaByKey[k];
+            return typeName && (normalize(k) === typeName || (tile.s || []).some(alias => normalize(alias) === typeName));
+        });
+        if(exact.length === 1) return {key:exact[0],source:"type"};
+        if(candidates.length > 1) return {key:null,source:"ambiguous",candidates};
+        // Bei unbekannter ID nur eindeutig exakte offizielle Bezeichnungen akzeptieren.
+        return {key:null,source:"unknown",candidates:exact};
+    }
 
     const VEHICLE_TYPE_OVERRIDES = {
         32:  { del: ["FuStW", "FuStW (DGL)", "Zivilstreifenwagen", "LauKw", "LeBefKw"], add: ["FuStW"] },
@@ -406,6 +449,7 @@
 
     let apiTimer=null, schoolingTimer=null;
     let sysReady=true, lastUpdateStr="--:--:--", isUpdating=false;
+    let lastSuccessfulVehicleFetch = null; // Nur nach erfolgreichem API-Abruf
     let lastCreditsUpdate=0;
     let creditsData={ein:0,aus:0,bilanz:0,date:""};
 
@@ -413,7 +457,21 @@
     let lastAlarmTime={}, saveTimeout=null;
 
     const heliAlreadyCountedThisSession=new Set();
-    const ktpAlreadyCountedThisSession=new Set();
+    const ktpAlreadyCountedThisSession=new Set(); // Kompatibilitaet mit aelteren Sitzungsdaten
+    const dispatchEventGuard = new Map();
+    const dispatchSeenWindowMs = 15000;
+    function registerDispatchEvent(vehicleId, kind){
+        const key = `${String(vehicleId)}:${kind}`;
+        const now = Date.now();
+        for(const [k,t] of dispatchEventGuard) if(now-t > dispatchSeenWindowMs) dispatchEventGuard.delete(k);
+        if(dispatchEventGuard.has(key)) return false;
+        dispatchEventGuard.set(key, now);
+        return true;
+    }
+    function validFms(value){
+        const n = Number(value);
+        return Number.isInteger(n) && n >= 1 && n <= 8 ? n : null;
+    }
 
     let schoolingsData=[];
     let buildingNameCache={};
@@ -421,9 +479,7 @@
     let _restzeitTimerId=null;
     let _buildingsFullyLoaded=false;
 
-    // =======================================================
     // HILFSFUNKTIONEN
-    // =======================================================
     function formatRestzeit(finishAtMs) {
         const diff = finishAtMs - Date.now();
         if(diff <= 0) return "✅ Fertig";
@@ -480,7 +536,9 @@
         },
         save: () => {
             if(saveTimeout) clearTimeout(saveTimeout);
+            const saveDay = getTodayString();
             saveTimeout = setTimeout(() => {
+                if(saveDay !== getTodayString() || GM_getValue(STORAGE.DAYSTAMP, "") !== saveDay) return;
                 json.save(STORAGE.COUNTS_TODAY, state.today);
                 json.save(STORAGE.COUNTS_TOTAL, state.total);
                 json.save(STORAGE.DETAILS_TODAY, state.det);
@@ -489,9 +547,7 @@
         }
     };
 
-    // =======================================================
     // INITIALISIERUNG
-    // =======================================================
     creditsData = json.load(STORAGE.CREDITS_DATA, {ein:0, aus:0, bilanz:0, date:""});
     const customStock = json.load(STORAGE.CUSTOM_STOCK, {});
 
@@ -504,6 +560,8 @@
 
     let vehicleAvailability={}, vehicleExists={}, vehicleInUseCount={}, vehicleTotalCount={}, vehicleFreeCount={};
     let hasFreeCountData=false, vehicleLists={};
+    let formattedVehicleUpdateTime = "Stand: --:--:--";
+
 
     let state = {
         today: store.load(STORAGE.COUNTS_TODAY),
@@ -529,24 +587,33 @@
         return false;
     }
 
-    // =======================================================
     // GEBÄUDE & LEHRGÄNGE
-    // =======================================================
+    let buildingNamesPromise = null;
     async function ensureBuildingNames(buildingIds){
         if(_buildingsFullyLoaded || buildingIds.length === 0) return;
         const missingIds = buildingIds.filter(id => !buildingNameCache[id]);
         if(missingIds.length === 0) return;
         try {
-            const bRes = await fetch("/api/buildings", {credentials: "same-origin"});
-            if(bRes.ok){
-                const buildings = await bRes.json();
+            if(!buildingNamesPromise){
+                buildingNamesPromise = fetch("/api/buildings", {credentials: "same-origin"})
+                    .then(r => { if(!r.ok) throw new Error("Buildings HTTP " + r.status); return r.json(); })
+                    .finally(() => { buildingNamesPromise = null; });
+            }
+            const buildings = await buildingNamesPromise;
+            if(Array.isArray(buildings)){
                 buildings.forEach(b => { buildingNameCache[b.id] = b.caption || ("Wache #" + b.id); });
                 _buildingsFullyLoaded = true;
             }
         } catch(e) { console.warn("[Bobelle] Gebäude-Fetch fehlgeschlagen:", e); }
     }
 
+    let schoolingPending = null;
     async function fetchSchoolings(){
+        if(schoolingPending) return schoolingPending;
+        schoolingPending = fetchSchoolingsImpl().finally(() => { schoolingPending = null; });
+        return schoolingPending;
+    }
+    async function fetchSchoolingsImpl(){
         try {
             const ownRes = await fetch("/api/schoolings", {credentials:"same-origin"});
             let own = [];
@@ -703,10 +770,10 @@
                 progressHtml = `<div style="margin-top:4px;height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${C_AUS};border-radius:2px;"></div></div><div style="font-size:9px;color:#999;margin-top:1px;">${pct}% abgeschlossen</div>`;
             }
 
-            const typBadge = s.description ? `<span style="font-size:9px;background:rgba(123,63,160,0.15);color:${C_AUS};padding:1px 5px;border-radius:3px;margin-left:5px;font-weight:bold;">${s.description}</span>` : "";
+            const typBadge = s.description ? `<span style="font-size:9px;background:rgba(123,63,160,0.15);color:${C_AUS};padding:1px 5px;border-radius:3px;margin-left:5px;font-weight:bold;">${escapeHTML(s.description)}</span>` : "";
             const pCount = s.participantCount > 0 ? `<span style="font-size:10px;color:#888;margin-left:6px;">${ICONS.person} ${s.participantCount}</span>` : "";
 
-            return `<div style="padding:8px 10px;border-radius:5px;margin-bottom:6px;background:rgba(123,63,160,0.07);border-left:3px solid ${C_AUS};"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:bold;">${s.caption}${typBadge}</div><div style="font-size:10px;color:#555;margin-top:2px;">📍 ${s.buildingName}${pCount}</div>${progressHtml}</div><div style="font-size:13px;font-weight:bold;color:${restColor};flex-shrink:0;">${rest}</div></div></div>`;
+            return `<div style="padding:8px 10px;border-radius:5px;margin-bottom:6px;background:rgba(123,63,160,0.07);border-left:3px solid ${C_AUS};"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;"><div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:bold;">${escapeHTML(s.caption)}${typBadge}</div><div style="font-size:10px;color:#555;margin-top:2px;">📍 ${escapeHTML(s.buildingName)}${pCount}</div>${progressHtml}</div><div style="font-size:13px;font-weight:bold;color:${restColor};flex-shrink:0;">${rest}</div></div></div>`;
         };
 
         const ol = document.createElement("div");
@@ -732,53 +799,49 @@
         getTargetBody().appendChild(ol);
     }
 
-    // =======================================================
     // UI UPDATES & STATUS
-    // =======================================================
     function updateSubHeaderInfo(){
         const sysEl = document.getElementById("fzSysStatus");
-        const updEl = document.getElementById("fzLastUpdate");
         const dispEl = document.getElementById("fzDispatcher");
-        if(!sysEl || !updEl || !dispEl) return;
+        if(!sysEl || !dispEl) return;
 
         sysEl.textContent = sysReady ? "Leitstelle betriebsbereit" : "Leitstelle offline / inaktiv";
         sysEl.style.color = sysReady ? uiSettings.subStatusColorOk : uiSettings.subStatusColorErr;
-        updEl.textContent = "Letztes Update: " + lastUpdateStr;
-
-        if(isUpdating) updEl.classList.add("fzUpdatingAnim");
-        else updEl.classList.remove("fzUpdatingAnim");
 
         const rankEl = document.getElementById("current_level");
-        dispEl.innerHTML = `Disposition: Bobelle <span style="margin-left:5px;">${rankEl ? (rankEl.innerText || rankEl.textContent).trim() : "Unbekannt"}</span>`;
+        dispEl.innerHTML = `Disposition: Bobelle <span style="margin-left:5px;">${escapeHTML(rankEl ? (rankEl.innerText || rankEl.textContent).trim() : "Unbekannt")}</span>`;
     }
 
+    // Tageswechsel vor jeder Buchung und jedem API-Durchlauf pruefen.
     function checkVehicleDayReset(currentState){
         const today = getTodayString();
-        if(GM_getValue(STORAGE.DAYSTAMP, "") !== today){
-            const oldToday = store.load(STORAGE.COUNTS_TODAY);
-            let hist = json.load(STORAGE.HISTORY_7DAYS, {});
-            for(const k in oldToday){
-                if(!hist[k]) hist[k] = [];
-                hist[k].unshift(oldToday[k]);
-                if(hist[k].length > 7) hist[k] = hist[k].slice(0,7);
-            }
-            json.save(STORAGE.HISTORY_7DAYS, hist);
-            currentState.history = hist;
-            json.save(STORAGE.YDAY_COUNTS, oldToday);
-            json.save(STORAGE.COUNTS_TODAY, {});
-            json.save(STORAGE.DETAILS_TODAY, {});
-            GM_setValue(STORAGE.DAYSTAMP, today);
-
-            if(currentState){
-                currentState.today = {};
-                currentState.yday = store.load(STORAGE.YDAY_COUNTS);
-                currentState.det = {};
-            }
-            heliAlreadyCountedThisSession.clear();
-            ktpAlreadyCountedThisSession.clear();
-            return true;
+        if(GM_getValue(STORAGE.DAYSTAMP, "") === today) return false;
+        if(saveTimeout){ clearTimeout(saveTimeout); saveTimeout = null; }
+        // Storage ist nicht transaktional. Der erneute Stempelcheck minimiert
+        // konkurrierende Tageswechsel mehrerer geoeffneter Tabs.
+        if(GM_getValue(STORAGE.DAYSTAMP, "") === today) return false;
+        const oldToday = store.load(STORAGE.COUNTS_TODAY);
+        const hist = json.load(STORAGE.HISTORY_7DAYS, {});
+        for(const k of KEYS){
+            if(!Array.isArray(hist[k])) hist[k] = [];
+            hist[k].unshift(Number(oldToday[k]) || 0);
+            hist[k] = hist[k].slice(0,7);
         }
-        return false;
+        json.save(STORAGE.HISTORY_7DAYS, hist);
+        json.save(STORAGE.YDAY_COUNTS, oldToday);
+        json.save(STORAGE.COUNTS_TODAY, {});
+        json.save(STORAGE.DETAILS_TODAY, {});
+        GM_setValue(STORAGE.DAYSTAMP, today);
+        if(currentState){
+            currentState.history = hist;
+            currentState.today = store.load(STORAGE.COUNTS_TODAY);
+            currentState.yday = store.load(STORAGE.YDAY_COUNTS);
+            currentState.det = {};
+        }
+        heliAlreadyCountedThisSession.clear();
+        ktpAlreadyCountedThisSession.clear();
+        dispatchEventGuard.clear();
+        return true;
     }
 
     function getWasserbedarfLiter(activeEl){
@@ -789,17 +852,14 @@
             const val = parseInt(matchLiter[1],10);
             if(val >= 500) return val;
         }
-        if(fullText.includes("gtlf")||fullText.includes("großtank")) return 10000;
-        if(fullText.includes("ptlf")||fullText.includes("tlf 4000")) return 4000;
-        if(fullText.includes("tankwagen") && !fullText.includes("klein")) return 5000;
-        if(fullText.includes("kleintankwagen")||fullText.includes("tlf 2000")) return 2000;
-        if(fullText.includes("tlf 3000")||fullText.includes("tlf")) return 3000;
+        // Ohne explizite Literangabe keine geschaetzte Menge verbuchen.
         return 0;
     }
 
     function incrementTileCount(vehicleKey, activeEl){
         if(!vehicleKey) return;
-        let inc = uiSettings.clickIncrement;
+        checkVehicleDayReset(state);
+        let inc = ["Patienten", "Gefangene", "Krankentransporte", "Helikopter"].includes(vehicleKey) ? 1 : uiSettings.clickIncrement;
         if(vehicleKey === "Wasserbedarf"){
             inc = getWasserbedarfLiter(activeEl);
             if(inc === 0) return;
@@ -936,14 +996,7 @@
             "Patienten","Krankenhausbetten","Gefangene","Gefängniszellen",
             "Wasserbedarf","Betreuung/Versorgung","Krankentransporte","Helikopter",
             "Meine DJI Mini 4k (Pilot Bobelle)",
-            "Laufende Lehrgänge","Aktive Lehrgänge",
-            "Feuer-und Rettungswache Herford","Feuer-und Rettungswache Gütersloh",
-            "Feuer-und Rettungswache Halle(Westf.)","Feuer-und Rettungswache Stukenbrock",
-            "Kreispolizeibehörde Herford","Kreispolizeibehörde Gütersloh",
-            "Kreispolizeibehörde Halle(Westf.)","Kreispolizeibehörde Stukenbrock",
-            "Polizeibehörde Warnemünde","Polizeibehörde Eckernförde","Polizeibehörde Bremerhafen",
-            "Rettungswache Warnemünde","Rettungswache Eckernförde","Rettungswache Bremerhafen",
-            "DLRG Herford","DLRG Gütersloh"
+            "Laufende Lehrgänge","Aktive Lehrgänge"
         ]);
 
         const relevantKeys = KEYS.filter(k => !EXCLUDE_FROM_AVAIL.has(k));
@@ -970,12 +1023,17 @@
         }, durationMs);
     }
 
-    // =======================================================
     // HAUPT-API-SCHLEIFE (FAHRZEUGE & CREDITS)
-    // =======================================================
-    async function fetchCreditsDaily() {
+    let creditsPending = null;
+    async function fetchCreditsDaily(){
+        if(creditsPending) return creditsPending;
+        creditsPending = fetchCreditsDailyImpl().finally(() => { creditsPending = null; });
+        return creditsPending;
+    }
+    async function fetchCreditsDailyImpl() {
         try {
             const res = await fetch('/credits/daily');
+            if(!res.ok) throw new Error('Credits HTTP ' + res.status);
             const html = await res.text();
             if (!html.includes('login-form')) {
                 const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -1015,8 +1073,8 @@
         if(!msg || !isMainPage) return;
         const id = msg.id ?? msg.vehicle_id;
         const f = msg.fms_real ?? msg.fms;
-        if(id != null && f != null && !isNaN(Number(f)) && vehicleIdSet.has(Number(id))){
-            liveFms[Number(id)] = { fms: Number(f), ts: Date.now() };
+        if(id != null && validFms(f) !== null && vehicleIdSet.has(Number(id))){
+            liveFms[Number(id)] = { fms: validFms(f), ts: Date.now() };
             requestRender(100);
         } else if(id != null && f != null){
             requestUpdate(250); // neues/unbekanntes Fahrzeug -> API
@@ -1050,6 +1108,28 @@
     let lastVehiclesRaw = null, vehicleIdSet = new Set();
     const liveFms = {};
 
+    // Fuenf Sekunden nach jedem erfolgreichen Fahrzeugdaten-Abruf gruen blinken.
+    let tileBlinkTimeout = null;
+    let tileBlinkUntil = 0;
+    function setTileUpdateBlink(active){
+        if(tileBlinkTimeout){ clearTimeout(tileBlinkTimeout); tileBlinkTimeout = null; }
+        tileBlinkUntil = active ? Date.now() + 5000 : 0;
+        for(const cached of Object.values(tileCache)){
+            if(cached && cached.updatedAt){
+                cached.updatedAt.classList.toggle("fzTileUpdating", active);
+            }
+        }
+        if(active){
+            tileBlinkTimeout = setTimeout(() => {
+                tileBlinkTimeout = null;
+                tileBlinkUntil = 0;
+                for(const cached of Object.values(tileCache)){
+                    if(cached && cached.updatedAt) cached.updatedAt.classList.remove("fzTileUpdating");
+                }
+            }, 5000);
+        }
+    }
+
     async function updateAvailability(){
         if(isUpdating) return;
         if(!isMainPage) return;
@@ -1066,24 +1146,35 @@
 
         let vehicles = [];
         try {
-            const response = await fetch("/api/vehicles", {credentials:"same-origin"});
-            if(!response.ok) throw new Error("API Offline");
-            vehicles = await response.json();
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 20000);
+            try {
+                const response = await fetch("/api/vehicles", {credentials:"same-origin", signal:controller.signal, cache:"no-store"});
+                if(!response.ok) throw new Error("API Offline: " + response.status);
+                vehicles = await response.json();
+            } finally {
+                clearTimeout(timeout);
+            }
             if(!Array.isArray(vehicles)) throw new Error("Invalid API Data");
             sysReady = true;
         } catch(e) {
             sysReady = false;
             isUpdating = false;
             updateSubHeaderInfo();
+            if(_updatePending){ _updatePending = false; requestUpdate(150); }
             return;
         }
 
+        lastSuccessfulVehicleFetch = new Date();
+        formattedVehicleUpdateTime = "Stand: " + lastSuccessfulVehicleFetch.toLocaleTimeString("de-DE");
+        setTileUpdateBlink(true);
         lastVehiclesRaw = vehicles;
         vehicleIdSet = new Set(vehicles.map(v => v.id));
         processVehicles(vehicles, true);
     }
 
     function processVehicles(vehicles, fromApi){
+        checkVehicleDayReset(state);
         for(const k of KEYS){
             vehicleAvailability[k] = false;
             vehicleExists[k] = false;
@@ -1094,6 +1185,7 @@
 
         hasFreeCountData = false;
         vehicleLists = {};
+        vehicleMatchDiagnostics = {total:0, matched:0, ambiguous:[], unknown:[], manual:0};
 
         let catStats = {};
         for(const c of CATEGORY_ORDER) catStats[c] = {free:0, busy:0, s6:0, total:0};
@@ -1106,11 +1198,13 @@
         const isInitialLoad = !vehicleStateCache._initialized;
 
         for(const v of vehicles){
-            const typeId = v.vehicle_type_id ?? v.vehicle_type ?? null;
-            let fms = v.fms_real ?? v.fms ?? null;
+            const rawTypeId = v.vehicle_type_id ?? v.vehicle_type ?? null;
+            const typeId = rawTypeId === null || rawTypeId === "" ? null : Number(rawTypeId);
+            // Die API kann Fahrzeugtypen als Zahl oder numerischen String liefern.
+            let fms = validFms(v.fms_real ?? v.fms);
             const fmsText = (v.fms_text || "").toLowerCase();
 
-            if(!fms || fms === 0){
+            if(fms === null){
                 if(fmsText.includes("frei auf wache")||fmsText.includes("at the station")) fms=2;
                 else if(fmsText.includes("frei auf funk")) fms=1;
                 else if(fmsText.includes("anfahrt")) fms=3;
@@ -1119,91 +1213,34 @@
                 else if(fmsText.includes("nicht einsatzbereit")) fms=6;
                 else if(fmsText.includes("patient")) fms=7;
                 else if(fmsText.includes("transportziel")) fms=8;
-                else fms=2;
+                else fms=null; // unbekannt: nicht als frei behandeln
             }
 
     const lv = liveFms[v.id];
             if(lv){
-                if(lv.fms === fms || Date.now() - lv.ts > 360000) delete liveFms[v.id];
+                if(lv.fms === fms || Date.now() - lv.ts > 60000) delete liveFms[v.id];
                 else fms = lv.fms; // Live-Status vom Spiel hat Vorrang, solange die API veraltet ist
             }
 
             const isInUse = (fms===3||fms===4||fms===7||fms===8);
             const isAvail = (fms===1||fms===2);
-            let matchedKeys = new Set();
-
-            const cachedMatch = VEHICLE_MATCH_CACHE.get(v.id);
-            if(cachedMatch && cachedMatch.caption === v.caption){
-                cachedMatch.keys.forEach(k => matchedKeys.add(k));
+            const resolution = resolveVehicleTile(v, typeId);
+            const matchedKeys = new Set(resolution.key ? [resolution.key] : []);
+            vehicleMatchDiagnostics.total++;
+            if(resolution.key){
+                vehicleMatchDiagnostics.matched++;
+                if(resolution.source === "manual") vehicleMatchDiagnostics.manual++;
             } else {
-                const vNameCustom = normalize(v.caption || "");
-                const vNameType = normalize(v.vehicle_type_caption || v.vehicle_type_name || "");
-                const mappedKeys = TYPE_ID_MAPPING[typeId];
-                let idMatched = false;
-
-                if(mappedKeys && mappedKeys.length > 0){
-                    if(mappedKeys.length === 1){
-                        matchedKeys.add(mappedKeys[0]);
-                        idMatched = true;
-                    } else {
-                        for(const k of mappedKeys){
-                            const tile = tileMetaByKey[k];
-                            if(tile && tile.search && tile.search.length > 0){
-                                let nameMatch = false;
-                                if(tile.norm && (vNameCustom.includes(tile.norm) || vNameType.includes(tile.norm))) nameMatch = true;
-                                if(!nameMatch){
-                                    for(const s of tile.search){
-                                        if(vNameCustom.includes(s) || vNameType.includes(s)){ nameMatch = true; break; }
-                                    }
-                                }
-                                if(nameMatch){ matchedKeys.add(k); idMatched = true; }
-                            } else {
-                                matchedKeys.add(k);
-                                idMatched = true;
-                            }
-                        }
-                    }
-                }
-
-                if(!idMatched){
-                    const cacheKey = vNameCustom + "|" + vNameType;
-                    if(nameCache[cacheKey]){
-                        for(const k of nameCache[cacheKey]) matchedKeys.add(k);
-                    } else {
-                        const found = [];
-                        // Use search index for faster lookups
-                        const searchTerms = [vNameCustom, vNameType];
-                        for(const term of searchTerms){
-                            if(SEARCH_INDEX[term]){
-                                const results = Array.isArray(SEARCH_INDEX[term]) ? SEARCH_INDEX[term] : [SEARCH_INDEX[term]];
-                                results.forEach(t => {
-                                    matchedKeys.add(t.n);
-                                    found.push(t.n);
-                                });
-                            }
-                        }
-                        if(nameCache[cacheKey] || Object.keys(nameCache).length < 500){
-                            nameCache[cacheKey] = found;
-                        }
-                        for(const k of found) matchedKeys.add(k);
-                    }
-                }
-
-                if (VEHICLE_TYPE_OVERRIDES[typeId]) {
-                    VEHICLE_TYPE_OVERRIDES[typeId].del.forEach(k => matchedKeys.delete(k));
-                    VEHICLE_TYPE_OVERRIDES[typeId].add.forEach(k => matchedKeys.add(k));
-                }
-
-                VEHICLE_MATCH_CACHE.set(v.id, {caption: v.caption, keys: Array.from(matchedKeys)});
-            }
-
-            const vBuildingId = v.building_id ?? v.station_building_id ?? null;
-            if(vBuildingId !== null && BUILDING_ID_TILE_MAP[vBuildingId]){
-                BUILDING_ID_TILE_MAP[vBuildingId].forEach(k => matchedKeys.add(k));
+                const entry = {
+                    id:v.id, caption:String(v.caption || "Unbenannt"),
+                    typeId:typeId, typeName:String(v.vehicle_type_caption || v.vehicle_type_name || ""),
+                    candidates:resolution.candidates || []
+                };
+                vehicleMatchDiagnostics[resolution.source === "ambiguous" ? "ambiguous" : "unknown"].push(entry);
             }
 
             const oldFms = vehicleStateCache[v.id];
-            if(!isInitialLoad && oldFms !== undefined && (oldFms === 1 || oldFms === 2) && (fms === 3 || fms === 4)){
+            if(!isInitialLoad && (oldFms === 1 || oldFms === 2) && (fms === 3 || fms === 4) && registerDispatchEvent(v.id, "dispatch")){
                 matchedKeys.forEach(k => {
                     if(k === "Wasserbedarf"){
                         const fakEl = { textContent: v.caption || "", title: "", getAttribute: () => "" };
@@ -1229,16 +1266,9 @@
                     const m = tileMetaByKey[k];
                     return m && (m.cat === "Luft" || m.cat === "SeenotRett") && /rth|hubschrauber/i.test(k);
                 });
-                if(isHeli) incrementTileCount("Helikopter", null);
-
-                const KTW_TYPE_IDS = new Set([38, 58, 74, 97]);
-                if(KTW_TYPE_IDS.has(typeId)){
-                    const ktpGuardKey = v.id + "_ktp_" + (vehicleStateCache[v.id] || 0);
-                    if(!ktpAlreadyCountedThisSession.has(ktpGuardKey) && ktpAlreadyCountedThisSession.size < 5000){
-                        ktpAlreadyCountedThisSession.add(ktpGuardKey);
-                        incrementTileCount("Krankentransporte", null);
-                    }
-                }
+                if(isHeli && registerDispatchEvent(v.id, "heli")) incrementTileCount("Helikopter", null);
+                // Krankentransporte nur bei bestaetigter Transportaktion zaehlen,
+                // nicht bereits beim Ausruecken eines KTW/NAW/ITW.
             }
 
             vehicleStateCache[v.id] = fms;
@@ -1256,7 +1286,7 @@
                     catStats[meta.cat].total++;
                     if(fms === 6) catStats[meta.cat].s6++;
                     else if(isInUse) catStats[meta.cat].busy++;
-                    else catStats[meta.cat].free++;
+                    else if(isAvail) catStats[meta.cat].free++;
                 }
 
                 if(!vehicleLists[k]) vehicleLists[k] = [];
@@ -1355,7 +1385,7 @@
             updateCategoryHeaders();
             renderAvailabilityIndicator();
             updateHeaderStats();
-            lastUpdateStr = new Date().toLocaleTimeString("de-DE");
+            if(fromApi && lastSuccessfulVehicleFetch) lastUpdateStr = lastSuccessfulVehicleFetch.toLocaleTimeString("de-DE");
             updateSubHeaderInfo();
             if(fromApi){
                 isUpdating = false;
@@ -1377,10 +1407,9 @@
         vehicleTotalCount["Patienten"] = cachedCapacities.beds || 0;
         vehicleInUseCount["Patienten"] = cachedCapacities.bedsUsed || 0;
         vehicleFreeCount["Patienten"] = Math.max(0, (cachedCapacities.beds || 0) - (cachedCapacities.bedsUsed || 0));
-        state.today["Patienten"] = Math.max(Number(state.today["Patienten"] || 0), Number(cachedCapacities.bedsUsed || 0));
+        // Patienten ist eine Tagesereignisstatistik, keine aktuelle Belegung.
 
-        const prisonerValue = Math.max(Number(state.today["Gefangene"] || 0), Number(cachedCapacities.cellsUsed || 0));
-        state.today["Gefangene"] = prisonerValue;
+        const prisonerValue = Number(cachedCapacities.cellsUsed || 0);
         state.today["Gefängniszellen"] = prisonerValue;
 
         vehicleExists["Gefangene"] = true;
@@ -1398,7 +1427,13 @@
         store.save();
     }
 
+    let capacityPending = null;
     async function updateBuildingCapacities(force=false){
+        if(capacityPending) return capacityPending;
+        capacityPending = updateBuildingCapacitiesImpl(force).finally(() => { capacityPending = null; });
+        return capacityPending;
+    }
+    async function updateBuildingCapacitiesImpl(force=false){
         const now = Date.now();
         if(!force && now - lastBuildingUpdate < 300000) return;
 
@@ -1406,6 +1441,7 @@
             const response = await fetch("/api/buildings", { credentials: "same-origin" });
             if(!response.ok) return;
             const buildings = await response.json();
+            if(!Array.isArray(buildings)) throw new Error("Ungueltige Gebaeude-API-Antwort");
 
             let beds = 0, bedsUsed = 0, cells = 0, cellsUsed = 0;
 
@@ -1418,14 +1454,14 @@
                 buildingNameCache[b.id] = b.caption || ("Wache #" + b.id);
 
                 if(type === 4 || String(b.caption || "").toLowerCase().includes("krankenhaus")){
-                    const bedTotal = Number(b.patient_extension_capacity ?? b.bed_count ?? b.hospital_beds ?? (10 + lvl)) || 0;
+                    const bedTotal = Number(b.patient_extension_capacity ?? b.bed_count ?? b.hospital_beds ?? 0) || 0;
                     const bedUsedVal = Number(b.patient_count ?? b.patients_count ?? b.current_patients ?? 0) || 0;
                     beds += bedTotal;
                     bedsUsed += bedUsedVal;
                 }
 
                 if(type === 6 || type === 12 || String(b.caption || "").toLowerCase().includes("gefängnis") || String(b.caption || "").toLowerCase().includes("polizei")){
-                    const cellTotal = Number(b.prisoner_capacity ?? b.jail_cells ?? b.cell_count ?? (type === 12 ? (1 + lvl) : (2 + lvl))) || 0;
+                    const cellTotal = Number(b.prisoner_capacity ?? b.jail_cells ?? b.cell_count ?? 0) || 0;
                     const usedVal = Number(b.prisoner_count ?? b.prisoners_count ?? b.current_prisoners ?? 0) || 0;
                     cells += cellTotal;
                     cellsUsed += usedVal;
@@ -1454,9 +1490,7 @@
         pill.style.color = uiSettings.creditsLabelColor;
     }
 
-    // =======================================================
-    // LOOPS & STYLES
-    // =======================================================
+    // Zeitgesteuerte Datenabfragen und Styles
     function startApiLoop(){
         if(apiTimer) clearInterval(apiTimer);
         const interval = Math.max(60, uiSettings.apiInterval || 120) * 1000;
@@ -1474,7 +1508,7 @@
             :root{
                 --fz-bg:${uiSettings.winBg};--fz-bc:${uiSettings.winBorderC};--fz-bw:${uiSettings.winBorderW}px;--fz-br:${uiSettings.winRadius}px;
                 --fz-cat-s:${uiSettings.catHeaderSize}px;--fz-cat-c:${uiSettings.catHeaderTextColor};--fz-cat-pad:${uiSettings.catHeaderPadding}px;
-                --fz-tile-h:${uiSettings.tileMinHeight}px;--fz-tile-gap:${uiSettings.tileGap}px;--fz-tile-bg:${uiSettings.tileBgColor};--fz-tile-text:${uiSettings.tileTextColor};
+                --fz-tile-h:${Math.max(35,Number(uiSettings.tileMinHeight)||65)}px;--fz-tile-gap:${uiSettings.tileGap}px;--fz-tile-px:${Math.max(0,Math.min(40,Number(uiSettings.tilePaddingX ?? 4)))}px;--fz-tile-py:${Math.max(0,Math.min(25,Number(uiSettings.tilePaddingY ?? 2)))}px;--fz-tile-bw:${Math.max(0,Math.min(10,Number(uiSettings.tileBorderWidth ?? 1)))}px;--fz-tile-bg:${uiSettings.tileBgColor};--fz-tile-text:${uiSettings.tileTextColor};
                 --fz-name-fs:${uiSettings.tileNameSize}px;--fz-name-fw:${uiSettings.tileNameWeight};--fz-count-fs:${uiSettings.tileCounterSize}px;--fz-badge-fs:${uiSettings.badgeSize}px;
                 --fz-nt-c:${uiSettings.numTodayColor};--fz-ny-c:${uiSettings.numYdayColor};--fz-res-c:${uiSettings.resCounterColor};--fz-res-s:${uiSettings.resCounterSize}px;
                 --fz-id-sz:${uiSettings.tileIdSize}px;--fz-id-c:${uiSettings.tileIdColor};--fz-id-a:left;
@@ -1491,12 +1525,11 @@
             .fzWrapper.fzHidden{opacity:0;transform:translateY(-50px);pointer-events:none;}
             .fzHeader{background:${uiSettings.headBg};color:${uiSettings.headColor};padding:4px 5px;display:flex;justify-content:space-between;align-items:center;user-select:none;font-family:sans-serif;min-height:35px;}
             .fzHeaderLeft{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;}.fzHeaderRight{display:flex;align-items:center;gap:5px;}
-            .fzSubInfoRow{display:flex;align-items:center;margin-top:3px;line-height:1;white-space:nowrap;}
+            .fzSubInfoRow{display:flex;align-items:baseline;gap:12px;margin-top:3px;line-height:1;white-space:nowrap;min-height:0;}
+            .fzSubInfoRow>span{display:inline-flex;align-items:baseline;line-height:1;min-width:0;}
+            .fzSubInfoRow>span+span{border-left:1px solid #777;padding-left:12px;}
             #fzSysStatus{font-size:var(--fz-sub-st-sz);font-weight:var(--fz-sub-st-fw);}
-            #fzLastUpdate{margin-left:10px;font-size:var(--fz-sub-up-sz);font-weight:var(--fz-sub-up-fw);color:var(--fz-sub-up-c);}
-            #fzDispatcher{margin-left:10px;font-size:var(--fz-sub-dp-sz);font-weight:var(--fz-sub-dp-fw);color:var(--fz-sub-dp-c);}
-            @keyframes fzBlinkYellow{0%{color:yellow;font-weight:bold;}50%{opacity:0.5;color:yellow;}100%{color:yellow;font-weight:bold;}}
-            .fzUpdatingAnim{animation:fzBlinkYellow 1s infinite;color:yellow!important;font-weight:bold!important;}
+            #fzDispatcher{font-size:var(--fz-sub-dp-sz);font-weight:var(--fz-sub-dp-fw);color:var(--fz-sub-dp-c);}
             .fzHeaderPill,.fzResPill,#fzAvailIndicator,.fzTrafficLight{font-size:var(--fz-head-sz);font-weight:bold;background:var(--fz-pill-bg);color:var(--fz-pill-c);padding:2px 6px;border-radius:10px;border:1px solid rgba(0,0,0,0.1);display:flex;align-items:center;gap:4px;cursor:default;white-space:nowrap;height:20px;box-sizing:border-box;}
             .fzResPill{cursor:pointer;transition:transform 0.1s;}.fzResPill:hover{transform:scale(1.05);filter:brightness(0.95);}#fzAvailIndicator{cursor:pointer;}
             .fzTrafficLight{padding:0 5px;gap:4px;}.fzLight{width:8px;height:8px;border-radius:50%;opacity:0.2;transition:opacity 0.3s;background-color:#555;}
@@ -1507,12 +1540,23 @@
             .fzFocusBtn{margin-right:8px;cursor:pointer;opacity:0.8;font-size:14px;margin-left:5px;}.fzFocusBtn:hover{opacity:1;transform:scale(1.1);}
             .fzCatBadge{background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:4px;font-size:11px;margin-right:6px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;border:1px solid rgba(255,255,255,0.3);font-weight:normal;}.fzCatBadge:hover{background:rgba(255,255,255,0.4);}
             .fzScrollArea{max-height:${uiSettings.winMaxHeight}px;overflow-y:auto;background:#fff;position:relative;flex:1;}.fzWrapper.fzFullscreen .fzScrollArea{max-height:100vh;flex:1;}body.fzExternal .fzScrollArea{max-height:100vh;flex:1;}
-            .fzGrid{display:grid;grid-template-columns:repeat(${uiSettings.columns},1fr);gap:0;background:#ccc;border-top:1px solid #ccc;border-left:1px solid #ccc;}
-            .fzTile{position:relative;display:flex;align-items:stretch;padding:2px 4px;height:var(--fz-tile-h);background-color:var(--fz-tile-bg);color:var(--fz-tile-text);border-left:5px solid transparent;border-right:1px solid #ccc;border-bottom:1px solid #ccc;gap:var(--fz-tile-gap);font-family:sans-serif;cursor:pointer;user-select:none;box-sizing:border-box;transition:height 0.18s ease;}
+            .fzGrid{display:grid;grid-template-columns:repeat(${Math.max(1,Math.min(12,Number(uiSettings.columns)||4))},${Number(uiSettings.tileColumnWidth)>0 ? `${Math.max(100,Math.min(800,Number(uiSettings.tileColumnWidth)))}px` : "minmax(0,1fr)"});gap:0;overflow-x:auto;background:#ccc;border-top:1px solid #ccc;border-left:1px solid #ccc;}
+            .fzTile{position:relative;display:flex;align-items:stretch;padding:var(--fz-tile-py) var(--fz-tile-px);height:var(--fz-tile-h);background-color:var(--fz-tile-bg);color:var(--fz-tile-text);border-left:5px solid transparent;border-right:var(--fz-tile-bw) solid #ccc;border-bottom:var(--fz-tile-bw) solid #ccc;gap:var(--fz-tile-gap);font-family:sans-serif;cursor:pointer;user-select:none;box-sizing:border-box;transition:height 0.18s ease;}
             .fzTile:hover{filter:brightness(0.95);}
-            .fzStatusDot{width:6px;height:6px;border-radius:50%;z-index:1;border:1px solid rgba(0,0,0,0.2);flex-shrink:0;margin-top:auto;margin-bottom:auto;}
+            /* Zusätzliche Informationen, ohne die Alarmierung rechts zu überdecken. */
+            /* Linke Kante entspricht der Textspalte nach Statuspunkt und Kachelabstand. */
+            .fzTileExtras{position:absolute;left:var(--fz-text-offset, 25px);top:2px;bottom:1px;right:5px;pointer-events:none;z-index:1;}
+            .fzTileUpdated{position:absolute;left:0;top:0;font:9px/1.1 Arial,sans-serif;color:#555;white-space:nowrap;opacity:.85;}
+            @keyframes fzTileGreenBlink{0%,100%{color:#118a31;opacity:1;}50%{color:#17cf54;opacity:.25;}}
+            .fzTileUpdated.fzTileUpdating{animation:fzTileGreenBlink .7s ease-in-out infinite;font-weight:bold;}
+            .fzTile.fzHasExtras .fzContentWrapper{padding-top:11px;box-sizing:border-box;}
+            .fzAvailabilityTrack{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(100,100,100,.22);border-radius:3px;overflow:hidden;}
+            .fzAvailabilityFill{display:block;height:100%;width:0;background:#28a745;transition:width .3s ease;}
+            .fzTile.fzTileCompact .fzTileExtras{display:none!important;}
+
+            .fzStatusDot{width:9px;height:9px;border-radius:50%;z-index:1;border:1px solid rgba(0,0,0,0.2);flex-shrink:0;margin-top:auto;margin-bottom:auto;}
             .fzContentWrapper{display:flex;flex-direction:column;justify-content:center;flex:1;overflow:hidden;height:100%;}
-            .fzRightWrapper{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;flex-shrink:0;min-width:max-content;padding-top:3px;padding-bottom:3px;}
+            .fzRightWrapper{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;flex-shrink:0;min-width:0;height:100%;padding-top:3px;padding-bottom:3px;box-sizing:border-box;}
             .fzBadgeSlot{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:2px;min-height:0;}
             .fzBadge{font-weight:bold;font-size:var(--fz-badge-fs);padding:0px 4px;border-radius:2px;color:#fff;white-space:nowrap;line-height:1.2;}.fzBadgeInUse{background:#dc3545;}
             .fzTileName{font-size:var(--fz-name-fs);font-weight:var(--fz-name-fw);white-space:nowrap;text-overflow:ellipsis;width:100%;overflow:hidden;line-height:1.2;}
@@ -1524,12 +1568,12 @@
             .fzTileShare{font-size:10px;color:var(--fz-ny-c);line-height:1;margin-top:1px;text-align:right;white-space:nowrap;}
             .fzPers{font-size:9px;color:#777;margin-top:1px;margin-bottom:2px;white-space:nowrap;}
             @keyframes fzAlarmBlink{0%{opacity:1;}45%{opacity:1;}65%{opacity:0.12;}100%{opacity:1;}}
-            .fzFunkalarmLabel{font-size:var(--fz-funk-sz);color:var(--fz-funk-c);font-weight:var(--fz-funk-fw);white-space:nowrap;text-align:right;line-height:1;margin-bottom:2px;overflow:hidden;max-width:100%;text-overflow:ellipsis;}
+            .fzFunkalarmLabel{margin-top:auto;flex-shrink:0;font-size:var(--fz-funk-sz);color:var(--fz-funk-c);font-weight:var(--fz-funk-fw);white-space:nowrap;text-align:right;line-height:1;margin-bottom:2px;overflow:hidden;max-width:100%;text-overflow:ellipsis;}
             .fzFunkalarmLabel.fzAlarming{animation:fzAlarmBlink 1.4s ease-in-out infinite;color:var(--fz-funk-blink-c)!important;font-weight:bold!important;}
             .fzBottomBar{display:none!important;height:3px;background:#e0e0e0;border-radius:2px;overflow:hidden;width:100%;margin-top:2px;}.fzBottomBarFill{height:100%;background:var(--fz-bar-c);width:0%;transition:width 0.3s;}
             .fzTile.fzInUse{background:${uiSettings.tileColorInUse}!important;color:#222!important;}
             .fzTile.fzEmpty{background:${uiSettings.tileColorEmpty}!important;color:#222!important;}
-            .fzTile.fzInUse .fzStatusDot,.fzTile.fzEmpty .fzStatusDot{background-color:#dc3545!important;}
+            /* Statuspunkt-Farbe wird anhand der Verfuegbarkeit im JavaScript gesetzt. */
             .fzTile.fzResource{background-color:var(--fz-res-bg)!important;color:#000!important;}
             .fzTile.fzResource.fzInUse{background-color:${uiSettings.tileColorInUse}!important;color:#222!important;}
             .fzTile.fzResource.fzEmpty{background-color:${uiSettings.tileColorEmpty}!important;color:#222!important;}
@@ -1538,7 +1582,7 @@
             /* Kategorie "Einsatz-Statistik" ausgeblendet (Zähler laufen im Hintergrund weiter, Klicks aus Kopfzeile/Badges funktionieren weiter) */
             #fzCatHead_Ressourcen{display:none!important;}
             .fzTile.fzStat{display:none!important;}
-            .fzTrend.up{color:${uiSettings.trendColorUp};}.fzTrend.down{color:${uiSettings.trendColorDown};}.fzTrend.eq{color:${uiSettings.trendColorEq};}
+            /* Pfeil und Wert als EINE Textzeile: identische Schrift/Baseline, kein Versatz. */
             .fzCatHeader{grid-column:1/-1;background:#333;color:var(--fz-cat-c);font-weight:bold;padding:var(--fz-cat-pad) 8px;text-align:left;font-size:var(--fz-cat-s);border-bottom:1px solid #ccc;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:sans-serif;position:relative;overflow:visible;}.fzCatHeader:hover{filter:brightness(1.1);}
             .fzBtn{background:#f5f5f5;border:1px solid #ccc;border-radius:4px;cursor:pointer;padding:4px 8px;font-weight:bold;color:#333;text-align:center;font-size:13px;transition:background-color 0.2s;}.fzBtn:hover{background:#e0e0e0;}
             .fzHeadBtn{cursor:pointer;font-size:14px;margin-left:5px;opacity:0.8;}.fzHeadBtn:hover{opacity:1;transform:scale(1.1);}
@@ -1556,7 +1600,6 @@
             .fzInput{width:80px;padding:2px;border:1px solid #ccc;border-radius:3px;text-align:right;}.fzColor{width:40px;height:20px;border:none;padding:0;cursor:pointer;}
             .fzModalStats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:15px;}
             .fzStatBox{background:#f8f9fa;padding:10px;border-radius:5px;text-align:center;border:1px solid #ddd;}.fzStatVal{font-size:18px;font-weight:bold;color:#333;}.fzStatLbl{font-size:10px;color:#666;text-transform:uppercase;margin-top:2px;}
-            .fzTrendDiff{font-size:11px;margin-left:5px;}.fzTrendDiff.pos{color:green;}.fzTrendDiff.neg{color:red;}
             .fzGraphContainer{display:flex;align-items:flex-end;justify-content:space-between;height:60px;padding:10px 0;border-bottom:1px solid #eee;margin-bottom:8px;}
             .fzGraphBarWrapper{display:flex;flex-direction:column;align-items:center;flex:1;}.fzGraphBar{width:60%;border-radius:2px 2px 0 0;min-height:1px;transition:height 0.3s;}
             .fzGraphLabel{font-size:9px;color:#666;margin-top:4px;}.fzGraphValue{font-size:9px;font-weight:bold;margin-bottom:2px;}
@@ -1612,9 +1655,7 @@
         }
     }
 
-    // =======================================================
     // KACHEL RENDER LOGIK
-    // =======================================================
     // Anteil einer Kachel an allen Alarmierungen des Tages (nur Fahrzeug-Kacheln, ohne Ressourcen/Lehrgänge)
     function getShareTotal(){
         let sum = 0;
@@ -1636,17 +1677,46 @@
         let total = vehicleTotalCount[key] || 0;
         if(total === 0 && customStock[key] !== undefined) total = customStock[key];
 
-        let free = 0;
-        if(hasFreeCountData) free = vehicleFreeCount[key] || 0;
-        else if(total > 0){
-            free = total - inUse;
-            if(free < 0) free = 0;
-        }
+        // Keine freien Fahrzeuge aus einem moeglicherweise veralteten Bestand schaetzen.
+        // Der API-Abruf liefert die FMS-basierten Freizaehlungen je Fahrzeugtyp.
+        const free = Math.min(total, Math.max(0, vehicleFreeCount[key] || 0));
+        const hasLiveStock = !!lastSuccessfulVehicleFetch && (vehicleTotalCount[key] || 0) > 0;
 
         cached.lastState = {v,inUse,free,total};
         const el = cached.el;
+        // Textposition direkt am tatsaechlichen Inhalt messen, statt Pixel zu raten.
+        if(cached.contentWrapper){
+            const textOffset = cached.contentWrapper.offsetLeft;
+            if(textOffset > 0 && cached.lastTextOffset !== textOffset){
+                el.style.setProperty("--fz-text-offset", textOffset + "px");
+                cached.lastTextOffset = textOffset;
+            }
+        }
         el.dataset.val = v;
         const isResource = RESOURCE_TILE_NAMES.has(key);
+        // Nur echte Fahrzeugkacheln; keine Ressourcen oder Lehrgangskacheln.
+        const vehicleTile = !isResource && tileMetaByKey[key]?.cat !== "Ausbildung";
+        if(cached.extras){
+            const showExtras = vehicleTile && total > 0;
+            cached.extras.style.display = showExtras ? "block" : "none";
+            el.classList.toggle("fzHasExtras", showExtras);
+            if(showExtras){
+                if(cached.updatedAt){
+                    if(cached.updatedAt.textContent !== formattedVehicleUpdateTime)
+                        cached.updatedAt.textContent = formattedVehicleUpdateTime;
+                    cached.updatedAt.title = "Letzter erfolgreicher Abruf der Fahrzeugdaten";
+                    cached.updatedAt.classList.toggle("fzTileUpdating", Date.now() < tileBlinkUntil);
+                }
+                const percent = hasLiveStock ? Math.max(0, Math.min(100, total ? free / total * 100 : 0)) : 0;
+                if(cached.availabilityFill){
+                    cached.availabilityFill.style.width = percent.toFixed(1) + "%";
+                    cached.availabilityFill.style.background = !hasLiveStock ? "#f0ad4e" : percent < 20 ? "#dc3545" : percent < 50 ? "#f0ad4e" : "#28a745";
+                }
+                if(cached.availabilityTrack) cached.availabilityTrack.title =
+                    hasLiveStock ? `${free} von ${total} Fahrzeugen verfügbar (${Math.round(percent)} %)` : "Verfügbarkeit nicht durch aktuelle Fahrzeugdaten bestätigt";
+            }
+        }
+
 
         const COUNTED_RESOURCE_KEYS = new Set([
             "Patienten","Gefangene","Wasserbedarf","Betreuung/Versorgung","Krankentransporte","Helikopter"
@@ -1683,9 +1753,7 @@
         if(showNumericCounter){
             if(cached.numToday) cached.numToday.textContent = v;
             if(cached.numYday) cached.numYday.textContent = uiSettings.showTileYday ? `(${y})` : "";
-            if(cached.trend){
-                cached.trend.style.display = "none"; // Trendpfeile komplett deaktiviert
-            }
+
         }
 
         if(cached.shareEl){
@@ -1717,7 +1785,7 @@
                 let idText = "";
                 if(meta && meta.id !== undefined && meta.id !== null){
                     const ids = Array.isArray(meta.id) ? meta.id : [meta.id];
-                    const filtered = ids.filter(i => i !== 0 && i !== null && i !== undefined);
+                    const filtered = ids.filter(i => i !== null && i !== undefined && (i !== 0 || key === "LF20"));
                     idText = filtered.join(", ");
                 }
                 if(idText){
@@ -1778,10 +1846,13 @@
             }
         }
 
-        el.classList.remove("fzInUse","fzEmpty");
-        if(!isResource){
-            if(total > 0 && free <= 0) el.classList.add("fzEmpty");
-            else if(inUse > 0) el.classList.add("fzInUse");
+        // Einheitliche Statusfarbe fuer ALLE Fahrzeugkacheln mit bekanntem Bestand.
+        // Gelb: mindestens ein Fahrzeug frei (auch wenn keines im Einsatz ist).
+        // Rot: Fahrzeugbestand vorhanden, aber kein Fahrzeug frei.
+        // Neutral: kein bestaetigter Live-Bestand (keine falsche Rot-Markierung).
+        el.classList.remove("fzInUse", "fzEmpty");
+        if (!isResource && hasLiveStock) {
+            el.classList.add(free > 0 ? "fzInUse" : "fzEmpty");
         }
 
         let dotColor = "#888";
@@ -1802,9 +1873,14 @@
                 dotColor = v > 0 ? "#f0ad4e" : "#888";
             }
         } else {
-            if(total > 0) dotColor = free > 0 ? "#5cb85c" : "#dc3545";
-            else if(vehicleExists[key]) dotColor = "#f0ad4e";
-            else dotColor = "#ff0000";
+            // Fahrzeugstatus unabhaengig von der Kachel-Hintergrundfarbe.
+            if(hasLiveStock){
+                dotColor = free > 0 ? "#5cb85c" : "#dc3545";
+            } else if(vehicleExists[key] || total > 0){
+                dotColor = "#f0ad4e"; // Fahrzeug erkannt, Daten unvollstaendig
+            } else {
+                dotColor = "#ff0000"; // Kein Fahrzeugbestand erkannt
+            }
         }
 
         if(cached.dot) cached.dot.style.backgroundColor = dotColor;
@@ -1830,21 +1906,23 @@
         div.dataset.key = key;
         div.dataset.val = v;
 
-        if(meta && (meta.cat === "Ressourcen" || meta.cat === "Ausbildung" || meta.cat === "Versorgung")) div.classList.add("fzResource");
+        if(meta && (meta.cat === "Ressourcen" || meta.cat === "Ausbildung")) div.classList.add("fzResource");
         if(meta && meta.cat === "Ressourcen") div.classList.add("fzStat");
         div.style.borderLeftColor = color;
 
         div.innerHTML = `
-            <div class="fzTileCompactRow"><span class="fzCompactDot"></span><span class="fzCompactLabel">${key}</span><span class="fzCompactCount"></span><span class="fzCompactBusy" style="display:none;"></span></div>
+            <div class="fzTileCompactRow"><span class="fzCompactDot"></span><span class="fzCompactLabel">${escapeHTML(key)}</span><span class="fzCompactCount"></span><span class="fzCompactBusy" style="display:none;"></span></div>
             <div class="fzStatusDot" style="background-color:#ff0000;margin-right:5px;"></div>
-            <div class="fzContentWrapper"><span class="fzBadgeSlot"></span><span class="fzTileName">${key}</span><div class="fzTileIdLabel"></div><div class="fzBottomBar"><div class="fzBottomBarFill"></div></div></div>
-            <div class="fzRightWrapper"><div class="fzFunkalarmLabel">${uiSettings.funkalarmText || 'Funk-Alarm'}</div><div class="fzTileCount"><span class="fzNumToday">0</span><span class="fzNumYday">(0)</span><span class="fzTrend"></span></div><div class="fzTileShare"></div><div class="fzResourceCounter"></div></div>
+            <div class="fzContentWrapper"><span class="fzBadgeSlot"></span><span class="fzTileName">${escapeHTML(key)}</span><div class="fzTileIdLabel"></div><div class="fzBottomBar"><div class="fzBottomBarFill"></div></div></div>
+            <div class="fzRightWrapper"><div class="fzTileCount"><span class="fzNumToday">0</span><span class="fzNumYday">(0)</span></div><div class="fzTileShare"></div><div class="fzResourceCounter"></div><div class="fzFunkalarmLabel">${escapeHTML(uiSettings.funkalarmText || 'Funk-Alarm')}</div></div>
+            <div class="fzTileExtras" style="display:none"><span class="fzTileUpdated"></span><div class="fzAvailabilityTrack"><span class="fzAvailabilityFill"></span></div></div>
         `;
         div.onclick = () => showDetails(key, state);
 
         tileEls[key] = div;
         tileCache[key] = {
             el: div,
+            contentWrapper: div.querySelector(".fzContentWrapper"),
             dot: div.querySelector(".fzStatusDot"),
             compactDot: div.querySelector(".fzCompactDot"),
             compactLabel: div.querySelector(".fzCompactLabel"),
@@ -1853,10 +1931,13 @@
             badgeSlot: div.querySelector(".fzBadgeSlot"),
             tileName: div.querySelector(".fzTileName"),
             bottomBar: div.querySelector(".fzBottomBarFill"),
+            extras: div.querySelector(".fzTileExtras"),
+            updatedAt: div.querySelector(".fzTileUpdated"),
+            availabilityTrack: div.querySelector(".fzAvailabilityTrack"),
+            availabilityFill: div.querySelector(".fzAvailabilityFill"),
             tileCount: div.querySelector(".fzTileCount"),
             numToday: div.querySelector(".fzNumToday"),
             numYday: div.querySelector(".fzNumYday"),
-            trend: div.querySelector(".fzTrend"),
             shareEl: div.querySelector(".fzTileShare"),
             resCounter: div.querySelector(".fzResourceCounter"),
             idLabel: div.querySelector(".fzTileIdLabel"),
@@ -1866,9 +1947,7 @@
         return div;
     }
 
-    // =======================================================
     // MODALS & EVENT HANDLER
-    // =======================================================
     function toggleCategoryTileCompact(cat){
         if(!Array.isArray(uiSettings.collapsedTilesCats)) uiSettings.collapsedTilesCats = [];
         const isCompact = uiSettings.collapsedTilesCats.includes(cat);
@@ -1918,7 +1997,6 @@
         const valYday = (state.yday[key] || 0);
         const diff = valToday - valYday;
 
-        let diffHtml = diff > 0 ? `<span class="fzTrendDiff pos">(+${diff})</span>` : (diff < 0 ? `<span class="fzTrendDiff neg">(${diff})</span>` : `<span class="fzTrendDiff" style="color:#999;">(0)</span>`);
 
         let totalTodayAll = 0;
         Object.values(state.today).forEach(v => totalTodayAll += v);
@@ -1927,6 +2005,7 @@
         const graphHtml = ""; // 7-Tage-Statistik entfernt
 
         let fmsCounts = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0};
+        const unknownFmsCount = list.filter(v => !Number.isInteger(v.fms) || v.fms < 1 || v.fms > 8).length;
         list.forEach(v => { if(v.fms>=1 && v.fms<=8) fmsCounts[v.fms]++; });
         const fmsTotal = list.length || 1;
 
@@ -1940,6 +2019,10 @@
                     segments += `<div title="S${s}: ${fmsCounts[s]}" style="width:${pct}%;background:${FMS_COLORS[s]};height:100%;display:flex;align-items:center;justify-content:center;transition:width 0.4s;">${pct>=10?`<span style="font-size:9px;color:${textColor};font-weight:bold;line-height:1;">${fmsCounts[s]}</span>`:""}</div>`;
                 }
             }
+            if(unknownFmsCount){
+                const pct = (unknownFmsCount / fmsTotal) * 100;
+                segments += `<div title="Unbekannt: ${unknownFmsCount}" style="width:${pct}%;background:#777;height:100%;"></div>`;
+            }
             fmsBarHtml += `<div style="display:flex;height:18px;border-radius:4px;overflow:hidden;margin-bottom:6px;border:1px solid #ddd;">${segments}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">`;
             for(let s=1; s<=8; s++){
                 if(fmsCounts[s] > 0){
@@ -1947,6 +2030,7 @@
                     fmsBarHtml += `<span style="font-size:11px;background:${FMS_COLORS[s]};color:${textColor};padding:2px 8px;border-radius:10px;font-weight:bold;">S${s}: ${fmsCounts[s]}</span>`;
                 }
             }
+            if(unknownFmsCount) fmsBarHtml += `<span style="font-size:11px;background:#777;color:white;padding:2px 8px;border-radius:10px;">Unbekannt: ${unknownFmsCount}</span>`;
             fmsBarHtml += `</div>`;
         } else {
             fmsBarHtml += `<div style="color:#999;font-size:12px;margin-bottom:12px;">Keine Fahrzeuge vorhanden.</div>`;
@@ -1957,7 +2041,7 @@
             const usageData = Object.entries(state.det[key]).sort((a,b)=>b[1]-a[1]).slice(0,5);
             if(usageData.length > 0){
                 usageHtml = `<div class="fzSectionTitle">Top Verwendung (Heute)</div><table class="fzUsageTable">`;
-                usageData.forEach(item => { usageHtml += `<tr><td>${item[0]}</td><td style="text-align:right;font-weight:bold;">${item[1]}</td></tr>`; });
+                usageData.forEach(item => { usageHtml += `<tr><td>${escapeHTML(item[0])}</td><td style="text-align:right;font-weight:bold;">${Number(item[1]) || 0}</td></tr>`; });
                 usageHtml += `</table>`;
             }
         }
@@ -1984,18 +2068,19 @@
             if(filtered.length === 0) return `<div style='padding:10px;text-align:center;color:#999'>Keine Fahrzeuge in dieser Kategorie.</div>`;
 
             return filtered.map(v => {
-                let color = "#28a745";
+                let color = "#6c757d";
+                if(v.fms === 1 || v.fms === 2) color = "#28a745";
                 if(v.fms === 6) color = "#000000";
                 else if(v.fms === 3 || v.fms === 4 || v.fms === 7 || v.fms === 8) color = "#dc3545";
                 else if(v.fms === 5) color = "#ffc107";
 
-                let statusDisplay = `(S${v.fms})`;
+                let statusDisplay = v.fms == null ? "(Unbekannt)" : `(S${v.fms})`;
                 if(v.missionId && (v.fms === 4 || v.fms === 7)){
-                    statusDisplay = `<a href="/missions/${v.missionId}" target="_blank" style="color:#007bff;text-decoration:underline;">(S${v.fms})</a>`;
+                    statusDisplay = `<a href="/missions/${encodeURIComponent(String(v.missionId))}" target="_blank" style="color:#007bff;text-decoration:underline;">(S${v.fms})</a>`;
                 }
 
                 let crewDisplay = v.crew > 0 ? `<span style="font-size:10px;color:#666;margin-left:5px;">${ICONS.person} ${v.crew}</span>` : "";
-                return `<div class="fzRow" style="justify-content:flex-start;gap:8px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${color};flex-shrink:0;"></span><span style="font-weight:bold;">${v.name}</span>${crewDisplay}<span style="color:#666;font-size:11px;margin-left:auto;">${statusDisplay}</span></div>`;
+                return `<div class="fzRow" style="justify-content:flex-start;gap:8px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background-color:${color};flex-shrink:0;"></span><span style="font-weight:bold;">${escapeHTML(v.name)}</span>${crewDisplay}<span style="color:#666;font-size:11px;margin-left:auto;">${statusDisplay}</span></div>`;
             }).join("");
         };
 
@@ -2006,7 +2091,7 @@
         const ol = document.createElement("div");
         ol.className = "fzModalOverlay";
         ol.onclick = (e) => { if(e.target === ol) ol.remove(); };
-        ol.innerHTML = `<div class="fzModal"><h3>${key} - Details</h3><div class="fzModalStats"><div class="fzStatBox"><div class="fzStatVal">${valToday}</div><div class="fzStatLbl">Heute</div></div><div class="fzStatBox"><div class="fzStatVal" style="font-size:16px;">${valYday} ${diffHtml}</div><div class="fzStatLbl">Gestern</div></div><div class="fzStatBox"><div class="fzStatVal">${sharePct}%</div><div class="fzStatLbl">Anteil Tag</div></div>${lastAlarmHtml}</div>${graphHtml}${fmsBarHtml}${usageHtml}<div class="fzSectionTitle">Fahrzeugliste (${list.length})</div><div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;" id="fzVehicleFilterBtns"><button class="fzFilterBtn active" data-filter="all">Alle (${list.length})</button><button class="fzFilterBtn" data-filter="free" style="border-color:#28a745;">🟢 Frei (${countFree})</button><button class="fzFilterBtn" data-filter="busy" style="border-color:#dc3545;">🔴 Im Einsatz (${countBusy})</button><button class="fzFilterBtn" data-filter="s6" style="border-color:#6c757d;">⚫ S6 (${countS6})</button></div><div id="fzVehicleListContent" style="max-height:300px;overflow-y:auto;">${renderVehicleList("all")}</div><button class="fzBtn" style="margin-top:15px;width:100%" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button></div>`;
+        ol.innerHTML = `<div class="fzModal"><h3>${escapeHTML(key)} - Details</h3><div class="fzModalStats"><div class="fzStatBox"><div class="fzStatVal">${valToday}</div><div class="fzStatLbl">Heute</div></div><div class="fzStatBox"><div class="fzStatVal" style="font-size:16px;">${valYday}</div><div class="fzStatLbl">Gestern</div></div><div class="fzStatBox"><div class="fzStatVal">${sharePct}%</div><div class="fzStatLbl">Anteil Tag</div></div>${lastAlarmHtml}</div>${graphHtml}${fmsBarHtml}${usageHtml}<div class="fzSectionTitle">Fahrzeugliste (${list.length})</div><div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;" id="fzVehicleFilterBtns"><button class="fzFilterBtn active" data-filter="all">Alle (${list.length})</button><button class="fzFilterBtn" data-filter="free" style="border-color:#28a745;">🟢 Frei (${countFree})</button><button class="fzFilterBtn" data-filter="busy" style="border-color:#dc3545;">🔴 Im Einsatz (${countBusy})</button><button class="fzFilterBtn" data-filter="s6" style="border-color:#6c757d;">⚫ S6 (${countS6})</button></div><div id="fzVehicleListContent" style="max-height:300px;overflow-y:auto;">${renderVehicleList("all")}</div><button class="fzBtn" style="margin-top:15px;width:100%" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button></div>`;
 
         setTimeout(() => {
             const btns = ol.querySelectorAll("#fzVehicleFilterBtns .fzFilterBtn");
@@ -2080,6 +2165,74 @@
         json.save(STORAGE.CUSTOM_STOCK, vehicleTotalCount);
         alert("Aktueller Fahrzeugbestand wurde gespeichert!");
         location.reload();
+    }
+
+    function showVehicleMatchDiagnostics(){
+        const doc = getTargetDoc();
+        const ol = doc.createElement("div");
+        ol.className = "fzModalOverlay";
+        ol.onclick = e => { if(e.target === ol) ol.remove(); };
+        const modal = doc.createElement("div");
+        modal.className = "fzModal";
+        modal.style.cssText = "max-width:720px;width:94%;max-height:85vh;overflow:auto";
+        const heading = doc.createElement("h3");
+        heading.textContent = "Fahrzeug-Zuordnungsprüfung (v4.5)";
+        modal.appendChild(heading);
+        const summary = doc.createElement("p");
+        const d = vehicleMatchDiagnostics;
+        summary.textContent = `Geprüft: ${d.total} | Eindeutig: ${d.matched} | Manuell: ${d.manual} | Mehrdeutig: ${d.ambiguous.length} | Unbekannt: ${d.unknown.length}`;
+        modal.appendChild(summary);
+        const info = doc.createElement("p");
+        info.textContent = "Nur die offizielle Fahrzeugtyp-ID und Typbezeichnung werden ausgewertet. Bei mehrdeutigen IDs erfolgt keine automatische Doppelzählung. Manuelle Korrekturen gelten für alle Fahrzeuge derselben Typ-ID.";
+        modal.appendChild(info);
+        const issues = [...d.ambiguous.map(x=>({...x,reason:"Mehrdeutig"})),...d.unknown.map(x=>({...x,reason:"Unbekannt"}))];
+        const seen = new Set();
+        for(const item of issues){
+            const groupKey = String(item.typeId) + "|" + item.typeName;
+            if(seen.has(groupKey)) continue;
+            seen.add(groupKey);
+            const row = doc.createElement("div");
+            row.style.cssText = "padding:8px 0;border-bottom:1px solid #aaa;display:flex;gap:8px;align-items:center;flex-wrap:wrap";
+            const label = doc.createElement("span");
+            label.style.cssText = "flex:1;min-width:200px;overflow-wrap:anywhere";
+            label.textContent = `${item.reason}: ID ${item.typeId ?? "?"} – ${item.typeName || "ohne Typbezeichnung"} (z.B. ${item.caption})`;
+            row.appendChild(label);
+            if(item.typeId !== null && Number.isFinite(item.typeId)){
+                const select = doc.createElement("select");
+                select.className = "fzInput";
+                const choices = ["",...KEYS.filter(k=>!SCHOOLING_TILE_NAMES.has(k))];
+                for(const key of choices){
+                    const opt = doc.createElement("option");
+                    opt.value = key;
+                    opt.textContent = key || "Nicht zuordnen";
+                    select.appendChild(opt);
+                }
+                select.value = manualTypeMappings[String(item.typeId)] || "";
+                select.onchange = () => {
+                    if(select.value) manualTypeMappings[String(item.typeId)] = select.value;
+                    else delete manualTypeMappings[String(item.typeId)];
+                    saveTypeOverrides();
+                    if(lastVehiclesRaw) processVehicles(lastVehiclesRaw,false);
+                    ol.remove();
+                    showVehicleMatchDiagnostics();
+                };
+                row.appendChild(select);
+            }
+            modal.appendChild(row);
+        }
+        if(!issues.length){
+            const good = doc.createElement("p");
+            good.textContent = "Keine unbekannten oder mehrdeutigen Fahrzeugtypen im letzten API-Abruf.";
+            modal.appendChild(good);
+        }
+        const close = doc.createElement("button");
+        close.className = "fzBtn";
+        close.style.cssText = "margin-top:15px;width:100%";
+        close.textContent = "Schließen";
+        close.onclick = () => ol.remove();
+        modal.appendChild(close);
+        ol.appendChild(modal);
+        getTargetBody().appendChild(ol);
     }
 
     function openSettings(){
@@ -2166,9 +2319,10 @@
         const groups = [
             {t:"Fenster Layout",i:[["Max Höhe (px)","winMaxHeight","number"],["Pos. Oben (px)","winTop","number"],["Fenster BG","winBg","color"],["Spalten","columns","number"]]},
             {t:"Kategorien",i:[["Farb-Modus","catHeaderMode","select",["category","custom"]],["Eigene Farbe","catHeaderBgColor","color"],["Textfarbe","catHeaderTextColor","color"],["Schriftgröße (px)","catHeaderSize","number"],["Innenabstand (px)","catHeaderPadding","number"]]},
-            {t:"Kacheln: Design",i:[["Hintergrund","tileBgColor","color"],["Textfarbe","tileTextColor","color"],["Ressourcen-BG","resourceTileBgColor","color"],["Balken Farbe","barColor","color"],["Min-Höhe (px)","tileMinHeight","number"]]},
+            {t:"Kacheln: Design",i:[["Hintergrund","tileBgColor","color"],["Textfarbe","tileTextColor","color"],["Ressourcen-BG","resourceTileBgColor","color"],["Balken Farbe","barColor","color"]]},
+            {t:"Kacheln: Größe & Abstände",i:[["Spaltenbreite (px, 0 = automatisch)","tileColumnWidth","number"],["Kachelhöhe / Zeilenhöhe (px)","tileMinHeight","number"],["Innenabstand links/rechts (px)","tilePaddingX","number"],["Innenabstand oben/unten (px)","tilePaddingY","number"],["Rahmendicke (px)","tileBorderWidth","number"],["Abstand Statuspunkt/Text (px)","tileGap","number"]]},
             {t:"Kacheln: Text & Badges",i:[["Name Größe (px)","tileNameSize","number"],["Name Fett","tileNameWeight","select",["bold","normal"]],["Badge Größe (px)","badgeSize","number"],["Zähler Größe (px)","tileCounterSize","number"],["Zähler Farbe","numTodayColor","color"]]},
-            {t:"Status & Trends",i:[["Bg (Im Einsatz)","tileColorInUse","color"],["Bg (Leer/0)","tileColorEmpty","color"],["Trend Hoch","trendColorUp","color"],["Trend Runter","trendColorDown","color"]]},
+            {t:"Status",i:[["Bg (Im Einsatz)","tileColorInUse","color"],["Bg (Leer/0)","tileColorEmpty","color"]]},
             {t:"Statistik (Header)",i:[["Einsätze Farbe","statsMissionsColor","color"],["Einsätze Größe","statsMissionsSize","number"],["KTW Farbe","statsKtpColor","color"],["Aktiv Farbe","statsActiveColor","color"]]},
             {t:"Sub-Infos",i:[["Status Größe","subStatusSize","number"],["Status (Bereit)","subStatusColorOk","color"],["Status (Fehler)","subStatusColorErr","color"],["Update Farbe","subUpdateColor","color"],["Dispo Farbe","subDispColor","color"]]},
             {t:"Credits Counter",i:[["Abstand (px)","creditsGap","number"],["Schriftgröße","creditsFontSize","number"],["Label Farbe","creditsLabelColor","color"],["Zahlen Farbe","creditsValueColor","color"]]},
@@ -2179,7 +2333,7 @@
         groups.forEach((g,index) => {
             const d = group(g.t);
             g.i.forEach(item => d.appendChild(createInput(item[0],item[1],item[2],item[3])));
-            if(index < 5) leftCol.appendChild(d);
+            if(index < 6) leftCol.appendChild(d);
             else rightCol.appendChild(d);
         });
 
@@ -2202,6 +2356,11 @@
         btnImp.textContent = "📂 Laden";
         btnImp.onclick = triggerImport;
 
+        const btnDiag = document.createElement("button");
+        btnDiag.className = "fzBtn";
+        btnDiag.textContent = "Fahrzeug-Zuordnung prüfen";
+        btnDiag.onclick = showVehicleMatchDiagnostics;
+        btnRow.appendChild(btnDiag);
         btnRow.appendChild(btnSync);
         btnRow.appendChild(btnExp);
         btnRow.appendChild(btnImp);
@@ -2341,7 +2500,7 @@
 
     function showMissingAvailabilityModal(){
         const s = getAvailabilitySummary();
-        const section = (title,arr,color) => `<h4 style="margin:12px 0 6px 0;">${title} (${arr.length})</h4>${arr.length?arr.map(k=>`<div class="fzRow"><span>${k}</span><b style="color:${color};">${title}</b></div>`).join(""):`<div style="padding:10px;text-align:center;color:#999;">Keine</div>`}`;
+        const section = (title,arr,color) => `<h4 style="margin:12px 0 6px 0;">${title} (${arr.length})</h4>${arr.length?arr.map(k=>`<div class="fzRow"><span>${escapeHTML(k)}</span><b style="color:${color};">${title}</b></div>`).join(""):`<div style="padding:10px;text-align:center;color:#999;">Keine</div>`}`;
 
         const ol = document.createElement("div");
         ol.className = "fzModalOverlay";
@@ -2407,7 +2566,7 @@
 
         const fzHeader = document.createElement("div");
         fzHeader.className = "fzHeader";
-        fzHeader.innerHTML = `<div class="fzHeaderLeft"><div style="display:flex;flex-direction:column;justify-content:center;gap:3px;"><div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap;"><div id="fzMissionStats" style="display:flex;gap:5px;align-items:center;">${getMissionStatsHTML()}</div><div id="fzAvailIndicator" class="fzHeaderPill" title="Verfügbarkeit">...</div><div id="fzAmpel" class="fzTrafficLight" title="Auto-Hide Timer"><div class="fzLight red"></div><div class="fzLight yellow"></div><div class="fzLight green active"></div></div><div id="fzResourcePills" style="display:flex;gap:5px;"></div></div><div class="fzSubInfoRow"><span id="fzSysStatus">Warte auf System...</span><span id="fzLastUpdate"></span><span id="fzDispatcher"></span></div></div></div><div class="fzHeaderRight"><div id="fzRelocatedButtons"><a href="https://www.leitstellenspiel.de/buildings/26017007" target="_blank" class="fzHeadBtn" title="Leitstelle Bielefeld" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/leitstellenansicht" target="_blank" class="fzHeadBtn" title="Wachenübersicht" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/buildings/26794438#tab_projected_missions" target="_blank" class="fzHeadBtn" title="SAR Leitstelle" style="text-decoration:none;color:inherit;">${SVGS.anchor}</a><span class="fzHeadBtn" id="fzToggleCompact" title="Kompakt/Normal">${SVGS.eye}</span><span class="fzHeadBtn" id="fzGlobalCollapse" title="Kategorien alle auf/zu">${SVGS.collapse}</span><span class="fzHeadBtn" id="fzGlobalTileCollapse" title="Alle Kacheln ein-/ausklappen" style="font-size:16px;opacity:0.8;">▦</span><span class="fzHeadBtn" id="fzSettingsButton" title="Einstellungen">${SVGS.settings}</span><span class="fzHeadBtn" id="fzPopoutButton" title="Fenster">${SVGS.popout}</span><span class="fzHeadBtn" id="fzFullscreenButton" title="Vollbild">${SVGS.maximize}</span><span class="fzHeadBtn" id="fzMinimizeButton" title="Minimieren">${SVGS.minimize}</span></div></div>`;
+        fzHeader.innerHTML = `<div class="fzHeaderLeft"><div style="display:flex;flex-direction:column;justify-content:center;gap:3px;"><div style="display:flex;gap:5px;align-items:center;flex-wrap:nowrap;"><div id="fzMissionStats" style="display:flex;gap:5px;align-items:center;">${getMissionStatsHTML()}</div><div id="fzAvailIndicator" class="fzHeaderPill" title="Verfügbarkeit">...</div><div id="fzAmpel" class="fzTrafficLight" title="Auto-Hide Timer"><div class="fzLight red"></div><div class="fzLight yellow"></div><div class="fzLight green active"></div></div><div id="fzResourcePills" style="display:flex;gap:5px;"></div></div><div class="fzSubInfoRow"><span id="fzSysStatus">Warte auf System...</span><span id="fzDispatcher"></span></div></div></div><div class="fzHeaderRight"><div id="fzRelocatedButtons"><a href="https://www.leitstellenspiel.de/buildings/26017007" target="_blank" class="fzHeadBtn" title="Leitstelle Bielefeld" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/leitstellenansicht" target="_blank" class="fzHeadBtn" title="Wachenübersicht" style="text-decoration:none;color:inherit;">${SVGS.building}</a><a href="https://www.leitstellenspiel.de/buildings/26794438#tab_projected_missions" target="_blank" class="fzHeadBtn" title="SAR Leitstelle" style="text-decoration:none;color:inherit;">${SVGS.anchor}</a><span class="fzHeadBtn" id="fzToggleCompact" title="Kompakt/Normal">${SVGS.eye}</span><span class="fzHeadBtn" id="fzGlobalCollapse" title="Kategorien alle auf/zu">${SVGS.collapse}</span><span class="fzHeadBtn" id="fzGlobalTileCollapse" title="Alle Kacheln ein-/ausklappen" style="font-size:16px;opacity:0.8;">▦</span><span class="fzHeadBtn" id="fzSettingsButton" title="Einstellungen">${SVGS.settings}</span><span class="fzHeadBtn" id="fzPopoutButton" title="Fenster">${SVGS.popout}</span><span class="fzHeadBtn" id="fzFullscreenButton" title="Vollbild">${SVGS.maximize}</span><span class="fzHeadBtn" id="fzMinimizeButton" title="Minimieren">${SVGS.minimize}</span></div></div>`;
         fzWrapper.appendChild(fzHeader);
 
         setTimeout(() => {
@@ -2472,7 +2631,10 @@
         setInterval(() => {
             if(document.hidden || (fzWrapper && fzWrapper.classList.contains("fzHidden") && !extWin)) return;
             const statsEl = getTargetDoc().getElementById("fzMissionStats");
-            if(statsEl) statsEl.innerHTML = getMissionStatsHTML();
+            if(statsEl){
+                const markup = getMissionStatsHTML();
+                if(statsEl.innerHTML !== markup) statsEl.innerHTML = markup;
+            }
         }, 3000);
 
         const scrollArea = document.createElement("div");
@@ -2511,10 +2673,6 @@
                         const heli = state.today["Helikopter"] || 0;
                         metricHtml += `<span class="fzCatBadge" id="fzBadge_Luft_Heli">${ICONS.heli} ${heli}</span>`;
                     }
-                    if(cat === "Versorgung"){
-                        const betr = state.today["Betreuung/Versorgung"] || 0;
-                        metricHtml += `<span class="fzCatBadge" id="fzBadge_Vers_Bet">${ICONS.supply} ${betr}</span>`;
-                    }
                     if(cat === "Ausbildung"){
                         const schCount = schoolingsData.filter(s => !s.finishAt || s.finishAt > Date.now()).length;
                         metricHtml += `<span class="fzCatBadge" id="fzBadge_Aus_Count">${ICONS.school} ${schCount} aktiv</span>`;
@@ -2529,7 +2687,7 @@
                     const tcIcon = isTileCompact ? "▤" : "▦";
                     const tcActive = isTileCompact ? "fzTCactive" : "";
 
-                    header.innerHTML = `<div style="display:flex;flex-direction:column;justify-content:center;min-width:140px;"><span style="line-height:1;">${displayName}</span>${utilBarHtml}</div><div style="display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:auto;">${metricHtml}<span class="fzFocusBtn" title="Fokus">${ICONS.target}</span><span class="fzTileCollapseToggle ${tcActive}" id="fzTileCollapse_${cat}" title="${isTileCompact?"Ausklappen":"Einklappen"}">${tcIcon}</span><span>${isCollapsed?"&#x25B6;":"&#x25BC;"}</span></div>`;
+                    header.innerHTML = `<div style="display:flex;flex-direction:column;justify-content:center;min-width:140px;"><span style="line-height:1;">${escapeHTML(displayName)}</span>${utilBarHtml}</div><div style="display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:auto;">${metricHtml}<span class="fzFocusBtn" title="Fokus">${ICONS.target}</span><span class="fzTileCollapseToggle ${tcActive}" id="fzTileCollapse_${cat}" title="${isTileCompact?"Ausklappen":"Einklappen"}">${tcIcon}</span><span>${isCollapsed?"&#x25B6;":"&#x25BC;"}</span></div>`;
 
                     header.onclick = (e) => {
                         if(e.target.classList.contains("fzTileCollapseToggle") || (e.target.closest && e.target.closest(".fzTileCollapseToggle"))){
@@ -2629,9 +2787,7 @@
         });
     }
 
-    // =======================================================
     // CLICK LISTENER & INTERCEPTS
-    // =======================================================
     const CLICK_PATTERNS = [
         { test: (url, text) => /\/patients?\/\d+\/hospitals?\/\d+/.test(url) || /\/missions\/\d+\/patients?\/\d+\/hospital/.test(url) || text.includes("ins krankenhaus"), action: "Patienten" },
         { test: (url, text) => /\/patients?\/\d+\/ambulances?\/\d+/.test(url) || /\/transports?\/\d+/.test(url) || text.includes("krankentransport"), action: "Krankentransporte" },
@@ -2654,56 +2810,29 @@
 
         for (const pattern of CLICK_PATTERNS) {
             if (pattern.test(urlStr, text)) {
-                incrementTileCount(pattern.action, activeEl);
-                if (pattern.action === "Patienten" || pattern.action === "Gefangene") {
-                    setTimeout(() => updateBuildingCapacities(true).then(() => {
-                        syncDerivedResourceCounts();
-                        KEYS.forEach(k => tileEls[k] && updateTile(k, state));
-                        updateCategoryHeaders();
-                    }), 2000);
-                }
+                // v4.7: POST/PUT wird erst nach erfolgreicher Serverantwort erfasst.
+                // Nur echte Navigation ohne Formular kann als Fallback erfasst werden.
+                // Navigation ist keine Serverbestaetigung; nur erfolgreiche API-Aktionen buchen.
                 return;
             }
         }
 
-        if(activeEl.classList.contains("aao_btn") || activeEl.hasAttribute("aao_id")){
-            const literVal = getWasserbedarfLiter(activeEl);
-            if(literVal > 0){
-                state.today["Wasserbedarf"] = (state.today["Wasserbedarf"] || 0) + literVal;
-                state.total["Wasserbedarf"] = (state.total["Wasserbedarf"] || 0) + literVal;
-                state.det["Wasserbedarf"] = state.det["Wasserbedarf"] || {};
-                const detKey = (text || "aao").slice(0,60);
-                state.det["Wasserbedarf"][detKey] = (state.det["Wasserbedarf"][detKey] || 0) + literVal;
-                store.save();
-
-                requestAnimationFrame(() => {
-                    if(tileEls["Wasserbedarf"]) updateTile("Wasserbedarf", state);
-                    updateCategoryHeaders();
-                    if(fzWrapper) fzWrapper.classList.remove("fzHidden");
-                    resetCountdown();
-                });
-                return;
-            }
-
-            if(text.includes("bt-kombi") || text.includes("gw-bt") || text.includes("bt lkw") || text.includes("anh fkh") || text.includes("betreuung")){
-                incrementTileCount("Betreuung/Versorgung", activeEl);
-                return;
-            }
-        }
+        // AAO-Klicks sind keine bestaetigten Alarmierungen. Keine
+        // Wasser-/Betreuungsstatistik ohne eindeutiges Erfolgsereignis.
 
         if(activeEl.classList.contains("vehicle_dispatch_button") || activeEl.hasAttribute("data-mission-id")){
-            if(text.includes("rth") || text.includes("ith") || text.includes("hubschrauber")){
-                const vId = activeEl.getAttribute("data-vehicle-id") || activeEl.getAttribute("data-id") || null;
-                const guardKey = vId ? (vId + "_heli_click") : null;
-                if(!guardKey || !heliAlreadyCountedThisSession.has(guardKey)){
-                    incrementTileCount("Helikopter", activeEl);
-                    if(guardKey && heliAlreadyCountedThisSession.size < 5000) heliAlreadyCountedThisSession.add(guardKey);
-                }
-            }
+            requestUpdate(1000); // FMS-Uebergang bestaetigt die Ausrueckung.
         }
     }, true);
 
     window.addEventListener("storage", (e) => {
+        if(e.key === "fzgm_" + STORAGE.DAYSTAMP){
+            state.today = store.load(STORAGE.COUNTS_TODAY);
+            state.yday = store.load(STORAGE.YDAY_COUNTS);
+            state.history = json.load(STORAGE.HISTORY_7DAYS, {});
+            state.det = json.load(STORAGE.DETAILS_TODAY, {});
+            refreshAllVisibleTiles();
+        }
         if(e.key === STORAGE.SYNC_SIGNAL){
             state.today = store.load(STORAGE.COUNTS_TODAY);
             state.total = store.load(STORAGE.COUNTS_TOTAL);
@@ -2714,72 +2843,95 @@
     });
 
     setInterval(() => {
-        if(!isMainPage || (document.hidden && !extWin)) return;
+        if(!isMainPage) return;
         if(checkVehicleDayReset(state)){
             KEYS.forEach(k => updateTile(k, state));
             updateAvailability();
             return;
         }
-        refreshAllVisibleTiles();
+        if(!document.hidden || extWin) refreshAllVisibleTiles();
     }, 30000);
 
-    // =======================================================
-    // API INTERCEPTS (FETCH/XHR)
-    // =======================================================
+    // API INTERCEPTS (FETCH/XHR) – nur bestaetigte Aktionen zaehlen.
+    const transportActionSeen = new Map();
+    function recordTransportAction(action, url){
+        checkVehicleDayReset(state);
+        const normalized = String(url || "").split("?")[0].toLowerCase();
+        const key = action + ":" + normalized;
+        const now = Date.now();
+        for(const [k,ts] of transportActionSeen){ if(now-ts > 5000) transportActionSeen.delete(k); }
+        if(transportActionSeen.has(key)) return;
+        transportActionSeen.set(key, now);
+        incrementTileCount(action, null);
+        if(action === "Patienten" || action === "Gefangene"){
+            updateBuildingCapacities(true).then(() => {
+                syncDerivedResourceCounts();
+                if(isMainPage){
+                    KEYS.forEach(k => tileEls[k] && updateTile(k, state));
+                    updateCategoryHeaders();
+                }
+            }).catch(e => console.warn("[Bobelle] Kapazitaeten:",e));
+        }
+    }
     (function(){
-        const API_HANDLERS = {
-            patient: { pattern: /\/patients?\/.*\/hospitals?/, action: "Patienten", callback: () => updateBuildingCapacities(true).then(() => { syncDerivedResourceCounts(); if(isMainPage) { KEYS.forEach(k => tileEls[k] && updateTile(k, state)); updateCategoryHeaders(); } }) },
-            transit: { pattern: /\/patients?\/.*\/ambulances?|\/transports?/, action: "Krankentransporte" },
-            prisoner: { pattern: /\/prisoners?\/.*\/cells?/, action: "Gefangene", callback: () => updateBuildingCapacities(true).then(() => { syncDerivedResourceCounts(); if(isMainPage) { KEYS.forEach(k => tileEls[k] && updateTile(k, state)); updateCategoryHeaders(); } }) }
-        };
-
-        const handleRequest = (url) => {
-            const u = String(url).toLowerCase();
+        const handlers = [
+            {pattern:/\/patients?\/.*\/hospitals?|\/missions\/\d+\/patients?\/\d+\/hospital/, action:"Patienten"},
+            {pattern:/\/patients?\/.*\/ambulances?|\/transports?\//, action:"Krankentransporte"},
+            {pattern:/\/prisoners?\/.*\/cells?|\/missions\/\d+\/prisoners?\/\d+\/cell/, action:"Gefangene"}
+        ];
+        const onSuccess = url => {
+            const u = String(url || "").toLowerCase();
             if(/\/missions\/\d+\/alarm/.test(u)){
                 setTimeout(() => requestUpdate(0), 800);
                 setTimeout(() => requestUpdate(0), 3500);
             }
-            for (const [key, { pattern, action, callback }] of Object.entries(API_HANDLERS)) {
-                if (pattern.test(u)) {
-                    setTimeout(() => {
-                        incrementTileCount(action, null);
-                        if (callback) callback();
-                    }, 300);
-                    return;
-                }
-            }
+            const handler = handlers.find(h => h.pattern.test(u));
+            if(handler) recordTransportAction(handler.action, u);
         };
-
-        const _xhrOpen = XMLHttpRequest.prototype.open;
-        XMLHttpRequest.prototype.open = function(method, url){
-            if((method || "").toUpperCase() === "PUT" || (method || "").toUpperCase() === "POST") {
-                handleRequest(url);
-            }
-            return _xhrOpen.apply(this, arguments);
+        const originalOpen = XMLHttpRequest.prototype.open;
+        const originalSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function(method,url){
+            this.__fzTrackUrl = /^(POST|PUT|PATCH)$/i.test(String(method)) ? String(url) : null;
+            return originalOpen.apply(this,arguments);
         };
-
-        const _fetch = window.fetch;
-        window.fetch = function(input, init){
-            const method = ((init && init.method) || "GET").toUpperCase();
-            if(method === "PUT" || method === "POST") {
-                handleRequest(typeof input === "string" ? input : (input.url || ""));
+        XMLHttpRequest.prototype.send = function(){
+            if(this.__fzTrackUrl){
+                const url = this.__fzTrackUrl;
+                this.addEventListener("load", () => {
+                    if(this.status >= 200 && this.status < 300) onSuccess(url);
+                }, {once:true});
             }
-            return _fetch.apply(this, arguments);
+            return originalSend.apply(this,arguments);
+        };
+        const originalFetch = window.fetch;
+        window.fetch = function(input,init){
+            const method = String(init?.method || (input instanceof Request ? input.method : "GET")).toUpperCase();
+            const url = typeof input === "string" ? input : (input?.url || "");
+            const result = originalFetch.apply(this,arguments);
+            if(["POST","PUT","PATCH"].includes(method)){
+                Promise.resolve(result).then(response => { if(response.ok) onSuccess(url); }).catch(() => {});
+            }
+            return result;
         };
     })();
 
-    // =======================================================
     // START
     if(isMainPage){
+        checkVehicleDayReset(state);
         const startDashboard = () => {
-            initUI(state);
-            registerEventListener();
+            try {
+                initUI(state);
+                registerEventListener();
+            } catch (error) {
+                console.error('[Bobelle Dashboard] Initialisierung fehlgeschlagen:', error);
+                return;
+            }
             setTimeout(() => {
                 updateBuildingCapacities(true).catch(() => {}).then(() => { updateAvailability(); fetchSchoolings(); });
             }, 600);
             setTimeout(() => startApiLoop(), 1000);
             setTimeout(() => startSchoolingLoop(), 1500);
-            setTimeout(() => updateBuildingCapacities(true), 2500);
+            // Der initiale Kapazitaetsabruf erfolgt bereits oben.
         };
         setTimeout(startDashboard, 100);
     }
