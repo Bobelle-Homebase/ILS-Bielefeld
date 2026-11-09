@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      4.8
+// @version      4.8.3
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -1571,6 +1571,14 @@
             .fzFunkalarmLabel{margin-top:auto;flex-shrink:0;font-size:var(--fz-funk-sz);color:var(--fz-funk-c);font-weight:var(--fz-funk-fw);white-space:nowrap;text-align:right;line-height:1;margin-bottom:2px;overflow:hidden;max-width:100%;text-overflow:ellipsis;}
             .fzFunkalarmLabel.fzAlarming{animation:fzAlarmBlink 1.4s ease-in-out infinite;color:var(--fz-funk-blink-c)!important;font-weight:bold!important;}
             .fzBottomBar{display:none!important;height:3px;background:#e0e0e0;border-radius:2px;overflow:hidden;width:100%;margin-top:2px;}.fzBottomBarFill{height:100%;background:var(--fz-bar-c);width:0%;transition:width 0.3s;}
+            /* Verfuegbarkeit je Fahrzeugtyp: 100 %, 50-99 %, 1-49 %, 0 %, kein Bestand. */
+            .fzTile.fzAllFree{background-color:#ffffff!important;color:#222!important;}
+            .fzTile.fzMostlyFree{background-color:#fff3cd!important;color:#222!important;}
+            .fzTile.fzFewFree{background-color:#ffcc80!important;color:#222!important;}
+            .fzTile.fzNoneFree{background-color:#f8b4b4!important;color:#222!important;}
+            .fzTile.fzNoStock{background-color:#e5e7eb!important;color:#222!important;}
+            .fzTile.fzStockUnknown{background-color:var(--fz-tile-bg)!important;color:var(--fz-tile-text)!important;}
+            /* Bestehende Klassen fuer Ressourcen weiterhin unterstuetzen. */
             .fzTile.fzInUse{background:${uiSettings.tileColorInUse}!important;color:#222!important;}
             .fzTile.fzEmpty{background:${uiSettings.tileColorEmpty}!important;color:#222!important;}
             /* Statuspunkt-Farbe wird anhand der Verfuegbarkeit im JavaScript gesetzt. */
@@ -1710,7 +1718,7 @@
                 const percent = hasLiveStock ? Math.max(0, Math.min(100, total ? free / total * 100 : 0)) : 0;
                 if(cached.availabilityFill){
                     cached.availabilityFill.style.width = percent.toFixed(1) + "%";
-                    cached.availabilityFill.style.background = !hasLiveStock ? "#f0ad4e" : percent < 20 ? "#dc3545" : percent < 50 ? "#f0ad4e" : "#28a745";
+                    cached.availabilityFill.style.background = !hasLiveStock ? "#94a3b8" : percent === 100 ? "#28a745" : percent >= 50 ? "#eab308" : percent > 0 ? "#f97316" : "#dc3545";
                 }
                 if(cached.availabilityTrack) cached.availabilityTrack.title =
                     hasLiveStock ? `${free} von ${total} Fahrzeugen verfügbar (${Math.round(percent)} %)` : "Verfügbarkeit nicht durch aktuelle Fahrzeugdaten bestätigt";
@@ -1847,12 +1855,23 @@
         }
 
         // Einheitliche Statusfarbe fuer ALLE Fahrzeugkacheln mit bekanntem Bestand.
-        // Gelb: mindestens ein Fahrzeug frei (auch wenn keines im Einsatz ist).
-        // Rot: Fahrzeugbestand vorhanden, aber kein Fahrzeug frei.
-        // Neutral: kein bestaetigter Live-Bestand (keine falsche Rot-Markierung).
-        el.classList.remove("fzInUse", "fzEmpty");
-        if (!isResource && hasLiveStock) {
-            el.classList.add(free > 0 ? "fzInUse" : "fzEmpty");
+        // Farbschema B ausschliesslich fuer echte Fahrzeugkacheln.
+        // Die Live-API liefert die FMS-basierten freien und gesamten Fahrzeuge pro Typ.
+        // Unbekannte/fehlgeschlagene API-Daten niemals als "kein Bestand" ausgeben.
+        el.classList.remove("fzInUse", "fzEmpty", "fzAllFree", "fzMostlyFree", "fzFewFree", "fzNoneFree", "fzNoStock", "fzStockUnknown");
+        if(vehicleTile){
+            if(!lastSuccessfulVehicleFetch){
+                el.classList.add("fzStockUnknown");
+            } else if((vehicleTotalCount[key] || 0) === 0){
+                // Keine manuell geschaetzten Bestandszahlen fuer die Farbentscheidung.
+                el.classList.add("fzNoStock");
+            } else {
+                const availabilityPercent = free / vehicleTotalCount[key] * 100;
+                if(availabilityPercent >= 100) el.classList.add("fzAllFree");
+                else if(availabilityPercent >= 50) el.classList.add("fzMostlyFree");
+                else if(free > 0) el.classList.add("fzFewFree");
+                else el.classList.add("fzNoneFree");
+            }
         }
 
         let dotColor = "#888";
@@ -1875,11 +1894,12 @@
         } else {
             // Fahrzeugstatus unabhaengig von der Kachel-Hintergrundfarbe.
             if(hasLiveStock){
-                dotColor = free > 0 ? "#5cb85c" : "#dc3545";
+                const ratio = total > 0 ? free / total : 0;
+                dotColor = ratio >= 1 ? "#5cb85c" : ratio >= 0.5 ? "#eab308" : ratio > 0 ? "#f97316" : "#dc3545";
             } else if(vehicleExists[key] || total > 0){
                 dotColor = "#f0ad4e"; // Fahrzeug erkannt, Daten unvollstaendig
             } else {
-                dotColor = "#ff0000"; // Kein Fahrzeugbestand erkannt
+                dotColor = "#94a3b8"; // Kein Fahrzeugbestand erkannt
             }
         }
 
@@ -1993,63 +2013,6 @@
         }
 
         const list = vehicleLists[key] || [];
-        const valToday = (state.today[key] || 0);
-        const valYday = (state.yday[key] || 0);
-        const diff = valToday - valYday;
-
-
-        let totalTodayAll = 0;
-        Object.values(state.today).forEach(v => totalTodayAll += v);
-        let sharePct = totalTodayAll > 0 ? ((valToday / totalTodayAll) * 100).toFixed(1) : "0.0";
-
-        const graphHtml = ""; // 7-Tage-Statistik entfernt
-
-        let fmsCounts = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0};
-        const unknownFmsCount = list.filter(v => !Number.isInteger(v.fms) || v.fms < 1 || v.fms > 8).length;
-        list.forEach(v => { if(v.fms>=1 && v.fms<=8) fmsCounts[v.fms]++; });
-        const fmsTotal = list.length || 1;
-
-        let fmsBarHtml = `<div class="fzSectionTitle">FMS-Übersicht (${list.length} Fahrzeuge)</div>`;
-        if(list.length > 0){
-            let segments = "";
-            for(let s=1; s<=8; s++){
-                if(fmsCounts[s] > 0){
-                    const pct = Math.round((fmsCounts[s] / fmsTotal) * 100);
-                    const textColor = (s === 3) ? "#000" : "#fff";
-                    segments += `<div title="S${s}: ${fmsCounts[s]}" style="width:${pct}%;background:${FMS_COLORS[s]};height:100%;display:flex;align-items:center;justify-content:center;transition:width 0.4s;">${pct>=10?`<span style="font-size:9px;color:${textColor};font-weight:bold;line-height:1;">${fmsCounts[s]}</span>`:""}</div>`;
-                }
-            }
-            if(unknownFmsCount){
-                const pct = (unknownFmsCount / fmsTotal) * 100;
-                segments += `<div title="Unbekannt: ${unknownFmsCount}" style="width:${pct}%;background:#777;height:100%;"></div>`;
-            }
-            fmsBarHtml += `<div style="display:flex;height:18px;border-radius:4px;overflow:hidden;margin-bottom:6px;border:1px solid #ddd;">${segments}</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;">`;
-            for(let s=1; s<=8; s++){
-                if(fmsCounts[s] > 0){
-                    const textColor = (s === 3) ? "#000" : "#fff";
-                    fmsBarHtml += `<span style="font-size:11px;background:${FMS_COLORS[s]};color:${textColor};padding:2px 8px;border-radius:10px;font-weight:bold;">S${s}: ${fmsCounts[s]}</span>`;
-                }
-            }
-            if(unknownFmsCount) fmsBarHtml += `<span style="font-size:11px;background:#777;color:white;padding:2px 8px;border-radius:10px;">Unbekannt: ${unknownFmsCount}</span>`;
-            fmsBarHtml += `</div>`;
-        } else {
-            fmsBarHtml += `<div style="color:#999;font-size:12px;margin-bottom:12px;">Keine Fahrzeuge vorhanden.</div>`;
-        }
-
-        let usageHtml = "";
-        if(state.det && state.det[key]){
-            const usageData = Object.entries(state.det[key]).sort((a,b)=>b[1]-a[1]).slice(0,5);
-            if(usageData.length > 0){
-                usageHtml = `<div class="fzSectionTitle">Top Verwendung (Heute)</div><table class="fzUsageTable">`;
-                usageData.forEach(item => { usageHtml += `<tr><td>${escapeHTML(item[0])}</td><td style="text-align:right;font-weight:bold;">${Number(item[1]) || 0}</td></tr>`; });
-                usageHtml += `</table>`;
-            }
-        }
-
-        const lastAlarm = lastAlarmTime[key] || null;
-        const lastAlarmHtml = lastAlarm
-        ? `<div class="fzStatBox"><div class="fzStatVal" style="font-size:14px;">🚨 ${lastAlarm}</div><div class="fzStatLbl">Letzte Alarmierung</div></div>`
-        : `<div class="fzStatBox"><div class="fzStatVal" style="font-size:13px;color:#aaa;">–</div><div class="fzStatLbl">Letzte Alarmierung</div></div>`;
 
         const renderVehicleList = (filter) => {
             let filtered = [...list];
@@ -2091,7 +2054,7 @@
         const ol = document.createElement("div");
         ol.className = "fzModalOverlay";
         ol.onclick = (e) => { if(e.target === ol) ol.remove(); };
-        ol.innerHTML = `<div class="fzModal"><h3>${escapeHTML(key)} - Details</h3><div class="fzModalStats"><div class="fzStatBox"><div class="fzStatVal">${valToday}</div><div class="fzStatLbl">Heute</div></div><div class="fzStatBox"><div class="fzStatVal" style="font-size:16px;">${valYday}</div><div class="fzStatLbl">Gestern</div></div><div class="fzStatBox"><div class="fzStatVal">${sharePct}%</div><div class="fzStatLbl">Anteil Tag</div></div>${lastAlarmHtml}</div>${graphHtml}${fmsBarHtml}${usageHtml}<div class="fzSectionTitle">Fahrzeugliste (${list.length})</div><div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;" id="fzVehicleFilterBtns"><button class="fzFilterBtn active" data-filter="all">Alle (${list.length})</button><button class="fzFilterBtn" data-filter="free" style="border-color:#28a745;">🟢 Frei (${countFree})</button><button class="fzFilterBtn" data-filter="busy" style="border-color:#dc3545;">🔴 Im Einsatz (${countBusy})</button><button class="fzFilterBtn" data-filter="s6" style="border-color:#6c757d;">⚫ S6 (${countS6})</button></div><div id="fzVehicleListContent" style="max-height:300px;overflow-y:auto;">${renderVehicleList("all")}</div><button class="fzBtn" style="margin-top:15px;width:100%" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button></div>`;
+        ol.innerHTML = `<div class="fzModal"><h3>${escapeHTML(key)} - Details</h3><div class="fzSectionTitle">Fahrzeugliste (${list.length})</div><div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;" id="fzVehicleFilterBtns"><button class="fzFilterBtn active" data-filter="all">Alle (${list.length})</button><button class="fzFilterBtn" data-filter="free" style="border-color:#28a745;">🟢 Frei (${countFree})</button><button class="fzFilterBtn" data-filter="busy" style="border-color:#dc3545;">🔴 Im Einsatz (${countBusy})</button><button class="fzFilterBtn" data-filter="s6" style="border-color:#6c757d;">⚫ S6 (${countS6})</button></div><div id="fzVehicleListContent" style="max-height:300px;overflow-y:auto;">${renderVehicleList("all")}</div><button class="fzBtn" style="margin-top:15px;width:100%" onclick="this.closest('.fzModalOverlay').remove()">Schließen</button></div>`;
 
         setTimeout(() => {
             const btns = ol.querySelectorAll("#fzVehicleFilterBtns .fzFilterBtn");
