@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Credits_Counter
 // @namespace    https://leitstellenspiel.de
-// @version      4.8.24
+// @version      4.8.25
 // @author       Design by Bobelle (Fixed)
 // @description  Zeigt Credits-Bilanz frei verschiebbar im Navbar-Bereich
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -106,7 +106,7 @@
     bilanzPositiveColor: '#40ff00',
     bilanzNegativeColor: '#ff3333',
     einnahmeColor: '#40ff00',
-    ausgabeColor: '#ff3333',
+    ausgabeColor: '#0000ff',//#ff3333
 
     refreshIntervalMs: 300000
   };
