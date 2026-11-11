@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_mit_Statistik
 // @namespace    https://leitstellenspiel.de
-// @version      4.8.13
+// @version      4.8.24
 // @author       Design by Bobelle
 // @description  Full All in One mit_Statistik
 // @icon         https://www.leitstellenspiel.de/favicon.ico
@@ -32,6 +32,18 @@
 
     // KONFIGURATION & KONSTANTEN
     const CFG = { zIndex: 99999 };
+
+    // v3.8.5 (Basis 4.8.23): Nur der Spieler hebt manuelles Schliessen auf.
+    let dashboardManuallyClosed = GM_getValue("dashboardManuallyClosed", "false") === "true";
+    function setDashboardManuallyClosed(closed){
+        dashboardManuallyClosed = closed;
+        GM_setValue("dashboardManuallyClosed", String(closed));
+        if(fzWrapper) fzWrapper.classList.toggle("fzHidden", closed);
+        if(closed){
+            if(safeHideTimer) clearTimeout(safeHideTimer);
+            if(animFrameId) cancelAnimationFrame(animFrameId);
+        }
+    }
 
     const VEHICLE_MATCH_CACHE = {
         _map: new Map(),
@@ -84,7 +96,7 @@
         { n:"HLF20", id:30, c:C_FW, cat:"FW", s:["hlf 20","hlf20"]},
         { n:"DLK23", id:2, c:C_FW, cat:"FW", s:["dlk"]},
         { n:"Rüstwagen", id:4, c:C_FW, cat:"FW", s:["rw","rüstwagen"]},
-        { n:"Schlauchwagen", id:[13,14,15], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw 2000tr"]},
+        { n:"Schlauchwagen", id:[13,14], c:C_FW, cat:"FW", s:["schlauchwagen","sw 1000","sw 2000","sw1000","sw2000","sw 1000 tr","sw 2000 tr"]},
         { n:"Kleintankwagen", id:118, c:C_FW, cat:"FW", s:["kleintankwagen"]},
         { n:"Tankwagen", id:120, c:C_FW, cat:"FW", s:["tankwagen"]},
         { n:"TLF", id:[17,18], c:C_FW, cat:"FW", s:["tlf"]},
@@ -175,8 +187,6 @@
         { n:"ULF mit Löscharm", id:84, c:"#5a1a1f", cat:"WerkFW", s:["ulf"]},
         { n:"TM 50", id:85, c:"#5a1a1f", cat:"WerkFW", s:["tm 50"]},
         { n:"Turbolöscher", id:86, c:"#5a1a1f", cat:"WerkFW", s:["turbo"]},
-        // Abgeleitete Pumpenkacheln: keine eigene primaere Fahrzeugtyp-ID.
-        // Die Zuordnung erfolgt unten nach Fahrzeugtyp-ID (17/18) bzw. HLF20.
         { n:"Schmutzwasserpumpen", c:C_THW, cat:"THW", s:["schmutzwasserpumpen"]},
         { n:"Feuerlöschpumpen", c:C_THW, cat:"THW", s:["feuerlöschpumpen"]},
         { n:"Tauchkraftwagen", id:69, c:C_THW, cat:"THW", s:["tauchkraftwagen"]},
@@ -351,6 +361,12 @@
         const id = typeId === null || !Number.isFinite(typeId) ? null : typeId;
         const typeName = normalize(v.vehicle_type_caption || v.vehicle_type_name || "");
         const idKey = id === null ? null : String(id);
+        // V4.8.18: Offizielle SW 1000 / SW 2000 IDs sind eindeutig.
+        // Alte manuelle Typ-Zuordnungen (z.B. zu GW-L1) duerfen sie nicht uebersteuern.
+        // Nur offizielle Typ-IDs, niemals den frei vergebenen Fahrzeugnamen verwenden.
+        if(id === 13 || id === 14){
+            return {key:"Schlauchwagen",source:"official-schlauchwagen-id"};
+        }
         if(idKey !== null && Object.prototype.hasOwnProperty.call(manualTypeMappings,idKey)){
             const key = manualTypeMappings[idKey];
             // Manuelle Korrekturen nur auf echte Fahrzeugkacheln zulassen.
@@ -359,6 +375,13 @@
         const override = id === null ? null : VEHICLE_TYPE_OVERRIDES[id];
         if(override && Array.isArray(override.add) && override.add.length === 1 && tileMetaByKey[override.add[0]] && !RESOURCE_TILE_NAMES.has(override.add[0])){
             return {key:override.add[0],source:"official-override"};
+        }
+        // Schlauchwagen: offizielle Typbezeichnungen auch dann erkennen,
+        // wenn die API eine neue oder nicht hinterlegte Fahrzeugtyp-ID liefert.
+        // Keine freie Fahrzeugbeschriftung (caption) verwenden, da diese beliebig ist.
+        const swNames = new Set(["schlauchwagen", "sw1000", "sw2000", "sw1000tr", "sw2000tr"]);
+        if (swNames.has(typeName) && (id === null || !(TYPE_ID_MAPPING[id] || []).length)) {
+            return {key:"Schlauchwagen",source:"official-type-name"};
         }
         const candidates = id === null ? [] : [...new Set(TYPE_ID_MAPPING[id] || [])];
         // Eindeutige offizielle ID ist verlaesslicher als frei gewaehlte Fahrzeugnamen.
@@ -463,7 +486,7 @@
     const heliAlreadyCountedThisSession=new Set();
     const ktpAlreadyCountedThisSession=new Set(); // Kompatibilitaet mit aelteren Sitzungsdaten
     const dispatchEventGuard = new Map();
-    const dispatchSeenWindowMs = 15000;
+    const dispatchSeenWindowMs = 2000; // Nur unmittelbare doppelte Funkereignisse unterdruecken
     function registerDispatchEvent(vehicleId, kind){
         const key = `${String(vehicleId)}:${kind}`;
         const now = Date.now();
@@ -538,16 +561,20 @@
             KEYS.forEach(k => { if(o[k] == null) o[k] = 0; });
             return o;
         },
-        save: () => {
-            if(saveTimeout) clearTimeout(saveTimeout);
+        save: (immediate = false) => {
+            if(saveTimeout) { clearTimeout(saveTimeout); saveTimeout = null; }
             const saveDay = getTodayString();
-            saveTimeout = setTimeout(() => {
+            const commit = () => {
+                saveTimeout = null;
                 if(saveDay !== getTodayString() || GM_getValue(STORAGE.DAYSTAMP, "") !== saveDay) return;
                 json.save(STORAGE.COUNTS_TODAY, state.today);
                 json.save(STORAGE.COUNTS_TOTAL, state.total);
                 json.save(STORAGE.DETAILS_TODAY, state.det);
-                localStorage.setItem(STORAGE.SYNC_SIGNAL, Date.now().toString());
-            }, 800);
+                try { localStorage.setItem(STORAGE.SYNC_SIGNAL, `${Date.now()}:${Math.random()}`); }
+                catch(error){ console.warn("[Bobelle Dashboard] Tab-Synchronisierung fehlgeschlagen:", error); }
+            };
+            if(immediate) commit();
+            else saveTimeout = setTimeout(commit, 800);
         }
     };
 
@@ -582,15 +609,6 @@
     let cachedCapacities = {beds:0, cells:0, bedsUsed:0, cellsUsed:0};
     let lastBuildingUpdate = 0;
 
-    function _setEl(id, html){
-        const el = document.getElementById(id);
-        if(el && el.innerHTML !== html){
-            el.innerHTML = html;
-            return true;
-        }
-        return false;
-    }
-
     // GEBÄUDE & LEHRGÄNGE
     let buildingNamesPromise = null;
     async function ensureBuildingNames(buildingIds){
@@ -617,6 +635,15 @@
         schoolingPending = fetchSchoolingsImpl().finally(() => { schoolingPending = null; });
         return schoolingPending;
     }
+    // Ungueltige oder fehlende Zeitstempel nicht als "NaN" in die Anzeige uebernehmen.
+    function parseSchoolingTimestamp(value){
+        if(value == null || value === "") return null;
+        const ms = typeof value === "number"
+            ? (value < 1e11 ? value * 1000 : value)
+            : new Date(value).getTime();
+        return Number.isFinite(ms) ? ms : null;
+    }
+
     async function fetchSchoolingsImpl(){
         try {
             const ownRes = await fetch("/api/schoolings", {credentials:"same-origin"});
@@ -637,8 +664,8 @@
                 description: s.description || s.schooling_description || s.type_name || "",
                 buildingId: s.building_id,
                 buildingName: buildingNameCache[s.building_id] || ("Wache #" + (s.building_id || "?")),
-                finishAt: s.finish_at ? new Date(s.finish_at).getTime() : (s.end_time ? new Date(s.end_time).getTime() : null),
-                startAt: s.start_at ? new Date(s.start_at).getTime() : null,
+                finishAt: parseSchoolingTimestamp(s.finish_at ?? s.end_time),
+                startAt: parseSchoolingTimestamp(s.start_at),
                 source: "eigen",
                 participantCount: s.participant_count || s.attendee_count || 0
             })).filter(s => !s.finishAt || s.finishAt > now - 60000);
@@ -653,7 +680,7 @@
     function updateSchoolingTiles(){
         if(_restzeitTimerId) clearTimeout(_restzeitTimerId);
         const now = Date.now();
-        const active = schoolingsData.filter(s => !s.finishAt || s.finishAt > now);
+        const active = schoolingsData.filter(s => s.finishAt === null || s.finishAt > now);
         const count = active.length;
 
         ["Laufende Lehrgänge", "Aktive Lehrgänge"].forEach(key => {
@@ -668,7 +695,7 @@
                 } else {
                     const earliest = active.reduce((a,b) => (a.finishAt && b.finishAt) ? (a.finishAt < b.finishAt ? a : b) : (a.finishAt ? a : b));
                     const label = key === "Aktive Lehrgänge" ? "Nächster" : "Nächster Abschluss";
-                    sub.textContent = `${label}: ${formatRestzeit(earliest.finishAt)}`;
+                    sub.textContent = earliest.finishAt === null ? "Abschlusszeit unbekannt" : `${label}: ${formatRestzeit(earliest.finishAt)}`;
                 }
             }
 
@@ -825,15 +852,14 @@
         state.det[vehicleKey] = state.det[vehicleKey] || {};
         const detailName = (normalize(activeEl ? activeEl.textContent : vehicleKey) || vehicleKey).slice(0,60);
         state.det[vehicleKey][detailName] = (state.det[vehicleKey][detailName] || 0) + inc;
-        store.save();
+        store.save(true);
 
         if(isMainPage){
             requestAnimationFrame(() => {
                 if(tileEls[vehicleKey]) updateTile(vehicleKey, state);
-                updateCategoryHeaders();
+
                 updateHeaderStats();
-                if(fzWrapper) fzWrapper.classList.remove("fzHidden");
-                resetCountdown();
+                // Statistik aktualisieren, ohne Sichtbarkeit oder Countdown zu aendern.
             });
         }
     }
@@ -841,106 +867,6 @@
     function updateHeaderStats(){
         const statsEl = document.getElementById("fzMissionStats");
         if(statsEl) statsEl.innerHTML = getMissionStatsHTML();
-    }
-
-    let _cachedHeaderElements = {};
-    let _headerCacheExpiry = 0;
-
-    function updateCategoryHeaders(){
-        const now = Date.now();
-        // Refresh cache if needed (every 1 minute)
-        if(now - _headerCacheExpiry > 60000) {
-            _cachedHeaderElements = {};
-            _headerCacheExpiry = now;
-        }
-
-        const pV = state.today["Patienten"] || 0;
-        let kV = 0;
-        ["KTW","KTW Typ B","ITW","RTH [Christoph 13 (Bielefeld)]","RTH mit Winde","NAW"].forEach(k => { kV += (state.today[k] || 0); });
-
-        _setEl("fzBadge_RD_Pat", `${ICONS.patient} ${pV}`);
-        _setEl("fzBadge_RD_KTW", `${ICONS.ktp} ${kV}`);
-
-        const beds = cachedCapacities.beds || 0, bedsUsed = cachedCapacities.bedsUsed || 0;
-        const rdB = _cachedHeaderElements.bed || document.getElementById("fzBadge_RD_Betten");
-        if(rdB){
-            _cachedHeaderElements.bed = rdB;
-            const bFree = Math.max(0, beds - bedsUsed);
-            const newHTML = `🏥 ${bFree}/${beds}`;
-            if(rdB.innerHTML !== newHTML) {
-                rdB.innerHTML = newHTML;
-                rdB.style.background = bFree < 3 ? "rgba(220,53,69,0.5)" : "rgba(40,167,69,0.3)";
-            }
-        }
-
-        const gef = state.today["Gefangene"] || 0;
-        _setEl("fzBadge_POL_Gef", `${ICONS.prisoner} ${gef}`);
-
-        const cells = cachedCapacities.cells || 0;
-        const polZ = _cachedHeaderElements.cells || document.getElementById("fzBadge_POL_Zellen");
-        if(polZ){
-            _cachedHeaderElements.cells = polZ;
-            const cFree = Math.max(0, cells - gef);
-            const newHTML = `🔒 ${cFree}/${cells}`;
-            if(polZ.innerHTML !== newHTML) {
-                polZ.innerHTML = newHTML;
-                polZ.style.background = cFree < 2 ? "rgba(220,53,69,0.5)" : "rgba(40,167,69,0.3)";
-            }
-        }
-
-        const wasser = state.today["Wasserbedarf"] || 0;
-        _setEl("fzBadge_FW_Was", `${ICONS.water} ${wasser.toLocaleString('de-DE')} L`);
-
-        const betr = state.today["Betreuung/Versorgung"] || 0;
-        _setEl("fzBadge_Vers_Bet", `${ICONS.supply} ${betr}`);
-
-        const heli = state.today["Helikopter"] || 0;
-        _setEl("fzBadge_Luft_Heli", `${ICONS.heli} ${heli}`);
-
-        const schCount = schoolingsData.filter(s => !s.finishAt || s.finishAt > Date.now()).length;
-        _setEl("fzBadge_Aus_Count", `${ICONS.school} ${schCount}`);
-
-        CATEGORY_ORDER.forEach(cat => {
-            const el = _cachedHeaderElements[cat + "_util"] || document.getElementById("fzBadge_Util_" + cat);
-            if(!el) return;
-            _cachedHeaderElements[cat + "_util"] = el;
-
-            const catKeys = CAT_VEHICLE_MAP[cat] || [];
-            let total = 0, busy = 0;
-            catKeys.forEach(t => {
-                total += (vehicleTotalCount[t.n] || 0);
-                busy += (vehicleInUseCount[t.n] || 0);
-            });
-
-            if(total === 0){ el.style.display = "none"; return; }
-            const pct = Math.round((busy / total) * 100);
-            el.style.display = "inline-flex";
-            el.innerHTML = `${pct}%`;
-            el.style.background = pct >= 80 ? "rgba(220,53,69,0.6)" : pct >= 50 ? "rgba(255,193,7,0.5)" : "rgba(40,167,69,0.35)";
-        });
-
-        CATEGORY_ORDER.forEach(cat => {
-            const el = _cachedHeaderElements[cat + "_alarm"] || document.getElementById("fzBadge_LastAlarm_" + cat);
-            if(!el) return;
-            _cachedHeaderElements[cat + "_alarm"] = el;
-
-            const catKeys = (CAT_TILE_MAP[cat] || []).map(t => t.n);
-            let latestTime = null, latestKey = null;
-            catKeys.forEach(k => {
-                if(lastAlarmTime[k]){
-                    if(!latestTime || lastAlarmTime[k] > latestTime){
-                        latestTime = lastAlarmTime[k];
-                        latestKey = k;
-                    }
-                }
-            });
-
-            if(latestTime){
-                el.style.display = "inline-flex";
-                el.innerHTML = `🚨 ${latestTime}`;
-                el.title = latestKey || "";
-            } else el.style.display = "none";
-        });
     }
 
     function getTargetBody(){ return (extWin && !extWin.closed) ? extWin.document.body : document.body; }
@@ -1125,7 +1051,18 @@
         setTileUpdateBlink(true);
         lastVehiclesRaw = vehicles;
         vehicleIdSet = new Set(vehicles.map(v => v.id));
-        processVehicles(vehicles, true);
+        try {
+            processVehicles(vehicles, true);
+        } catch(error) {
+            sysReady = false;
+            console.error("[Bobelle Dashboard] Fahrzeugverarbeitung fehlgeschlagen:", error);
+            updateSubHeaderInfo();
+        } finally {
+            // Das Rendering erfolgt asynchron. Der API-Lock darf nicht von einem
+            // spaeteren requestAnimationFrame oder einem DOM-Fehler abhaengen.
+            isUpdating = false;
+            if(_updatePending){ _updatePending = false; requestUpdate(150); }
+        }
     }
 
     // Abgeleitete Pumpen-Kacheln: Die Bestands-/FMS-Anzeige folgt den
@@ -1181,8 +1118,8 @@
 
     const lv = liveFms[v.id];
             if(lv){
-                if(lv.fms === fms || Date.now() - lv.ts > 60000) delete liveFms[v.id];
-                else fms = lv.fms; // Live-Status vom Spiel hat Vorrang, solange die API veraltet ist
+                if(lv.fms === fms || Date.now() - lv.ts > 20000) delete liveFms[v.id];
+                else fms = lv.fms; // Funkstatus maximal 20 Sekunden bevorzugen; danach API erneut massgeblich
             }
 
             const isInUse = (fms===3||fms===4||fms===7||fms===8);
@@ -1209,7 +1146,7 @@
             }
 
             const oldFms = vehicleStateCache[v.id];
-            if(!isInitialLoad && (oldFms === 1 || oldFms === 2) && (fms === 3 || fms === 4) && registerDispatchEvent(v.id, "dispatch")){
+            if(!isInitialLoad && (oldFms === 1 || oldFms === 2) && (fms === 3 || fms === 4 || fms === 7 || fms === 8) && registerDispatchEvent(v.id, "dispatch")){
                 matchedKeys.forEach(k => {
                     // Abgeleitete Pumpenkacheln zeigen nur den Fahrzeugbestand und
                     // die Verfügbarkeit; Einsatzstatistiken bleiben beim Träger.
@@ -1223,7 +1160,7 @@
                             state.det["Wasserbedarf"] = state.det["Wasserbedarf"] || {};
                             const dKey = (normalize(v.caption || "wasserbedarf") || "wasserbedarf").slice(0,60);
                             state.det["Wasserbedarf"][dKey] = (state.det["Wasserbedarf"][dKey] || 0) + liter;
-                            store.save();
+                            store.save(true);
                         }
                         triggerAlarm(k);
                         return;
@@ -1267,7 +1204,8 @@
                     fms,
                     id: v.id,
                     missionId: (v.target_type === 'Mission') ? v.target_id : null,
-                    crew: v.assigned_personnel_count || 0
+                    crew: v.assigned_personnel_count ?? null,
+                    buildingId: v.building_id ?? v.buildingId ?? null
                 });
             }
         }
@@ -1278,9 +1216,9 @@
             const keys = BUILDING_ID_TILE_MAP[bid] || [];
             keys.forEach(k => {
                 vehicleExists[k] = true;
-                vehicleAvailability[k] = true;
-                if(!vehicleTotalCount[k]) vehicleTotalCount[k] = 1;
-                if(!vehicleFreeCount[k]) vehicleFreeCount[k] = 1;
+                // Gebaeude-Verknuepfungen belegen nur die Kachel, niemals einen
+                // erfundenen Fahrzeugbestand oder einen erfundenen freien FMS.
+                // Bestand/Verfuegbarkeit stammen ausschliesslich aus Fahrzeugdaten.
             });
         });
 
@@ -1306,11 +1244,12 @@
         // Single RAF for all DOM updates
         const doc = getTargetDoc();
         requestAnimationFrame(() => {
+          try {
             const pillsContainer = doc.getElementById("fzResourcePills");
             if(pillsContainer){
                 const pat = state.today["Patienten"] || 0;
-                let ktwCount = 0;
-                ["KTW","KTW Typ B","ITW","RTH [Christoph 13 (Bielefeld)]","RTH mit Winde","NAW"].forEach(k => { ktwCount += (state.today[k] || 0); });
+                // Nur bestaetigte Krankentransport-Aktionen, nicht alle Fahrzeugausrueckungen.
+                const ktwCount = state.today["Krankentransporte"] || 0;
 
                 const valColor = uiSettings.creditsValueColor;
                 const einStr = creditsData.ein.toLocaleString('de-DE');
@@ -1354,15 +1293,14 @@
             }
 
             for(const k of KEYS) updateTile(k, state);
-            updateCategoryHeaders();
+
             renderAvailabilityIndicator();
             updateHeaderStats();
             if(fromApi && lastSuccessfulVehicleFetch) lastUpdateStr = lastSuccessfulVehicleFetch.toLocaleTimeString("de-DE");
             updateSubHeaderInfo();
-            if(fromApi){
-                isUpdating = false;
-                if(_updatePending){ _updatePending = false; requestUpdate(150); }
-            }
+          } catch(error) {
+            console.error("[Bobelle Dashboard] Rendering fehlgeschlagen:", error);
+          }
         });
     }
 
@@ -1510,7 +1448,7 @@
             .fzBarFree{height:100%;background:#28a745;transition:width 0.5s;}.fzBarBusy{height:100%;background:#dc3545;transition:width 0.5s;}.fzBarS6{height:100%;background:#999;transition:width 0.5s;}
             .fzCatStatText{margin-right:10px;white-space:nowrap;font-size:9px;margin-top:1px;font-weight:normal;color:var(--fz-cat-stat-c);}
             .fzFocusBtn{margin-right:8px;cursor:pointer;opacity:0.8;font-size:14px;margin-left:5px;}.fzFocusBtn:hover{opacity:1;transform:scale(1.1);}
-            .fzCatBadge{background:rgba(255,255,255,0.2);padding:1px 6px;border-radius:4px;font-size:11px;margin-right:6px;cursor:pointer;display:inline-flex;align-items:center;gap:3px;border:1px solid rgba(255,255,255,0.3);font-weight:normal;}.fzCatBadge:hover{background:rgba(255,255,255,0.4);}
+
             .fzScrollArea{max-height:${uiSettings.winMaxHeight}px;overflow-y:auto;background:#fff;position:relative;flex:1;}.fzWrapper.fzFullscreen .fzScrollArea{max-height:100vh;flex:1;}body.fzExternal .fzScrollArea{max-height:100vh;flex:1;}
             .fzGrid{display:grid;grid-template-columns:repeat(${Math.max(1,Math.min(12,Number(uiSettings.columns)||4))},${Number(uiSettings.tileColumnWidth)>0 ? `${Math.max(100,Math.min(800,Number(uiSettings.tileColumnWidth)))}px` : "minmax(0,1fr)"});gap:0;overflow-x:auto;background:#ccc;border-top:1px solid #ccc;border-left:1px solid #ccc;}
             .fzTile{position:relative;display:flex;align-items:stretch;padding:var(--fz-tile-py) var(--fz-tile-px);height:var(--fz-tile-h);background-color:var(--fz-tile-bg);color:var(--fz-tile-text);border-left:5px solid transparent;border-right:var(--fz-tile-bw) solid #ccc;border-bottom:var(--fz-tile-bw) solid #ccc;gap:var(--fz-tile-gap);font-family:sans-serif;cursor:default;user-select:none;box-sizing:border-box;transition:height 0.18s ease;}
@@ -1537,7 +1475,6 @@
             .fzNumYday{font-weight:normal;color:var(--fz-ny-c);font-size:calc(var(--fz-count-fs)*0.8);}
             .fzTileIdLabel{font-size:var(--fz-id-sz);color:var(--fz-id-c);text-align:var(--fz-id-a);width:100%;margin-top:1px;white-space:nowrap;line-height:1;}
             .fzResourceCounter{font-size:var(--fz-res-s);color:var(--fz-res-c);font-weight:bold;}
-            .fzTileShare{font-size:10px;color:var(--fz-ny-c);line-height:1;margin-top:1px;text-align:right;white-space:nowrap;}
             .fzPers{font-size:9px;color:#777;margin-top:1px;margin-bottom:2px;white-space:nowrap;}
             @keyframes fzAlarmBlink{0%{opacity:1;}45%{opacity:1;}65%{opacity:0.12;}100%{opacity:1;}}
             .fzFunkalarmLabel{margin-top:auto;flex-shrink:0;font-size:var(--fz-funk-sz);color:var(--fz-funk-c);font-weight:var(--fz-funk-fw);white-space:nowrap;text-align:right;line-height:1;margin-bottom:2px;overflow:hidden;max-width:100%;text-overflow:ellipsis;}
@@ -1559,7 +1496,7 @@
             .fzTile.fzResource.fzEmpty{background-color:${uiSettings.tileColorEmpty}!important;color:#222!important;}
             .fzTile.fzStat{background-color:var(--fz-tile-bg)!important;color:var(--fz-tile-text)!important;height:48px;}
             .fzTile.fzStat .fzFunkalarmLabel{display:none!important;}
-            /* Kategorie "Einsatz-Statistik" ausgeblendet (Zähler laufen im Hintergrund weiter, Klicks aus Kopfzeile/Badges funktionieren weiter) */
+            /* Kategorie "Einsatz-Statistik" ausgeblendet (Statistiken laufen im Hintergrund weiter) */
             #fzCatHead_Ressourcen{display:none!important;}
             .fzTile.fzStat{display:none!important;}
             /* Pfeil und Wert als EINE Textzeile: identische Schrift/Baseline, kein Versatz. */
@@ -1636,17 +1573,6 @@
     }
 
     // KACHEL RENDER LOGIK
-    // Anteil einer Kachel an allen Alarmierungen des Tages (nur Fahrzeug-Kacheln, ohne Ressourcen/Lehrgänge)
-    function getShareTotal(){
-        let sum = 0;
-        for(const k of KEYS){
-            const m = tileMetaByKey[k];
-            if(!m || m.cat === "Ressourcen" || m.cat === "Ausbildung") continue;
-            sum += (state.today[k] || 0);
-        }
-        return sum;
-    }
-
     function updateTile(key, state){
         if(SCHOOLING_TILE_NAMES.has(key)){ updateSchoolingTiles(); return; }
         const cached = tileCache[key];
@@ -1733,16 +1659,6 @@
         if(showNumericCounter){
             if(cached.numToday) cached.numToday.textContent = v;
             if(cached.numYday) cached.numYday.textContent = uiSettings.showTileYday ? `(${y})` : "";
-        }
-
-        if(cached.shareEl){
-            const m = tileMetaByKey[key];
-            let shareTxt = "";
-            if(m && m.cat !== "Ressourcen" && m.cat !== "Ausbildung" && v > 0){
-                const tot = getShareTotal();
-                if(tot > 0) shareTxt = Math.round((v / tot) * 100) + " %";
-            }
-            if(cached.shareEl.textContent !== shareTxt) cached.shareEl.textContent = shareTxt;
         }
 
         if(cached.bottomBar){
@@ -1885,6 +1801,86 @@
         }
     }
 
+
+    // v4.8.17: Fahrzeugdetails mit Sortierung, Verlauf, Wachen und Personal.
+    // Die Informationen stammen ausschließlich aus bereits vorhandenen API-Daten.
+    let vehicleDetailDialog = null, vehicleDetailTimer = null, vehicleDetailKey = null;
+    let vehicleDetailCleanup = null;
+    function closeVehicleDetail(){
+        if(vehicleDetailTimer){clearInterval(vehicleDetailTimer);vehicleDetailTimer=null;}
+        if(vehicleDetailCleanup){vehicleDetailCleanup();vehicleDetailCleanup=null;}
+        if(vehicleDetailDialog){vehicleDetailDialog.remove();vehicleDetailDialog=null;}
+        vehicleDetailKey=null;
+    }
+    function openVehicleDetail(key, ownerDocument=document){
+        if(!tileMetaByKey[key] || RESOURCE_TILE_NAMES.has(key))return;
+        closeVehicleDetail();vehicleDetailKey=key;
+        const doc=ownerDocument;
+        const overlay=doc.createElement('div');
+        overlay.style.cssText='position:fixed;inset:0;z-index:2147483646;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
+        const panel=doc.createElement('section');
+        panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label',key+' Fahrzeugdetails');
+        panel.style.cssText='width:min(850px,100%);max-height:88vh;overflow:auto;background:#f8f9fa;color:#20252b;border-radius:10px;box-shadow:0 12px 45px #0005;font:14px Arial,sans-serif;padding:18px;box-sizing:border-box;';
+        const header=doc.createElement('div');header.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;';
+        const title=doc.createElement('strong');title.style.fontSize='19px';title.textContent=key+' – Fahrzeugdetails';
+        const close=doc.createElement('button');close.type='button';close.textContent='✕';close.setAttribute('aria-label','Schließen');
+        close.style.cssText='border:1px solid #ccc;border-radius:6px;background:white;padding:6px 10px;cursor:pointer;';close.addEventListener('click',closeVehicleDetail);
+        header.append(title,close);
+        const nav=doc.createElement('div');nav.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;';
+        const content=doc.createElement('div');panel.append(header,nav,content);overlay.appendChild(panel);
+        let activeTab='vehicles',sortBy='name',sortDirection=1;
+        const tabs=[['vehicles','Fahrzeuge'],['stats','Statistik'],['stations','Wachen'],['crew','Personal']];
+        const el=(tag,text,style='')=>{const x=doc.createElement(tag);if(text!==null)x.textContent=String(text);if(style)x.style.cssText=style;return x;};
+        const link=(text,url)=>{const a=el('a',text);a.href=url;a.target='_blank';a.rel='noopener noreferrer';a.style.color='#075ba5';return a;};
+        const stat=(label,value)=>{const box=el('div',null,'flex:1;min-width:110px;background:#e9ecef;border-radius:7px;padding:10px;text-align:center;');box.append(el('div',value,'font-size:23px;font-weight:bold;'),el('div',label,'font-size:12px;margin-top:4px;'));return box;};
+        const row=(values,headerRow=false)=>{const tr=doc.createElement('tr');values.forEach(v=>{const cell=doc.createElement(headerRow?'th':'td');cell.style.cssText='text-align:left;padding:8px;border-bottom:1px solid #d8dce0;';if(v && typeof v==='object' && v.nodeType)cell.appendChild(v);else cell.textContent=String(v ?? '–');tr.appendChild(cell);});return tr;};
+        const table=(head,rows)=>{const wrapper=el('div',null,'overflow-x:auto;margin-top:8px;');const t=el('table',null,'width:100%;border-collapse:collapse;font-size:13px;');t.appendChild(row(head,true));rows.forEach(r=>t.appendChild(row(r)));wrapper.appendChild(t);return wrapper;};
+        const nameFor=v=>v.buildingId==null?'Unbekannte Wache':(buildingNameCache[v.buildingId]||('Wache #'+v.buildingId));
+        function render(){
+            if(!overlay.isConnected || vehicleDetailKey!==key)return;
+            nav.replaceChildren();tabs.forEach(([id,label])=>{const btn=el('button',label,'border:1px solid #ccd1d5;border-radius:5px;padding:7px 11px;cursor:pointer;background:'+(activeTab===id?'#343a40;color:white;':'white;color:#20252b;'));btn.type='button';btn.addEventListener('click',()=>{activeTab=id;render();});nav.appendChild(btn);});
+            content.replaceChildren();const vehicles=vehicleLists[key]||[];
+            const total=vehicleTotalCount[key]||0,free=vehicleFreeCount[key]||0,busy=vehicleInUseCount[key]||0;
+            if(activeTab==='vehicles'){
+                const summary=el('div',null,'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;');summary.append(stat('Gesamt',total),stat('Frei',free),stat('Im Einsatz',busy));content.appendChild(summary);
+                const controls=el('div',null,'display:flex;gap:8px;align-items:center;flex-wrap:wrap;');controls.appendChild(el('span','Sortieren nach:'));
+                const select=doc.createElement('select');select.style.cssText='padding:6px;border:1px solid #ccc;border-radius:5px;';
+                [['name','Fahrzeugname'],['fms','FMS-Status'],['station','Wache'],['crew','Personal']].forEach(([value,label])=>{const opt=el('option',label);opt.value=value;select.appendChild(opt);});select.value=sortBy;select.addEventListener('change',()=>{sortBy=select.value;render();});controls.appendChild(select);
+                const direction=el('button',sortDirection===1?'Aufsteigend ↑':'Absteigend ↓','border:1px solid #ccc;border-radius:5px;padding:6px;cursor:pointer;background:white;');direction.addEventListener('click',()=>{sortDirection*=-1;render();});controls.appendChild(direction);content.appendChild(controls);
+                const sorted=vehicles.slice().sort((a,b)=>{const av=sortBy==='station'?nameFor(a):a[sortBy],bv=sortBy==='station'?nameFor(b):b[sortBy];return sortDirection*(typeof av==='number'&&typeof bv==='number'?av-bv:String(av??'').localeCompare(String(bv??''),'de',{numeric:true}));});
+                content.appendChild(table(['Fahrzeug','FMS','Personal','Wache'],sorted.map(v=>[link(v.name||'Unbenannt','/vehicles/'+encodeURIComponent(v.id)),v.fms==null?'Unbekannt':'FMS '+v.fms,v.crew??'Unbekannt',v.buildingId==null?nameFor(v):link(nameFor(v),'/buildings/'+encodeURIComponent(v.buildingId))])));
+                if(!vehicles.length)content.appendChild(el('p','Noch keine Fahrzeugdaten vorhanden.'));
+            }else if(activeTab==='stats'){
+                const summary=el('div',null,'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;');summary.append(stat('Heute',state.today[key]||0),stat('Gestern',state.yday[key]||0),stat('Insgesamt',state.total[key]||0));content.appendChild(summary);
+                content.appendChild(el('strong','Alarmierungen der letzten 7 abgeschlossenen Tage'));
+                const values=Array.isArray(state.history[key])?state.history[key].slice(0,7):[];
+                if(!values.length)content.appendChild(el('p','Noch keine abgeschlossenen Tage gespeichert.'));
+                else{
+                    const chart=el('div',null,'display:flex;align-items:end;gap:8px;height:175px;margin:15px 0 8px;padding:8px;border-bottom:1px solid #bbb;');
+                    const max=Math.max(1,...values.map(v=>Number(v)||0));
+                    values.slice().reverse().forEach((value,i)=>{const count=Number(value)||0;const item=el('div',null,'height:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;');item.appendChild(el('span',count,'font-size:11px;'));const bar=el('div',null,'width:70%;max-width:60px;height:'+Math.max(2,Math.round(count/max*125))+'px;background:#3278b7;border-radius:3px 3px 0 0;');item.appendChild(bar);item.appendChild(el('span','Tag -'+(values.length-i),'font-size:10px;white-space:nowrap;'));chart.appendChild(item);});content.appendChild(chart);
+                    content.appendChild(el('p','Tag -1 ist gestern; ältere Tage folgen nach links. Fehlende Historie wird nicht als 0 ergänzt.','font-size:11px;color:#666;'));
+                }
+            }else if(activeTab==='stations'){
+                const groups=new Map();vehicles.forEach(v=>{const id=v.buildingId==null?'unknown':String(v.buildingId);if(!groups.has(id))groups.set(id,{id,name:nameFor(v),total:0,free:0,busy:0});const g=groups.get(id);g.total++;if(v.fms===1||v.fms===2)g.free++;if([3,4,7,8].includes(v.fms))g.busy++;});
+                content.appendChild(el('strong','Fahrzeuge nach zugeordneter Wache'));
+                content.appendChild(table(['Wache','Gesamt','Frei','Im Einsatz'],[...groups.values()].sort((a,b)=>a.name.localeCompare(b.name,'de')).map(g=>[g.id==='unknown'?g.name:link(g.name,'/buildings/'+encodeURIComponent(g.id)),g.total,g.free,g.busy])));
+                if(!groups.size)content.appendChild(el('p','Keine Fahrzeugdaten verfügbar.'));
+                content.appendChild(el('p','Die Zuordnung verwendet die Gebäude-ID aus der Fahrzeug-API. Fehlt sie, erscheint „Unbekannte Wache“.','font-size:11px;color:#666;'));
+            }else{
+                const known=vehicles.filter(v=>v.crew!=null);const sum=known.reduce((n,v)=>n+Number(v.crew||0),0);
+                const summary=el('div',null,'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;');summary.append(stat('Zugewiesenes Personal',sum),stat('Fahrzeuge mit Personalangabe',known.length+' / '+vehicles.length));content.appendChild(summary);
+                content.appendChild(table(['Fahrzeug','Zugewiesene Einsatzkräfte'],vehicles.map(v=>[link(v.name||'Unbenannt','/vehicles/'+encodeURIComponent(v.id)),v.crew??'Nicht verfügbar'])));
+                content.appendChild(el('p','Es werden nur zugewiesene Einsatzkräfte gezählt. Sollbesatzung, verfügbare Wachenkräfte und Personennamen liefert die vorhandene Datenverarbeitung nicht zuverlässig.','font-size:11px;color:#666;'));
+            }
+            content.appendChild(el('p',formattedVehicleUpdateTime+' · Anzeige basiert auf dem letzten erfolgreichen Fahrzeugabruf.','font-size:11px;color:#666;margin-top:12px;'));
+        }
+        overlay.addEventListener('click',e=>{if(e.target===overlay)closeVehicleDetail();});
+        const esc=e=>{if(e.key==='Escape')closeVehicleDetail();};doc.addEventListener('keydown',esc);
+        vehicleDetailCleanup=()=>doc.removeEventListener('keydown',esc);
+        doc.body.appendChild(overlay);vehicleDetailDialog=overlay;render();vehicleDetailTimer=setInterval(render,2500);close.focus();
+    }
+
     function createTile(key, state){
         if(SCHOOLING_TILE_NAMES.has(key)) return createSchoolingTile(key);
 
@@ -1896,6 +1892,12 @@
         div.className = "fzTile";
         div.dataset.key = key;
         div.dataset.val = v;
+        if(meta && !RESOURCE_TILE_NAMES.has(key)){
+            div.style.cursor = "pointer";
+            div.title = "Klicken für Fahrzeugdetails";
+            div.addEventListener("click", () => openVehicleDetail(key, div.ownerDocument));
+        }
+
 
         if(meta && (meta.cat === "Ressourcen" || meta.cat === "Ausbildung")) div.classList.add("fzResource");
         if(meta && meta.cat === "Ressourcen") div.classList.add("fzStat");
@@ -1905,7 +1907,7 @@
             <div class="fzTileCompactRow"><span class="fzCompactDot"></span><span class="fzCompactLabel">${escapeHTML(key)}</span><span class="fzCompactCount"></span><span class="fzCompactBusy" style="display:none;"></span></div>
             <div class="fzStatusDot" style="background-color:#ff0000;margin-right:5px;"></div>
             <div class="fzContentWrapper"><span class="fzBadgeSlot"></span><span class="fzTileName">${escapeHTML(key)}</span><div class="fzTileIdLabel"></div><div class="fzBottomBar"><div class="fzBottomBarFill"></div></div></div>
-            <div class="fzRightWrapper"><div class="fzTileCount"><span class="fzNumToday">0</span><span class="fzNumYday">(0)</span></div><div class="fzTileShare"></div><div class="fzResourceCounter"></div><div class="fzFunkalarmLabel">${escapeHTML(uiSettings.funkalarmText || 'Funk-Alarm')}</div></div>
+            <div class="fzRightWrapper"><div class="fzTileCount"><span class="fzNumToday">0</span><span class="fzNumYday">(0)</span></div><div class="fzResourceCounter"></div><div class="fzFunkalarmLabel">${escapeHTML(uiSettings.funkalarmText || 'Funk-Alarm')}</div></div>
             <div class="fzTileExtras" style="display:none"><span class="fzTileUpdated"></span><div class="fzAvailabilityTrack"><span class="fzAvailabilityFill"></span></div></div>
         `;
 
@@ -1928,7 +1930,6 @@
             tileCount: div.querySelector(".fzTileCount"),
             numToday: div.querySelector(".fzNumToday"),
             numYday: div.querySelector(".fzNumYday"),
-            shareEl: div.querySelector(".fzTileShare"),
             resCounter: div.querySelector(".fzResourceCounter"),
             idLabel: div.querySelector(".fzTileIdLabel"),
             funkalarmLabel: div.querySelector(".fzFunkalarmLabel"),
@@ -1972,7 +1973,9 @@
     function toggleFS(){ if(fzWrapper) fzWrapper.classList.toggle("fzFullscreen"); }
 
     function exportData(){
-        const backup = {settings:uiSettings, today:state.today, total:state.total, history:state.history, yday:state.yday, customStock};
+        const backup = {backupVersion:2, settings:uiSettings, today:state.today, total:state.total,
+            history:state.history, yday:state.yday, detailsToday:state.det,
+            customStock, vehicleTypeMappings:manualTypeMappings};
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup,null,2));
         const a = document.createElement('a');
         a.setAttribute("href", dataStr);
@@ -1992,12 +1995,24 @@
             reader.onload = event => {
                 try{
                     const data = JSON.parse(event.target.result);
+                    if(!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Ungueltige Sicherungsdatei");
+                    const validObject = v => v && typeof v === "object" && !Array.isArray(v);
+                    for(const key of ["settings","today","total","history","yday","detailsToday","customStock","vehicleTypeMappings"]){
+                        if(data[key] !== undefined && !validObject(data[key])) throw new Error("Ungueltiges Datenfeld: " + key);
+                    }
                     if(data.settings) GM_setValue(STORAGE.UISETTINGS, JSON.stringify(data.settings));
                     if(data.today) GM_setValue(STORAGE.COUNTS_TODAY, JSON.stringify(data.today));
                     if(data.total) GM_setValue(STORAGE.COUNTS_TOTAL, JSON.stringify(data.total));
                     if(data.history) GM_setValue(STORAGE.HISTORY_7DAYS, JSON.stringify(data.history));
                     if(data.yday) GM_setValue(STORAGE.YDAY_COUNTS, JSON.stringify(data.yday));
                     if(data.customStock) GM_setValue(STORAGE.CUSTOM_STOCK, JSON.stringify(data.customStock));
+                    if(data.detailsToday) GM_setValue(STORAGE.DETAILS_TODAY, JSON.stringify(data.detailsToday));
+                    if(data.vehicleTypeMappings){
+                        // Offizielle Schlauchwagen-IDs bleiben auch nach einem Import geschuetzt.
+                        const mappings = {...data.vehicleTypeMappings};
+                        delete mappings["13"]; delete mappings["14"];
+                        GM_setValue(MATCH_OVERRIDE_KEY, JSON.stringify(mappings));
+                    }
                     alert("Daten erfolgreich importiert! Seite wird neu geladen.");
                     location.reload();
                 }catch(err){
@@ -2276,7 +2291,7 @@
     }
 
     function startCountdown(){
-        if(!fzWrapper || extWin) return;
+        if(!fzWrapper || extWin || dashboardManuallyClosed) return;
         isHovering = false;
         if(safeHideTimer) clearTimeout(safeHideTimer);
         if(animFrameId) cancelAnimationFrame(animFrameId);
@@ -2435,10 +2450,10 @@
         toggleBtn.addEventListener("click", () => {
             if(!fzWrapper) return;
             if(fzWrapper.classList.contains("fzHidden")){
-                fzWrapper.classList.remove("fzHidden");
+                setDashboardManuallyClosed(false);
                 resetCountdown();
             } else {
-                fzWrapper.classList.add("fzHidden");
+                setDashboardManuallyClosed(true);
             }
         });
 
@@ -2451,10 +2466,15 @@
 
         fzWrapper = document.createElement("div");
         fzWrapper.className = "fzWrapper";
+        if(dashboardManuallyClosed) fzWrapper.classList.add("fzHidden");
         if(uiSettings.compactMode) fzWrapper.classList.add("fzCompact");
 
         fzWrapper.onmouseleave = () => startCountdown();
-        fzWrapper.onmouseenter = () => { resetCountdown(); fzWrapper.classList.remove("fzHidden"); };
+        fzWrapper.onmouseenter = () => {
+            if(dashboardManuallyClosed) return;
+            resetCountdown();
+            fzWrapper.classList.remove("fzHidden");
+        };
 
         const fzHeader = document.createElement("div");
         fzHeader.className = "fzHeader";
@@ -2474,7 +2494,7 @@
 
             if(ind) ind.onclick = showMissingAvailabilityModal;
             if(com) com.onclick = toggleCompactMode;
-            if(min) min.onclick = (e) => { e.stopPropagation(); fzWrapper.classList.add("fzHidden"); };
+            if(min) min.onclick = (e) => { e.stopPropagation(); setDashboardManuallyClosed(true); };
             if(set) set.onclick = openSettings;
             if(pop) pop.onclick = togglePopout;
             if(full) full.onclick = toggleFS;
@@ -2545,31 +2565,6 @@
                     let displayName = CAT_DISPLAY_NAMES[cat] || cat;
                     let isCollapsed = uiSettings.collapsedCats.includes(cat);
                     let isTileCompact = (uiSettings.collapsedTilesCats || []).includes(cat);
-                    let metricHtml = "";
-
-                    if(cat === "RD"){
-                        const pV = state.today["Patienten"] || 0;
-                        let kV = 0;
-                        ["KTW","KTW Typ B","ITW","RTH [Christoph 13 (Bielefeld)]","RTH mit Winde","NAW"].forEach(k => { kV += (state.today[k] || 0); });
-                        metricHtml += `<span class="fzCatBadge" id="fzBadge_RD_Pat">${ICONS.patient} ${pV}</span><span class="fzCatBadge" id="fzBadge_RD_KTW">${ICONS.ktp} ${kV}</span>`;
-                    }
-                    if(cat === "FW"){
-                        let wasser = state.today["Wasserbedarf"] || 0;
-                        metricHtml += `<span class="fzCatBadge" id="fzBadge_FW_Was" onclick="event.stopPropagation();document.querySelector('.fzTile[data-key=\\'Wasserbedarf\\']')?.click()">${ICONS.water} ${wasser.toLocaleString('de-DE')} L</span>`;
-                    }
-                    if(cat === "POL"){
-                        const gef = state.today["Gefangene"] || 0;
-                        metricHtml += `<span class="fzCatBadge" id="fzBadge_POL_Gef" onclick="event.stopPropagation();document.querySelector('.fzTile[data-key=\\'Gefangene\\']')?.click()">${ICONS.prisoner} ${gef}</span>`;
-                    }
-                    if(cat === "Luft"){
-                        const heli = state.today["Helikopter"] || 0;
-                        metricHtml += `<span class="fzCatBadge" id="fzBadge_Luft_Heli">${ICONS.heli} ${heli}</span>`;
-                    }
-                    if(cat === "Ausbildung"){
-                        const schCount = schoolingsData.filter(s => !s.finishAt || s.finishAt > Date.now()).length;
-                        metricHtml += `<span class="fzCatBadge" id="fzBadge_Aus_Count">${ICONS.school} ${schCount} aktiv</span>`;
-                    }
-
                     let header = document.createElement("div");
                     header.className = "fzCatHeader";
                     header.id = "fzCatHead_" + cat;
@@ -2579,7 +2574,7 @@
                     const tcIcon = isTileCompact ? "▤" : "▦";
                     const tcActive = isTileCompact ? "fzTCactive" : "";
 
-                    header.innerHTML = `<div style="display:flex;flex-direction:column;justify-content:center;min-width:140px;"><span style="line-height:1;">${escapeHTML(displayName)}</span>${utilBarHtml}</div><div style="display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:auto;">${metricHtml}<span class="fzFocusBtn" title="Fokus">${ICONS.target}</span><span class="fzTileCollapseToggle ${tcActive}" id="fzTileCollapse_${cat}" title="${isTileCompact?"Ausklappen":"Einklappen"}">${tcIcon}</span><span>${isCollapsed?"&#x25B6;":"&#x25BC;"}</span></div>`;
+                    header.innerHTML = `<div style="display:flex;flex-direction:column;justify-content:center;min-width:140px;"><span style="line-height:1;">${escapeHTML(displayName)}</span>${utilBarHtml}</div><div style="display:flex;align-items:center;gap:4px;flex-shrink:0;margin-left:auto;"><span class="fzFocusBtn" title="Fokus">${ICONS.target}</span><span class="fzTileCollapseToggle ${tcActive}" id="fzTileCollapse_${cat}" title="${isTileCompact?"Ausklappen":"Einklappen"}">${tcIcon}</span><span>${isCollapsed?"&#x25B6;":"&#x25BC;"}</span></div>`;
 
                     header.onclick = (e) => {
                         if(e.target.classList.contains("fzTileCollapseToggle") || (e.target.closest && e.target.closest(".fzTileCollapseToggle"))){
@@ -2594,7 +2589,7 @@
                             redrawGrid();
                             return;
                         }
-                        if(e.target.classList.contains("fzCatBadge") || e.target.closest(".fzCatBadge")) return;
+
 
                         uiSettings.collapsedCats = isCollapsed ? uiSettings.collapsedCats.filter(c => c !== cat) : [...uiSettings.collapsedCats,cat];
                         saveUI();
@@ -2672,12 +2667,17 @@
 
         requestAnimationFrame(() => {
             KEYS.forEach(k => { if(tileEls[k]) updateTile(k, state); });
-            updateCategoryHeaders();
+
             updateHeaderStats();
             renderAvailabilityIndicator();
             updateSubHeaderInfo();
         });
     }
+
+    // V4.8.20: Keine Manipulation der AAO-Fahrzeugauswahl.
+    // Die vom Spieler eingerichtete eigene Fahrzeugklasse bleibt massgeblich.
+    // Insbesondere duerfen kombinierte Alarmierungen nicht durch einen
+    // zeitlich nachwirkenden Schlauchwagen-Filter abgewaehlt werden.
 
     // CLICK LISTENER & INTERCEPTS
     const CLICK_PATTERNS = [
@@ -2719,6 +2719,7 @@
 
     window.addEventListener("storage", (e) => {
         if(e.key === "fzgm_" + STORAGE.DAYSTAMP){
+            if(saveTimeout){ clearTimeout(saveTimeout); saveTimeout = null; }
             state.today = store.load(STORAGE.COUNTS_TODAY);
             state.yday = store.load(STORAGE.YDAY_COUNTS);
             state.history = json.load(STORAGE.HISTORY_7DAYS, {});
@@ -2726,6 +2727,8 @@
             refreshAllVisibleTiles();
         }
         if(e.key === STORAGE.SYNC_SIGNAL){
+            // Offene lokale Aenderungen nicht durch einen anderen Tab ueberschreiben.
+            if(saveTimeout) return;
             state.today = store.load(STORAGE.COUNTS_TODAY);
             state.total = store.load(STORAGE.COUNTS_TOTAL);
             state.yday = store.load(STORAGE.YDAY_COUNTS);
@@ -2745,22 +2748,17 @@
     }, 30000);
 
     // API INTERCEPTS (FETCH/XHR) – nur bestaetigte Aktionen zaehlen.
-    const transportActionSeen = new Map();
     function recordTransportAction(action, url){
         checkVehicleDayReset(state);
-        const normalized = String(url || "").split("?")[0].toLowerCase();
-        const key = action + ":" + normalized;
-        const now = Date.now();
-        for(const [k,ts] of transportActionSeen){ if(now-ts > 5000) transportActionSeen.delete(k); }
-        if(transportActionSeen.has(key)) return;
-        transportActionSeen.set(key, now);
+        // Jede erfolgreiche HTTP-Aktion zaehlt einmal. Unterschiedliche Aktionen
+        // auf derselben URL duerfen sich nicht gegenseitig unterdruecken.
         incrementTileCount(action, null);
         if(action === "Patienten" || action === "Gefangene"){
             updateBuildingCapacities(true).then(() => {
                 syncDerivedResourceCounts();
                 if(isMainPage){
                     KEYS.forEach(k => tileEls[k] && updateTile(k, state));
-                    updateCategoryHeaders();
+
                 }
             }).catch(e => console.warn("[Bobelle] Kapazitaeten:",e));
         }
