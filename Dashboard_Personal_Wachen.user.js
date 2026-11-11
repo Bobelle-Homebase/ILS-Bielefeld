@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Personal_Wachen
 // @namespace    https://leitstellenspiel.de
-// @version      2.1
+// @version      4.8.24
 // @author       Design by Bobelle
 // @description  Zeigt soll/Ist auf den Wachen an
 // @icon         https://www.leitstellenspiel.de/favicon.ico
