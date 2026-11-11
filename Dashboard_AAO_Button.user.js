@@ -30,16 +30,16 @@
             // Buttons auf der AAO-Seite
             const group = link.closest(".btn-group.aao_btn_group");
             if (group) {
-                link.style.minWidth = "113%";
+                link.style.minWidth = "100%";
                 link.style.textAlign = "left";
 
-                group.style.width = "113%";
+                group.style.width = "100%";
                 group.style.margin = "0";
             }
 
             // Buttons auf der Einsatzseite
             if (link.classList.contains("aao_btn")) {
-                link.style.minWidth = "113%";
+                link.style.minWidth = "100%";
                 link.style.textAlign = "left";
 
                 const icon = link.querySelector("span.label");
