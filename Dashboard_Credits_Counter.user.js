@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Dashboard_Credits_Counter
 // @namespace    https://leitstellenspiel.de
-// @version      2.1
+// @version      4.8.24
 // @author       Design by Bobelle (Fixed)
 // @description  Zeigt Credits-Bilanz frei verschiebbar im Navbar-Bereich
 // @icon         https://www.leitstellenspiel.de/favicon.ico
